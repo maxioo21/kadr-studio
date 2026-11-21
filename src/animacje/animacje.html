@@ -2,15 +2,15 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Bebas+Neue&family=Bangers&family=Pacifico&family=Anton&family=Montserrat:wght@700;900&family=Press+Start+2P&family=Bungee&family=JetBrains+Mono:wght@500&family=Playfair+Display:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Barlow+Semi+Condensed:wght@500;600;700&family=Bebas+Neue&family=Bangers&family=Pacifico&family=Anton&family=Montserrat:wght@700;900&family=Press+Start+2P&family=Bungee&family=JetBrains+Mono:wght@500&family=Playfair+Display:wght@700&display=swap">
 <style>
 /* Layout: template studio. Gallery (left) | live player (center) | edit panel (right); phone = player, panel, gallery.
    Dark-only like the FakeTok editor: neutral greys, one cyan accent. */
 :root{
-  --app:#0e0e10; --panel:#17171a; --panel2:#1e1e22; --raise:#26262b; --hover:#303036; --line:#2a2a2f; --line2:#3a3a41;
+  --app:#0b0b0c; --panel:#151516; --panel2:#1b1b1d; --raise:#232325; --hover:#2d2d30; --line:#242426; --line2:#36363a;
   --fg:#ececf0; --dim:#9c9ca6; --faint:#62626b;
   --acc:#22d3e6; --acc-ink:#03181b; --acc-soft:rgba(34,211,230,.13); --danger:#ff6b6b;
-  --f-ui:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --f-ui:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif; --f-cond:"Barlow Semi Condensed","Inter",sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
   color-scheme:dark;
 }
 html,body{height:100%}
@@ -115,6 +115,42 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 #toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,16px);background:#f2f2f5;color:#111;font-weight:600;padding:9px 15px;border-radius:9px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:60;max-width:calc(100% - 32px);text-align:center}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 .loading{position:absolute;inset:0;display:grid;place-items:center;color:var(--dim);font-size:13px}
+
+/* pro-tool skin */
+.panel{border-radius:4px}
+.ph{height:32px;font:600 12px/1 var(--f-cond);letter-spacing:.09em;text-transform:uppercase;color:var(--dim);padding:0 12px;gap:10px}
+.ph .hint{font:500 11px var(--f-mono);letter-spacing:0;text-transform:none}
+.logo{font:700 16px/1 var(--f-cond);letter-spacing:.06em;text-transform:uppercase}
+.logo .mark{border-radius:3px;width:22px;height:22px}
+.logo small{font:500 12px var(--f-cond);letter-spacing:.12em;color:var(--faint)}
+.seg{border-radius:4px}.seg button{border-radius:3px;font:600 12px var(--f-cond);letter-spacing:.06em;text-transform:uppercase}
+.btn{border-radius:4px;font-family:var(--f-cond);font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:13px}
+.cats{padding:0 8px;gap:0;border-bottom:1px solid var(--line)}
+.cat{background:transparent;border-radius:0;color:var(--faint);font:600 12px var(--f-cond);letter-spacing:.07em;text-transform:uppercase;padding:9px 9px 8px;position:relative}
+.cat:hover{color:var(--fg)}
+.cat.on{background:transparent;color:var(--fg)}
+.cat.on::after{content:"";position:absolute;left:9px;right:9px;bottom:-1px;height:2px;background:var(--acc)}
+.cat small{font:500 10px var(--f-mono);color:var(--faint);margin-left:4px}
+.search{margin:8px 10px 0;display:flex;align-items:center;gap:8px;background:var(--raise);border-radius:4px;padding:0 10px;flex:none}
+.search svg{width:14px;height:14px;color:var(--faint);flex:none}
+.search input{background:transparent;border:0;outline:0;padding:8px 0;width:100%;font-size:13px}
+.glist{grid-template-columns:repeat(auto-fill,minmax(138px,1fr));gap:12px 8px;padding:10px}
+.tcard{gap:4px}
+.tcard .pv{border-radius:3px}
+.tcard b{font:600 13px/1.2 var(--f-cond);letter-spacing:.02em;color:var(--fg)}
+.tcard .meta{font:500 10.5px var(--f-mono);color:var(--faint)}
+.tcard .tag{border-radius:2px;font:700 9.5px var(--f-cond);letter-spacing:.1em;background:var(--acc);color:var(--acc-ink)}
+.tcard .dur{border-radius:2px}
+.tcard.on .pv{box-shadow:0 0 0 2px var(--acc)}
+.gh{font:600 12px var(--f-cond);letter-spacing:.09em;text-transform:uppercase;color:var(--dim)}
+.gh .hint{text-transform:none;letter-spacing:0;font-family:var(--f-ui)}
+.field label{font:600 11px var(--f-cond);letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+.field input[type=text],.field textarea,.field select,.color{border-radius:4px}
+.toggle{font:600 11.5px var(--f-cond);letter-spacing:.08em;text-transform:uppercase}
+.tc{font-size:13px}
+.play{border-radius:4px;width:36px;height:36px}
+.canwrap{box-shadow:0 0 0 1px #000,0 14px 40px rgba(0,0,0,.5)}
+.viewer{background:#070708}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 @media (max-width:900px){
   body{overflow:auto}
@@ -131,7 +167,7 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 
 <div id="app">
   <header>
-    <div class="logo"><div class="mark" id="logoMark"></div>FakeTok Animacje <small>szablony do montażu</small></div>
+    <div class="logo"><div class="mark" id="logoMark"></div>FakeTok <small>Animacje</small></div>
     <div class="spacer"></div>
     <div class="seg" id="fmtSeg" role="group" aria-label="Format filmu"></div>
   </header>
@@ -139,6 +175,7 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
   <section id="gal" class="panel" aria-label="Szablony">
     <div class="ph">Szablony <span class="spacer"></span><span class="hint" id="galCount"></span></div>
     <div class="cats" id="cats"></div>
+    <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input type="text" id="q" placeholder="Szukaj: neon, przejście, skin, VS…" aria-label="Szukaj animacji"></label>
     <div class="glist" id="glist"></div>
   </section>
 
@@ -150,9 +187,10 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
     </div>
     <div class="transport">
       <button class="play" id="playBtn" title="Odtwórz / pauza (spacja)" aria-label="Odtwórz lub zatrzymaj"></button>
-      <span class="tc"><b id="tNow">0.0</b> / <span id="tDur">0.0</span> s</span>
+      <span class="tc"><b id="tNow">00:00</b> / <span id="tDur">00:00</span></span>
       <input type="range" id="scrub" min="0" max="1000" value="0" aria-label="Przewijanie">
       <label class="toggle"><input type="checkbox" id="loopChk" checked> Pętla</label>
+      <label class="toggle" title="Pokazuje, gdzie napisy są bezpieczne i nie zasłoni ich interfejs aplikacji"><input type="checkbox" id="guideChk"> Ramki</label>
       <label class="toggle"><input type="checkbox" id="soundChk" checked> Dźwięk</label>
     </div>
   </section>
@@ -463,7 +501,7 @@ const TEMPLATES = [
     sfx: [[.05, 'whoosh'], [2.1, 'pop'], [2.55, 'whoosh']],
     render(g, W, H, t, v, u) {
       const por = isPortrait(W, H);
-      const cam = por ? frameCam(W, H, .42, .5, .38) : frameCam(W, H, .62, .3, .52);
+      const cam = por ? frameCam(W, H, .38, .5, .33) : frameCam(W, H, .62, .3, .52);
       const arrive = 1.6, kx = E.out(seg(t, 0, arrive));
       const x = lerp(-cam.visW * .75, 0, kx);
       let p = { x, ...idlePose(t) };
@@ -473,7 +511,7 @@ const TEMPLATES = [
       if (wv > 0) p.armR = [0, lerp(0, -2.7, E.out(wv)) + Math.sin(t * 11) * .35 * wv];
       drawChar(g, W, H, p, cam, { rim: v.accent });
       const k1 = seg(t, 2.05, 2.6), k2 = seg(t, 2.35, 2.9), k3 = seg(t, 2.55, 3.1);
-      const tx = por ? W / 2 : W * .66, ty = por ? H * .74 : H * .46, align = 'center';
+      const tx = por ? W / 2 : W * .66, ty = por ? H * .63 : H * .46, align = 'center';
       const maxW = por ? W * .86 : W * .58;
       T(g, v.nick, tx, ty, { size: 150 * u, font: 'Bungee', weight: 400, scale: E.back(k1), alpha: k1 * 3, maxW, shadow: { color: 'rgba(0,0,0,.45)', blur: 0, x: 8 * u, y: 8 * u }, align });
       g.fillStyle = v.accent; const bw = Math.min(maxW, 520 * u) * E.out(k2); g.fillRect(tx - bw / 2, ty + 95 * u, bw, 14 * u);
@@ -1784,7 +1822,7 @@ const valsFor = tpl => { const o = {}; for (const [k, , , def] of tpl.fields) o[
 const durOf = tpl => (tpl.durFn ? tpl.durFn(valsFor(tpl)) : tpl.dur);
 const sfxOf = tpl => (tpl.sfxFn ? tpl.sfxFn(valsFor(tpl)) : tpl.sfx || []);
 const isKeyBg = () => ST.bg === 'green' || ST.bg === 'none';
-const BGS = [['grad', 'Gradient'], ['green', 'Zielone'], ['black', 'Czarne'], ['video', 'Twój film'], ['image', 'Zdjęcie'], ['color', 'Kolor'], ['none', 'Przezroczyste']];
+const BGS = [['grad', 'Studio'], ['green', 'Zielone'], ['black', 'Czarne'], ['video', 'Twój film'], ['image', 'Zdjęcie'], ['color', 'Kolor'], ['none', 'Przezroczyste']];
 
 function drawBackground(g, W, H, t, tpl, forExport) {
   const bg = (forExport && ST.bg === 'none') ? 'green' : ST.bg;
@@ -1796,9 +1834,11 @@ function drawBackground(g, W, H, t, tpl, forExport) {
   if (bg === 'video') { g.fillStyle = '#000'; g.fillRect(0, 0, W, H); return; }
   if (bg === 'image' && ST.bgImg) { const im = ST.bgImg, k = Math.max(W / im.width, H / im.height); g.drawImage(im, (W - im.width * k) / 2, (H - im.height * k) / 2, im.width * k, im.height * k); g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(0, 0, W, H); return; }
   const v = valsFor(tpl), acc = v.accent || v.c1 || v.color || '#22d3e6';
-  const gr = g.createLinearGradient(0, 0, W * .3, H); gr.addColorStop(0, mix('#0b0b12', acc, .12)); gr.addColorStop(1, '#07070b'); g.fillStyle = gr; g.fillRect(0, 0, W, H);
-  const rg = g.createRadialGradient(W * .5, H * .45, 0, W * .5, H * .45, Math.max(W, H) * .6); rg.addColorStop(0, rgba(acc, .18)); rg.addColorStop(1, rgba(acc, 0)); g.fillStyle = rg; g.fillRect(0, 0, W, H);
+  const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, mix('#1a1a1c', acc, .05)); gr.addColorStop(1, '#0c0c0d'); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+  const vg2 = g.createRadialGradient(W / 2, H * .48, Math.min(W, H) * .2, W / 2, H * .5, Math.max(W, H) * .78); vg2.addColorStop(0, 'rgba(0,0,0,0)'); vg2.addColorStop(1, 'rgba(0,0,0,.6)'); g.fillStyle = vg2; g.fillRect(0, 0, W, H);
+  const gc = grainCanvas(); g.save(); g.globalAlpha = .06; g.globalCompositeOperation = 'screen'; const ox = Math.floor(rnd(Math.floor(t * 24), 3) * 256), oy = Math.floor(rnd(Math.floor(t * 24), 4) * 256); g.translate(-ox, -oy); g.fillStyle = g.createPattern(gc, 'repeat'); g.fillRect(0, 0, W + 256, H + 256); g.restore();
 }
+let grainCv = null; function grainCanvas() { if (grainCv) return grainCv; grainCv = document.createElement('canvas'); grainCv.width = grainCv.height = 256; const g = grainCv.getContext('2d'), d = g.createImageData(256, 256); for (let i = 0; i < d.data.length; i += 4) { const v2 = Math.random() * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v2; d.data[i + 3] = 255; } g.putImageData(d, 0, 0); return grainCv; }
 function renderTo(g, W, H, t, tpl = ST.tpl, forExport = false) {
   g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over'; g.filter = 'none'; g.shadowColor = 'transparent';
   drawBackground(g, W, H, t, tpl, forExport);
@@ -1834,21 +1874,34 @@ function renderFmt() {
   $('#fmtSeg').replaceChildren(...Object.keys(FORMATS).map(f => h('button', { class: ST.fmt === f ? 'on' : '', onclick: () => { ST.fmt = f; renderFmt(); sizeView(); dirty = true; } }, f === '16:9' ? '16:9 YouTube' : f === '9:16' ? '9:16 TikTok' : '1:1')));
 }
 function renderCats() {
-  $('#cats').replaceChildren(...CATS.map(c => h('button', { class: `cat${ST.cat === c ? ' on' : ''}`, onclick: () => { ST.cat = c; renderCats(); renderGallery(); } }, c === 'Wszystkie' ? c : CAT_NAMES[c])));
+  $('#cats').replaceChildren(...CATS.map(c => { const n = c === 'Wszystkie' ? TEMPLATES.length : TEMPLATES.filter(t => t.cat === c).length; return h('button', { class: `cat${ST.cat === c ? ' on' : ''}`, onclick: () => { ST.cat = c; renderCats(); renderGallery(); } }, c === 'Wszystkie' ? c : CAT_NAMES[c], h('small', null, n)); }));
 }
-const posters = new Map();
+const posters = new Map(); let hoverCard = null, hoverStep = -1;
+const norm = x => x.toLocaleLowerCase('pl').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ł/g, 'l');
+const fmtTC = t => `${String(Math.floor(t)).padStart(2, '0')}:${String(Math.floor((t % 1) * 30)).padStart(2, '0')}`;
 function renderGallery() {
   const order = ['Napisy', 'Kanał', 'Montaż', 'Przejścia', 'Postać', 'Film', 'Gry'];
-  const list = TEMPLATES.filter(t => ST.cat === 'Wszystkie' || t.cat === ST.cat).sort((a, b) => ST.cat === 'Wszystkie' ? order.indexOf(a.cat) - order.indexOf(b.cat) : 0);
-  $('#galCount').textContent = `${list.length} z ${TEMPLATES.length}`;
-  $('#glist').replaceChildren(...list.map(tpl => {
+  const q = norm(($('#q') && $('#q').value) || '').trim();
+  const list = TEMPLATES.filter(t => (ST.cat === 'Wszystkie' || t.cat === ST.cat) && (!q || norm(t.name + ' ' + t.d + ' ' + (CAT_NAMES[t.cat] || '') + (t.skin ? ' skin postac' : '')).includes(q)))
+    .sort((a, b) => ST.cat === 'Wszystkie' ? order.indexOf(a.cat) - order.indexOf(b.cat) : 0);
+  $('#galCount').textContent = `${list.length}/${TEMPLATES.length}`;
+  $('#glist').replaceChildren(...(list.length ? list.map(tpl => {
     const cv = h('canvas', { width: 320, height: 180, 'data-tpl': tpl.id });
-    const card = h('button', { class: `tcard${ST.tpl === tpl ? ' on' : ''}`, onclick: () => selectTpl(tpl) },
-      h('div', { class: 'pv' }, cv, tpl.skin ? h('span', { class: 'tag' }, 'SKIN') : null, h('span', { class: 'dur' }, durOf(tpl).toFixed(1) + ' s')),
-      h('b', null, tpl.name), h('span', { class: 'd' }, tpl.d));
+    const card = h('button', { class: `tcard${ST.tpl === tpl ? ' on' : ''}`, title: tpl.d, onclick: () => selectTpl(tpl) },
+      h('div', { class: 'pv' }, cv, tpl.skin ? h('span', { class: 'tag' }, 'SKIN') : tpl.footage ? h('span', { class: 'tag' }, 'TWÓJ FILM') : null, h('span', { class: 'dur' }, fmtTC(durOf(tpl)))),
+      h('b', null, tpl.name), h('span', { class: 'meta' }, CAT_NAMES[tpl.cat] || tpl.cat));
     const p = posters.get(tpl.id); if (p) cv.getContext('2d').drawImage(p, 0, 0);
+    card.addEventListener('pointerenter', () => { hoverCard = { tpl, cv, t0: performance.now() }; });
+    card.addEventListener('pointerleave', () => { if (hoverCard && hoverCard.cv === cv) { hoverCard = null; const pp = posters.get(tpl.id); if (pp) { const g2 = cv.getContext('2d'); g2.clearRect(0, 0, 320, 180); g2.drawImage(pp, 0, 0); } } });
     return card;
-  }));
+  }) : [h('div', { class: 'hint', style: 'grid-column:1/-1;padding:20px 4px' }, 'Nic nie pasuje. Spróbuj innego słowa, np. „napis”, „przejście”, „skin”.')]));
+}
+function hoverTick(now) {
+  if (!hoverCard || exporting || !hoverCard.cv.isConnected) return;
+  const step = Math.floor(now / 70); if (step === hoverStep) return; hoverStep = step;
+  const { tpl, cv, t0 } = hoverCard, D = durOf(tpl), t = ((now - t0) / 1000) % D, saveBg = ST.bg;
+  if (ST.bg === 'video' || ST.bg === 'image' || ST.bg === 'none') ST.bg = tpl.defBg || 'grad';
+  renderTo(cv.getContext('2d'), 320, 180, t, tpl); ST.bg = saveBg;
 }
 function makePosters(only) {
   const W = 320, H = 180, saveBg = ST.bg; ST.bg = 'grad';
@@ -1869,7 +1922,7 @@ function selectTpl(tpl) {
   renderGallery(); renderEditor(); updateTitle(); dirty = true;
   if (window.matchMedia('(max-width:900px)').matches) $('#stage').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
-function updateTitle() { $('#tplTitle').textContent = ST.tpl.name; $('#tplHint').textContent = ST.tpl.bgHint && ST.bg !== 'green' ? 'Do nałożenia na film wybierz zielone tło' : ''; $('#tDur').textContent = durOf(ST.tpl).toFixed(1); }
+function updateTitle() { $('#tplTitle').textContent = ST.tpl.name; $('#tplHint').textContent = ST.tpl.bgHint && ST.bg !== 'green' ? 'Do nałożenia na film wybierz zielone tło' : ''; $('#tDur').textContent = fmtTC(durOf(ST.tpl)); }
 function field(key, type, label, def, opts) {
   const id = 'f-' + key;
   const val = VALS[key] ?? def;
@@ -1922,7 +1975,7 @@ function bgGroup() {
   if (ST.bg === 'color') { const inp = h('input', { type: 'color', id: 'f-bgcolor', value: ST.bgColor }); inp.addEventListener('input', () => { ST.bgColor = inp.value; dirty = true; }); extra.push(h('div', { class: 'field' }, h('label', { for: 'f-bgcolor' }, 'Kolor tła'), h('div', { class: 'color' }, inp))); }
   if (ST.bg === 'image') extra.push(h('button', { class: 'btn', onclick: () => $('#bgIn').click() }, 'Zmień zdjęcie tła'));
   if (ST.bg === 'video') extra.push(h('button', { class: 'btn', onclick: () => $('#vidIn').click() }, 'Zmień film'));
-  const tip = { green: 'Zielone tło usuniesz w CapCut: Wycinanie → Kluczowanie koloru (Usuń kolor) → kliknij zielony.', none: 'Przezroczyste tło zapisuje się tylko w klatce PNG. Film dostaje zielone tło.', video: 'Widzisz animację na swoim nagraniu. Pobrany film będzie już gotowy, z animacją i dźwiękiem z nagrania, bez CapCuta.', grad: 'Gradient pasuje do koloru akcentu szablonu.' }[ST.bg];
+  const tip = { green: 'Zielone tło usuniesz w CapCut: Wycinanie → Kluczowanie koloru (Usuń kolor) → kliknij zielony.', none: 'Przezroczyste tło zapisuje się tylko w klatce PNG. Film dostaje zielone tło.', video: 'Widzisz animację na swoim nagraniu. Pobrany film będzie już gotowy, z animacją i dźwiękiem z nagrania, bez CapCuta.', grad: 'Ciemne tło jak w studiu, z delikatnym ziarnem.' }[ST.bg];
   return h('div', { class: 'group' }, h('div', { class: 'gh' }, 'Tło'), pills, ...extra, tip ? h('div', { class: 'hint' }, tip) : null,
     h('div', { class: 'field' }, h('label', { for: 'f-speed' }, `Tempo animacji: ${ST.speed.toFixed(2)}×`), speedSlider()));
 }
@@ -1945,13 +1998,24 @@ function tick(now) {
     dirty = true;
   }
   if (!exporting) syncBgVideo(ST.t, ST.playing);
-  if ((dirty || ((ST.bg === 'video' || ST.tpl.footage) && ST.bgVid)) && !exporting) { dirty = false; sizeView(); renderTo(vg, view.width, view.height, ST.t); const s = $('#scrub'); s.value = Math.round(ST.t / D * 1000); s.style.setProperty('--p', (ST.t / D * 100) + '%'); $('#tNow').textContent = ST.t.toFixed(1); }
+  hoverTick(now);
+  if ((dirty || ((ST.bg === 'video' || ST.tpl.footage) && ST.bgVid)) && !exporting) { dirty = false; sizeView(); renderTo(vg, view.width, view.height, ST.t); if (ST.guides) drawGuides(vg, view.width, view.height); const s = $('#scrub'); s.value = Math.round(ST.t / D * 1000); s.style.setProperty('--p', (ST.t / D * 100) + '%'); $('#tNow').textContent = fmtTC(ST.t); }
   requestAnimationFrame(tick);
 }
 function setPlayIcon() { $('#playBtn').innerHTML = ST.playing ? ICON.pause : ICON.play; }
 $('#playBtn').addEventListener('click', () => { audio(); if (!ST.playing && ST.t >= durOf(ST.tpl) - .01) ST.t = 0; ST.playing = !ST.playing; setPlayIcon(); });
 $('#scrub').addEventListener('input', e => { ST.t = e.target.value / 1000 * durOf(ST.tpl); ST.playing = false; setPlayIcon(); dirty = true; });
 $('#loopChk').addEventListener('change', e => ST.loop = e.target.checked);
+$('#guideChk').addEventListener('change', e => { ST.guides = e.target.checked; dirty = true; });
+$('#q').addEventListener('input', () => renderGallery());
+function drawGuides(g, W, H) {
+  g.save(); g.lineWidth = Math.max(1, W / 900); g.setLineDash([8, 6]);
+  g.strokeStyle = 'rgba(255,255,255,.55)'; g.strokeRect(W * .05, H * .05, W * .9, H * .9);
+  g.strokeStyle = 'rgba(34,211,230,.7)'; g.strokeRect(W * .1, H * .1, W * .8, H * .8);
+  g.setLineDash([]);
+  if (H > W * 1.2) { g.fillStyle = 'rgba(255,60,90,.16)'; g.fillRect(W * .84, H * .38, W * .16, H * .5); g.fillRect(0, H * .8, W * .84, H * .2); g.fillStyle = 'rgba(255,255,255,.75)'; g.font = `600 ${Math.round(W / 34)}px "Barlow Semi Condensed", sans-serif`; g.textAlign = 'center'; g.fillText('PRZYCISKI', W * .92, H * .36); g.fillText('OPIS I NICK', W * .42, H * .79); }
+  g.restore();
+}
 $('#soundChk').addEventListener('change', e => { ST.sound = e.target.checked; if (ST.sound) audio(); });
 document.addEventListener('pointerdown', () => { try { audio(); } catch (e) { } }, { once: true });
 document.addEventListener('keydown', e => { if (e.code === 'Space' && !e.target.matches('input,textarea,select,button')) { e.preventDefault(); $('#playBtn').click(); } });
