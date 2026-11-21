@@ -2,7 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Syne:wght@700;800&family=Pixelify+Sans:wght@400;500;600;700&family=Lilita+One&family=Silkscreen:wght@400;700&family=Barlow+Semi+Condensed:wght@500;600;700&family=Bebas+Neue&family=Bangers&family=Pacifico&family=Anton&family=Montserrat:wght@700;900&family=Press+Start+2P&family=Bungee&family=JetBrains+Mono:wght@500&family=Playfair+Display:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Syne:wght@700;800&family=Pixelify+Sans:wght@400;500;600;700&family=Tiny5&family=Lilita+One&family=Silkscreen:wght@400;700&family=Barlow+Semi+Condensed:wght@500;600;700&family=Bebas+Neue&family=Bangers&family=Pacifico&family=Anton&family=Montserrat:wght@700;900&family=Press+Start+2P&family=Bungee&family=JetBrains+Mono:wght@500&family=Playfair+Display:wght@700&display=swap">
 <style>
 /* Layout: creator app. Animations (left) | preview with quality pill (center) | settings panel (right).
    Near-black surfaces, rounded dark fields, white pill for the active choice, violet for the main action. */
@@ -137,6 +137,14 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 .rrow input{flex:1}
 .rrow span{font:500 13px var(--f-mono);color:var(--dim);min-width:48px;text-align:right}
 .skinbox{display:flex;gap:14px;align-items:center;background:var(--field);border-radius:18px;padding:12px}
+.items{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:8px}
+.itm{aspect-ratio:1;border:0;border-radius:12px;background:var(--field);display:grid;place-items:center;padding:0;color:var(--dim)}
+.itm canvas{width:40px;height:40px;image-rendering:pixelated}
+.itm:hover{background:var(--hover)}
+.itm.on{box-shadow:0 0 0 2px var(--app),0 0 0 4px #fff}
+.itm.up{border:1.5px dashed var(--line2)}
+.itm.up svg{width:20px;height:20px}
+.linkbtn{border:0;background:none;color:var(--acc-hi);padding:0;font:inherit;text-decoration:underline;cursor:pointer}
 .skinbox canvas{width:88px;height:88px;image-rendering:pixelated;background:repeating-conic-gradient(#26262c 0 25%,#1b1b20 0 50%) 0 0/11px 11px;border-radius:12px;flex:none}
 .skinbox .col{display:flex;flex-direction:column;gap:8px;min-width:0}
 .skinbox .btn{padding:10px 14px;background:var(--field2)}
@@ -161,6 +169,36 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 .field{display:flex;flex-direction:column;gap:6px}
 .field label{color:var(--dim);font-size:13px}
 .field input[type=text],.field select{background:var(--field);border:1px solid transparent;border-radius:12px;padding:10px 12px;width:100%;box-sizing:border-box}
+.aiview{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+#gal:not(.ai-mode) .aiview{display:none}
+#gal.ai-mode #cats,#gal.ai-mode .search,#gal.ai-mode #glist{display:none}
+#galMode button{display:inline-flex;align-items:center;gap:6px}
+#galMode .aitab:not(.on){color:#b9b0ff}
+.aihead b{display:block;font-size:17px;font-weight:700;margin-bottom:4px}
+.aihead p{margin:0;color:var(--dim);font-size:13px}
+.aiview textarea{width:100%;box-sizing:border-box;min-height:110px;background:var(--field);border:1px solid transparent;border-radius:18px;padding:14px 16px;resize:vertical;line-height:1.5;color:#e9e9ee;font-size:15px}
+.aiview textarea:focus{outline:none;border-color:var(--acc)}
+.aichips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:0;border-radius:999px;background:var(--field);color:var(--dim);padding:7px 11px;font-size:12px;font-weight:600;text-align:left}
+.chip:hover{color:var(--fg);background:var(--hover)}
+.airow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.aiprog{background:var(--panel2);border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.aitime{font:500 12px var(--f-mono);color:var(--faint)}
+.aistep{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--faint)}
+.aistep i{width:14px;height:14px;border-radius:50%;border:2px solid var(--line2);flex:none}
+.aistep.run{color:var(--fg)}.aistep.run i{border-color:var(--acc-hi);border-top-color:transparent;animation:aispin .8s linear infinite}
+.aistep.done{color:var(--dim)}.aistep.done i{background:var(--acc);border-color:var(--acc)}
+.aistep.fail{color:var(--danger)}.aistep.fail i{border-color:var(--danger)}
+@keyframes aispin{to{transform:rotate(360deg)}}
+.aicard{background:var(--panel2);border:1px solid var(--line2);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.aicard p{margin:0;color:var(--dim);font-size:13px}
+.aicard .btn{align-self:flex-start}
+.aisub{font-weight:700;font-size:14px;margin-top:6px}
+.ailist{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px 10px}
+.aimeta{display:flex;align-items:center;gap:6px}
+.aimeta b{flex:1;min-width:0;font-size:13px;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.aidel{border:0;background:transparent;color:var(--faint);font-size:18px;width:26px;height:26px;border-radius:8px}
+.aidel:hover{background:var(--field);color:var(--fg)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 @media (max-width:900px){
   body{overflow:auto}
@@ -185,10 +223,11 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   </header>
 
   <section id="gal" class="panel" aria-label="Szablony">
-    <div class="ph">Animacje <span class="spacer"></span><span class="hint" id="galCount"></span></div>
+    <div class="ph"><div class="seg" id="galMode" role="tablist" aria-label="Tryb"><button type="button" class="on" data-m="list">Animacje</button><button type="button" data-m="ai" class="aitab"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z" fill="currentColor"/></svg>AI</button></div><span class="spacer"></span><span class="hint" id="galCount"></span></div>
     <div class="cats" id="cats"></div>
     <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input type="text" id="q" placeholder="Szukaj: neon, przejście, skin, VS…" aria-label="Szukaj animacji"></label>
     <div class="glist" id="glist"></div>
+    <div class="aiview" id="aiView"></div>
   </section>
 
   <section id="stage" class="panel" aria-label="Podgląd">
@@ -196,7 +235,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
     <div class="viewer" id="viewer">
       <div class="canwrap" id="canwrap"><canvas id="view" width="1280" height="720"></canvas></div>
       <div class="loading" id="loading">Ładuję silnik 3D…</div>
-      <label class="qual"><select id="qualSel" aria-label="Jakość podglądu"><option value="1">Pełna jakość</option><option value="0.5" selected>1/2 jakości</option><option value="0.25">1/4 jakości</option></select></label>
+      <label class="qual"><select id="qualSel" aria-label="Jakość podglądu"><option value="1" selected>Pełna jakość</option><option value="0.5">1/2 jakości</option><option value="0.25">1/4 jakości</option></select></label>
     </div>
     <div class="transport">
       <button class="play" id="playBtn" title="Odtwórz / pauza (spacja)" aria-label="Odtwórz lub zatrzymaj"></button>
@@ -2014,13 +2053,13 @@ TEMPLATES.push(
   },
   {
     id: 'commentPop', cat: 'Kanał', name: 'Komentarz widza', d: 'Karta z komentarzem wjeżdża na ekran, a serduszko dostaje polubienie.', dur: 4.2, defBg: 'green', keyHint: true,
-    fields: [['nick', 'text', 'Nick widza', '@kuba_gra'], ['text', 'text', 'Komentarz', 'Najlepszy edit jaki widziałem!'], ['likes', 'text', 'Polubienia', '2481'], ['accent', 'color', 'Kolor awatara', '#7c5cff']], sfx: [[.15, 'whoosh'], [1.6, 'pop']],
+    fields: [['avatar', 'image', 'Zdjęcie profilowe', null], ['nick', 'text', 'Nick widza', '@kuba_gra'], ['text', 'text', 'Komentarz', 'Najlepszy edit jaki widziałem!'], ['likes', 'text', 'Polubienia', '2481'], ['accent', 'color', 'Kolor awatara', '#7c5cff']], sfx: [[.15, 'whoosh'], [1.6, 'pop']],
     render(g, W, H, t, v, u) {
       const w = Math.min(W * .88, 1120 * u), hh = 270 * u, k = E.back(seg(t, .1, .6)), out = E.in(seg(t, 3.7, 4.1)), x = W / 2 - w / 2 + (1 - k) * -W * .9 + out * W, y = H / 2 - hh / 2;
       g.save(); g.shadowColor = 'rgba(0,0,0,.4)'; g.shadowBlur = 50 * u; g.shadowOffsetY = 18 * u; rr(g, x, y, w, hh, 34 * u); g.fillStyle = '#fbfbfd'; g.fill(); g.restore();
       const ax = x + 90 * u, ay = y + 95 * u, ag = g.createLinearGradient(ax - 50 * u, ay - 50 * u, ax + 50 * u, ay + 50 * u); ag.addColorStop(0, v.accent); ag.addColorStop(1, mix(v.accent, '#ff3d7f', .6));
       g.fillStyle = ag; g.beginPath(); g.arc(ax, ay, 52 * u, 0, Math.PI * 2); g.fill();
-      T(g, (v.nick.replace('@', '')[0] || '?').toUpperCase(), ax, ay + 3 * u, { size: 54 * u, weight: 900 });
+      T(g, (v.nick.replace('@', '')[0] || '?').toUpperCase(), ax, ay + 3 * u, { size: 54 * u, weight: 900 }); avatarImg(g, v.avatar, ax, ay, 52 * u);
       g.font = `800 ${40 * u}px Inter`; const nw = g.measureText(v.nick).width;
       T(g, v.nick, x + 170 * u, y + 72 * u, { size: 40 * u, weight: 800, color: '#111', align: 'left' });
       T(g, '2 godz. temu', x + 190 * u + nw, y + 72 * u, { size: 34 * u, weight: 500, color: '#8a8a93', align: 'left' });
@@ -2271,7 +2310,7 @@ const ytStar = (g, x, y, r, rot, color) => { g.save(); g.translate(x, y); g.rota
 TEMPLATES.push(
   {
     id: 'endscreen', cat: 'Kanał', name: 'Ekran końcowy', d: 'Dwa miejsca na kolejne filmy i czerwony przycisk subskrypcji, jak na końcu filmów na YouTube.', dur: 8, defBg: 'green', keyHint: true,
-    fields: [['title', 'text', 'Napis', 'OBEJRZYJ TEŻ'], ['name', 'text', 'Nazwa kanału', 'TwójNick'], ['accent', 'color', 'Kolor awatara', '#ffb020']], sfx: [[.2, 'pop'], [.45, 'pop'], [.8, 'pop'], [1.3, 'pop'], [3.5, 'click'], [3.6, 'ding']],
+    fields: [['avatar', 'image', 'Zdjęcie profilowe', null], ['title', 'text', 'Napis', 'OBEJRZYJ TEŻ'], ['name', 'text', 'Nazwa kanału', 'TwójNick'], ['accent', 'color', 'Kolor awatara', '#ffb020']], sfx: [[.2, 'pop'], [.45, 'pop'], [.8, 'pop'], [1.3, 'pop'], [3.5, 'click'], [3.6, 'ding']],
     render(g, W, H, t, v, u) {
       const por = isPortrait(W, H), out = E.in(seg(t, 7.4, 7.9)), sw = por ? W * .8 : W * .38, sh = sw * 9 / 16;
       const slots = por ? [[W * .1, H * .15], [W * .1, H * .15 + sh + H * .04]] : [[W * .08, H * .16], [W * .54, H * .16]];
@@ -2291,7 +2330,7 @@ TEMPLATES.push(
         g.save(); g.globalAlpha *= clamp(ka * 2, 0, 1); g.translate(ax, ay); g.scale(ka, ka);
         g.fillStyle = '#000'; g.beginPath(); g.arc(10 * u, 12 * u, R, 0, Math.PI * 2); g.fill();
         g.fillStyle = v.accent; g.beginPath(); g.arc(0, 0, R, 0, Math.PI * 2); g.fill(); g.lineWidth = 9 * u; g.strokeStyle = '#111'; g.stroke();
-        bt(g, (v.name[0] || '?').toUpperCase(), 0, 6 * u, R * 1.15);
+        bt(g, (v.name[0] || '?').toUpperCase(), 0, 6 * u, R * 1.15); avatarImg(g, v.avatar, 0, 0, R);
         bt(g, v.name, 0, R + 72 * u, 54 * u, { maxW: W * .6 });
         g.restore();
       }
@@ -2693,7 +2732,7 @@ TEMPLATES.push(
   },
   {
     id: 'proStats', cat: 'Pro', name: 'Statystyki gracza', d: 'Błyszcząca karta z nickiem i trzema statystykami, które liczą się w górę z paskami.', dur: 5.5, defBg: 'green', keyHint: true,
-    fields: [['name', 'text', 'Nick', 'TwójNick'], ['k1', 'text', 'Statystyka 1', 'Zabójstwa'], ['v1', 'text', 'Wartość 1', '1240'], ['k2', 'text', 'Statystyka 2', 'Wygrane'], ['v2', 'text', 'Wartość 2', '312'], ['k3', 'text', 'Statystyka 3', 'Śmierci'], ['v3', 'text', 'Wartość 3', '365'], ['c1', 'color', 'Kolor 1', '#6d5efc'], ['c2', 'color', 'Kolor 2', '#ff3dd8']],
+    fields: [['avatar', 'image', 'Zdjęcie profilowe', null], ['name', 'text', 'Nick', 'TwójNick'], ['k1', 'text', 'Statystyka 1', 'Zabójstwa'], ['v1', 'text', 'Wartość 1', '1240'], ['k2', 'text', 'Statystyka 2', 'Wygrane'], ['v2', 'text', 'Wartość 2', '312'], ['k3', 'text', 'Statystyka 3', 'Śmierci'], ['v3', 'text', 'Wartość 3', '365'], ['c1', 'color', 'Kolor 1', '#6d5efc'], ['c2', 'color', 'Kolor 2', '#ff3dd8']],
     sfx: [[.15, 'whoosh'], [.8, 'tick'], [1.1, 'tick'], [1.4, 'tick'], [2.4, 'ding']],
     render(g, W, H, t, v, u) {
       const out = E.in(seg(t, 5, 5.5)), w = Math.min(W * .86, 980 * u), hh = 560 * u, x = W / 2 - w / 2, y = H / 2 - hh / 2, k = E.back(seg(t, .1, .55)) * (1 - out);
@@ -2702,7 +2741,7 @@ TEMPLATES.push(
       proPanel(g, x, y, w, hh, 40 * u, '#191922', '#0d0d12', u);
       g.save(); rr(g, x, y, w, 8 * u + 0, 4 * u); g.restore();
       const bar = g.createLinearGradient(x, 0, x + w, 0); bar.addColorStop(0, v.c1); bar.addColorStop(1, v.c2); g.fillStyle = bar; rr(g, x + 40 * u, y + 30 * u, w - 80 * u, 8 * u, 4 * u); g.fill();
-      const av = 64 * u; g.fillStyle = bar; g.beginPath(); g.arc(x + 60 * u + av, y + 130 * u, av, 0, Math.PI * 2); g.fill(); T(g, (v.name[0] || '?').toUpperCase(), x + 60 * u + av, y + 134 * u, { size: av * 1.1, font: 'Syne', weight: 800 });
+      const av = 64 * u; g.fillStyle = bar; g.beginPath(); g.arc(x + 60 * u + av, y + 130 * u, av, 0, Math.PI * 2); g.fill(); T(g, (v.name[0] || '?').toUpperCase(), x + 60 * u + av, y + 134 * u, { size: av * 1.1, font: 'Syne', weight: 800 }); avatarImg(g, v.avatar, x + 60 * u + av, y + 130 * u, av);
       proText(g, v.name, x + 90 * u + av * 2, y + 130 * u, { size: 76 * u, c1: '#ffffff', c2: mix(v.c2, '#ffffff', .5), maxW: w - av * 2 - 140 * u });
       const vals = [[v.k1, v.v1], [v.k2, v.v2], [v.k3, v.v3]], mx = Math.max(...vals.map(([, a]) => parseFloat(String(a).replace(',', '.')) || 0), 1);
       vals.forEach(([kk, vv], i) => {
@@ -2779,12 +2818,12 @@ function pxHead(g, x, y, s, seed) {
   const col = { H: hair, S: skin, W: '#ffffff', E: eye, D: mix(skin, '#000000', .18), M: mix(skin, '#3a1a10', .55) };
   rows.forEach((r, j) => [...r].forEach((c, i) => { g.fillStyle = col[c]; g.fillRect(Math.floor(x + i * P), Math.floor(y + j * P), Math.ceil(P), Math.ceil(P)); }));
 }
-const pxFont = (size, w = 600) => `${w} ${size}px "Pixelify Sans", "Press Start 2P", monospace`;
+const pxFont = (size, w = 400) => `400 ${size}px "Tiny5", "Press Start 2P", monospace`;
 const guiPop = (t, t0, d = .35) => E.back(seg(t, t0, t0 + d));
 const GUI_TPL = [
   {
     id: 'guiFollow', cat: 'Pro', name: 'Obserwuj i dzwonek', d: 'Pigułka z profilem: kursor klika Obserwuj, potem dzwonek, który zaczyna dzwonić.', dur: 5, keyHint: true,
-    fields: [['nick', 'text', 'Nick', '@twojnick'], ['btn', 'text', 'Przycisk', 'Obserwuj'], ['done', 'text', 'Po kliknięciu', 'Obserwujesz'], ['c1', 'color', 'Kolor 1', '#ff2d6f'], ['c2', 'color', 'Kolor 2', '#8f2dff']],
+    fields: [['avatar', 'image', 'Zdjęcie profilowe', null], ['nick', 'text', 'Nick', '@twojnick'], ['btn', 'text', 'Przycisk', 'Obserwuj'], ['done', 'text', 'Po kliknięciu', 'Obserwujesz'], ['c1', 'color', 'Kolor 1', '#ff2d6f'], ['c2', 'color', 'Kolor 2', '#8f2dff']],
     sfx: [[.15, 'pop'], [1.2, 'click'], [2.3, 'click'], [2.35, 'bell']],
     render(g, W, H, t, v, u) {
       const out = E.in(seg(t, 4.5, 5)), k = guiPop(t, .1, .45) * (1 - out), pw = Math.min(W * .86, 820 * u), ph = 150 * u, cx = W / 2 - 50 * u, cy = H / 2, x = cx - pw / 2, y = cy - ph / 2;
@@ -2794,7 +2833,7 @@ const GUI_TPL = [
       g.save(); g.shadowColor = rgba(v.c2, .55); g.shadowBlur = 40 * u; g.shadowOffsetY = 14 * u; rr(g, x, y, pw, ph, ph / 2); const gr = g.createLinearGradient(x, y, x + pw, y + ph); gr.addColorStop(0, v.c1); gr.addColorStop(1, v.c2); g.fillStyle = gr; g.fill(); g.restore();
       g.save(); rr(g, x, y, pw, ph, ph / 2); g.clip(); const sh = g.createLinearGradient(0, y, 0, y + ph * .5); sh.addColorStop(0, 'rgba(255,255,255,.3)'); sh.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = sh; g.fillRect(x, y, pw, ph * .5); g.restore();
       const ar = ph * .36, ax = x + ph * .5, ay = cy; g.fillStyle = '#fff'; g.beginPath(); g.arc(ax, ay, ar + 5 * u, 0, Math.PI * 2); g.fill(); const ag = g.createLinearGradient(ax - ar, ay - ar, ax + ar, ay + ar); ag.addColorStop(0, '#111'); ag.addColorStop(1, '#3a3a46'); g.fillStyle = ag; g.beginPath(); g.arc(ax, ay, ar, 0, Math.PI * 2); g.fill();
-      g.save(); g.translate(ax, ay); g.fillStyle = '#fff'; g.beginPath(); g.ellipse(-ar * .18, ar * .3, ar * .2, ar * .16, -.4, 0, Math.PI * 2); g.fill(); g.fillRect(-ar * .02, -ar * .45, ar * .1, ar * .78); g.beginPath(); g.moveTo(ar * .08, -ar * .45); g.quadraticCurveTo(ar * .35, -ar * .3, ar * .38, -ar * .08); g.lineTo(ar * .08, -ar * .2); g.fill(); g.restore();
+      g.save(); g.translate(ax, ay); g.fillStyle = '#fff'; g.beginPath(); g.ellipse(-ar * .18, ar * .3, ar * .2, ar * .16, -.4, 0, Math.PI * 2); g.fill(); g.fillRect(-ar * .02, -ar * .45, ar * .1, ar * .78); g.beginPath(); g.moveTo(ar * .08, -ar * .45); g.quadraticCurveTo(ar * .35, -ar * .3, ar * .38, -ar * .08); g.lineTo(ar * .08, -ar * .2); g.fill(); g.restore(); avatarImg(g, v.avatar, ax, ay, ar);
       T(g, v.nick, ax + ar + 30 * u, cy, { size: 52 * u, weight: 800, align: 'left', maxW: pw - ph - 330 * u, shadow: { color: 'rgba(0,0,0,.25)', blur: 8 * u, y: 3 * u } });
       const bw = 250 * u, bh = 88 * u, bx = x + pw - bw - 34 * u, by = cy - bh / 2, sc = press1 ? .92 : 1;
       g.save(); g.translate(bx + bw / 2, cy); g.scale(sc, sc); g.translate(-(bx + bw / 2), -cy); rr(g, bx, by, bw, bh, bh / 2); g.fillStyle = followed ? 'rgba(255,255,255,.22)' : '#ffffff'; g.fill();
@@ -2818,19 +2857,19 @@ const GUI_TPL = [
       g.save(); g.translate(W / 2, H / 2); g.scale(k, k); g.translate(-W / 2, -H / 2);
       const br = 26 * u, bl = 56 * u; g.strokeStyle = 'rgba(255,255,255,.9)'; g.lineWidth = 6 * u; for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) { const px = W / 2 + sx * (pw / 2 + br), py = H / 2 + sy * (ph / 2 + br); g.beginPath(); g.moveTo(px - sx * bl, py); g.lineTo(px, py); g.lineTo(px, py - sy * bl); g.stroke(); }
       pxPanel(g, x, y, pw, ph, P);
-      g.font = pxFont(52 * u, 700); T(g, v.title, W / 2, y + 70 * u, { size: 52 * u, font: 'Pixelify Sans', weight: 700, color: '#3f3f3f', maxW: pw * .8, shadow: { color: 'rgba(255,255,255,.6)', x: 2 * u, y: 2 * u } });
+      g.font = pxFont(52 * u, 700); T(g, v.title, W / 2, y + 70 * u, { size: 52 * u, font: 'Tiny5', weight: 400, color: '#3f3f3f', maxW: pw * .8, shadow: { color: 'rgba(255,255,255,.6)', x: 2 * u, y: 2 * u } });
       const lx = x + 30 * u, ly = y + 120 * u, lw = pw - 100 * u, lh = vis * rowH; pxSlot(g, lx, ly, 0, P); g.fillStyle = '#8b8b8b'; g.fillRect(lx, ly, lw, lh); g.fillStyle = 'rgba(0,0,0,.5)'; g.fillRect(lx, ly, lw, P); g.fillRect(lx, ly, P, lh); g.fillStyle = 'rgba(255,255,255,.8)'; g.fillRect(lx, ly + lh - P, lw, P);
       const joined = names.filter((_, i) => t >= .7 + i * .6).length, scroll = Math.max(0, joined - vis), sOff = (scroll - 1 + clamp((t - (.7 + (joined - 1) * .6)) / .3, 0, 1)) * rowH;
       g.save(); g.beginPath(); g.rect(lx + P, ly + P, lw - 2 * P, lh - 2 * P); g.clip();
       names.forEach((nm, i) => { const t0 = .7 + i * .6; if (t < t0) return; const kr = E.out(seg(t, t0, t0 + .3)), ry = ly + i * rowH - Math.max(0, sOff); g.save(); g.globalAlpha *= kr; g.translate((1 - kr) * 60 * u, 0);
         g.fillStyle = i % 2 ? 'rgba(0,0,0,.06)' : 'rgba(255,255,255,.06)'; g.fillRect(lx + P, ry + 2 * u, lw - 2 * P, rowH - 4 * u);
-        pxHead(g, lx + 20 * u, ry + 14 * u, 60 * u, i + 2); T(g, nm, lx + 100 * u, ry + rowH / 2, { size: 40 * u, font: 'Pixelify Sans', weight: 600, color: '#ffffff', align: 'left', maxW: lw * .45, shadow: { color: '#3f3f3f', x: 3 * u, y: 3 * u } });
-        T(g, 'dołączył', lx + lw - 24 * u, ry + rowH / 2, { size: 34 * u, font: 'Pixelify Sans', weight: 600, color: v.accent, align: 'right', shadow: { color: mix(v.accent, '#000000', .6), x: 3 * u, y: 3 * u } }); g.restore(); });
+        pxHead(g, lx + 20 * u, ry + 14 * u, 60 * u, i + 2); T(g, nm, lx + 100 * u, ry + rowH / 2, { size: 40 * u, font: 'Tiny5', weight: 400, color: '#ffffff', align: 'left', maxW: lw * .45, shadow: { color: '#3f3f3f', x: 3 * u, y: 3 * u } });
+        T(g, 'dołączył', lx + lw - 24 * u, ry + rowH / 2, { size: 34 * u, font: 'Tiny5', weight: 400, color: v.accent, align: 'right', shadow: { color: mix(v.accent, '#000000', .6), x: 3 * u, y: 3 * u } }); g.restore(); });
       g.restore();
       const sx = x + pw - 58 * u, sbh = lh, thumbH = sbh * Math.min(1, vis / Math.max(vis, names.length)), prog = names.length > vis ? clamp(sOff / ((names.length - vis) * rowH), 0, 1) : 0;
       g.fillStyle = '#5a5a5a'; g.fillRect(sx, ly, 28 * u, sbh); pxPanel(g, sx, ly + (sbh - thumbH) * prog, 28 * u, thumbH, Math.max(1, P * .6));
       const bw = 220 * u, bh = 64 * u; pxPanel(g, W / 2 - bw / 2, y + ph - bh - 30 * u, bw, bh, P, '#7a7a7a', '#a8a8a8', '#3a3a3a');
-      T(g, 'WYJDŹ', W / 2, y + ph - bh / 2 - 30 * u, { size: 32 * u, font: 'Pixelify Sans', weight: 700, color: '#ffffff', shadow: { color: '#3f3f3f', x: 2 * u, y: 2 * u } });
+      T(g, 'WYJDŹ', W / 2, y + ph - bh / 2 - 30 * u, { size: 32 * u, font: 'Tiny5', weight: 400, color: '#ffffff', shadow: { color: '#3f3f3f', x: 2 * u, y: 2 * u } });
       g.restore();
     }
   },
@@ -2896,7 +2935,7 @@ const GUI_TPL = [
       g.font = pxFont(56 * u, 600); const tw = g.measureText(v.title).width + 60 * u, th = 84 * u;
       g.save(); g.shadowColor = 'rgba(0,0,0,.5)'; g.shadowBlur = 30 * u; g.shadowOffsetY = 12 * u; pxPanel(g, x, y - th + P * 2, tw, th, P, c, mix(c, '#ffffff', .4), mix(c, '#000000', .45), '#1a0303'); pxPanel(g, x, y, pw, ph, P, c, mix(c, '#ffffff', .4), mix(c, '#000000', .45), '#1a0303'); g.restore();
       g.fillStyle = c; g.fillRect(x + 3 * P, y, tw - 6 * P, 3 * P);
-      T(g, v.title, x + 30 * u, y - th / 2 + P * 2, { size: 56 * u, font: 'Pixelify Sans', weight: 600, color: '#ffffff', align: 'left', shadow: { color: mix(c, '#000000', .6), x: 3 * u, y: 3 * u } });
+      T(g, v.title, x + 30 * u, y - th / 2 + P * 2, { size: 56 * u, font: 'Tiny5', weight: 400, color: '#ffffff', align: 'left', shadow: { color: mix(c, '#000000', .6), x: 3 * u, y: 3 * u } });
       for (let i = 0; i < n; i++) {
         const sx = x + 35 * u + i * (slot + gap), sy = y + 35 * u; pxSlot(g, sx, sy, slot, P, mix(c, '#000000', .35));
         if (i < n - 1) { const kk = guiPop(t, .5 + i * .25, .3); if (kk > 0) { g.save(); g.translate(sx + slot / 2, sy + slot / 2); g.scale(kk, kk); pxHead(g, -slot * .36, -slot * .36, slot * .72, i * 3 + 1); g.restore(); } }
@@ -2931,14 +2970,14 @@ const GUI_TPL = [
       const cols = [v.accent, '#f2c53d', '#e2453c', '#46c35a', '#d9d9d9', '#3d3d42', '#3a5fd6', '#222226', '#9a5bd6'];
       g.save(); g.translate(W / 2, H / 2); g.scale(k, k); g.rotate((1 - k) * .2); g.translate(-W / 2, -H / 2);
       g.save(); g.shadowColor = 'rgba(0,0,0,.55)'; g.shadowBlur = 40 * u; g.shadowOffsetY = 16 * u; pxPanel(g, x, y, pw, ph, P); g.restore();
-      T(g, v.title, x + 36 * u, y + 52 * u, { size: 44 * u, font: 'Pixelify Sans', weight: 600, color: '#3f3f3f', align: 'left', maxW: pw - 60 * u });
+      T(g, v.title, x + 36 * u, y + 52 * u, { size: 44 * u, font: 'Tiny5', weight: 400, color: '#3f3f3f', align: 'left', maxW: pw - 60 * u });
       for (let i = 0; i < 9; i++) { const sx = x + 35 * u + (i % 3) * (slot + gap), sy = y + 95 * u + Math.floor(i / 3) * (slot + gap); pxSlot(g, sx, sy, slot, P); const kk = guiPop(t, .5 + i * .15, .28); if (kk > 0) { g.save(); g.translate(sx + slot / 2, sy + slot / 2); g.scale(kk, kk); pxBlock(g, 0, 0, slot * .72, cols[i]); g.restore(); } }
       g.restore();
     }
   },
   {
     id: 'guiProfile', cat: 'Pro', name: 'Baner profilu', d: 'Biała pigułka z profilem: awatar w kolorowym kółku, nick, liczby postów i obserwujących oraz przycisk Obserwuj.', dur: 5, keyHint: true,
-    fields: [['nick', 'text', 'Nick', 'twojnick'], ['posts', 'text', 'Posty', '123'], ['fans', 'text', 'Obserwujący', '6,7 mln'], ['follow', 'text', 'Obserwowani', '1,3 tys.'], ['c1', 'color', 'Kolor 1', '#7c3aed'], ['c2', 'color', 'Kolor 2', '#ec4899']],
+    fields: [['avatar', 'image', 'Zdjęcie profilowe', null], ['nick', 'text', 'Nick', 'twojnick'], ['posts', 'text', 'Posty', '123'], ['fans', 'text', 'Obserwujący', '6,7 mln'], ['follow', 'text', 'Obserwowani', '1,3 tys.'], ['c1', 'color', 'Kolor 1', '#7c3aed'], ['c2', 'color', 'Kolor 2', '#ec4899']],
     sfx: [[.15, 'pop'], [.7, 'tick'], [.9, 'tick'], [1.1, 'tick'], [2.2, 'click'], [2.25, 'pop']],
     render(g, W, H, t, v, u) {
       const out = E.in(seg(t, 4.5, 5)), k = guiPop(t, .1, .45) * (1 - out); if (k <= 0) return;
@@ -2947,7 +2986,7 @@ const GUI_TPL = [
       g.save(); g.shadowColor = 'rgba(0,0,0,.4)'; g.shadowBlur = 50 * u; g.shadowOffsetY = 18 * u; rr(g, x, y, pw, ph, ph / 2); g.fillStyle = '#ffffff'; g.fill(); g.restore();
       const ar = ph * .38, ax = x + ph / 2, ay = y + ph / 2, rg = g.createLinearGradient(ax - ar, ay - ar, ax + ar, ay + ar); rg.addColorStop(0, v.c1); rg.addColorStop(1, v.c2);
       g.fillStyle = rg; g.beginPath(); g.arc(ax, ay, ar + 10 * u, 0, Math.PI * 2); g.fill(); g.fillStyle = '#fff'; g.beginPath(); g.arc(ax, ay, ar + 3 * u, 0, Math.PI * 2); g.fill(); g.fillStyle = rg; g.beginPath(); g.arc(ax, ay, ar - 4 * u, 0, Math.PI * 2); g.fill();
-      T(g, (v.nick.replace('@', '')[0] || '?').toUpperCase(), ax, ay + 4 * u, { size: ar * 1.1, font: 'Syne', weight: 800, color: '#fff' });
+      T(g, (v.nick.replace('@', '')[0] || '?').toUpperCase(), ax, ay + 4 * u, { size: ar * 1.1, font: 'Syne', weight: 800, color: '#fff' }); avatarImg(g, v.avatar, ax, ay, ar - 4 * u);
       const ix = x + ph + 20 * u, iw = pw - ph - 60 * u, mid = ix + iw / 2;
       g.font = `800 ${46 * u}px Inter`; const nw = Math.min(iw * .8, g.measureText(v.nick).width);
       T(g, v.nick, mid - 18 * u, y + 62 * u, { size: 46 * u, weight: 800, color: '#111', maxW: iw * .8 });
@@ -2966,63 +3005,131 @@ Object.entries({ guiFollow: 2.6, guiTeamList: 3.6, guiPixel2: 1.4, guiGradText: 
 
 
 /* ===== game-style overlay pack: 16×16 pixel items (drawn here), pixel type with hard shadows, game menus and toasts. No background ===== */
+/* 16×16 pixel items, drawn here in a game-texture style: 4 material tones, a tinted dark outline, wood handles */
+const MC_DEF = { diamond: '#4aedd9', emerald: '#17dd62', gold: '#fcee4b', sword: '#4aedd9', pickaxe: '#4aedd9', bow: '#9b7442', apple: '#e0221f', heart: '#e8191c', potion: '#f53ea2', gift: '#9b4ce0' };
+const MC_ITEMS = [['diamond', 'Diament'], ['emerald', 'Szmaragd'], ['gold', 'Sztabka złota'], ['sword', 'Miecz'], ['pickaxe', 'Kilof'], ['bow', 'Łuk'], ['apple', 'Jabłko'], ['heart', 'Serce'], ['potion', 'Mikstura'], ['gift', 'Prezent']];
 const MCS = {};
+function mcTone(hx, dl, ds = 0) { const [h, s, l] = hexToHsl(hx); return hslToHex(h, clamp(s + ds, 0, 1), clamp(l + dl, .04, .97)); }
+const mcKind = v => (VALS.icon ? '__custom' : v.item);
+function mcCustomSprite() { const im = VALS.icon; if (im._spr) return im._spr; const S = 48, c = document.createElement('canvas'); c.width = c.height = S; const k = Math.min(S / im.width, S / im.height), w = im.width * k, h = im.height * k, cg = c.getContext('2d'); cg.imageSmoothingEnabled = im.width > S; cg.drawImage(im, (S - w) / 2, (S - h) / 2, w, h); c._smooth = im.width > S; im._spr = c; return c; }
+function avatarImg(g, im, cx, cy, r) { if (!im) return; g.save(); g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.clip(); const k = Math.max(2 * r / im.width, 2 * r / im.height); g.drawImage(im, cx - im.width * k / 2, cy - im.height * k / 2, im.width * k, im.height * k); g.restore(); }
+/* textures from the viewer's own game files: the .jar (or a resource pack .zip) is read in the browser, nothing is uploaded */
+const MC_TEX_KEY = 'faketok_mc_tex_v1', MC_TEX = {}, MC_TEX_PATHS = { diamond: 'item/diamond', emerald: 'item/emerald', gold: 'item/gold_ingot', sword: 'item/diamond_sword', pickaxe: 'item/diamond_pickaxe', bow: 'item/bow', apple: 'item/apple', heart: 'gui/sprites/hud/heart/full', potion: 'item/potion', gift: 'item/totem_of_undying' };
+const MC_EXTRA = [['netherite_sword', 'Miecz z netherytu'], ['iron_sword', 'Żelazny miecz'], ['golden_apple', 'Złote jabłko'], ['enchanted_golden_apple', 'Zaklęte złote jabłko'], ['totem_of_undying', 'Totem nieśmiertelności'], ['ender_pearl', 'Perła Kresu'], ['ender_eye', 'Oko Kresu'], ['nether_star', 'Gwiazda Netheru'], ['experience_bottle', 'Butelka doświadczenia'], ['iron_ingot', 'Sztabka żelaza'], ['netherite_ingot', 'Sztabka netherytu'], ['diamond_axe', 'Diamentowa siekiera'], ['netherite_pickaxe', 'Kilof z netherytu'], ['blaze_rod', 'Płomienna różdżka'], ['cooked_beef', 'Pieczona wołowina'], ['fire_charge', 'Ładunek ognia']];
+function mcTexLoaded() { return Object.keys(MC_TEX).length > 0; }
+function mcTexApply(map) { Object.entries(map).forEach(([k, url]) => { const im = new Image(); im.onload = () => { MC_TEX[k] = im; Object.keys(MCS).forEach(x => { if (x.startsWith(k)) delete MCS[x]; }); dirty = true; }; im.src = url; });
+  MC_EXTRA.forEach(([k, l]) => { if (map[k] && !MC_ITEMS.some(x => x[0] === k)) { MC_ITEMS.push([k, l]); MC_DEF[k] = MC_DEF[k] || ''; } }); }
+try { const saved = JSON.parse(localStorage.getItem(MC_TEX_KEY) || 'null'); if (saved) mcTexApply(saved); } catch (e) { }
+function loadJsZip() { return window.JSZip ? Promise.resolve(window.JSZip) : new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'; sc.onload = () => res(window.JSZip); sc.onerror = () => rej(new Error('jszip')); document.head.append(sc); }); }
+async function mcTexImport(file) {
+  toast('Czytam plik gry…', 8000); const JSZip = await loadJsZip(), zip = await JSZip.loadAsync(file), map = {};
+  const find = rel => zip.file(`assets/minecraft/textures/${rel}.png`) || zip.file(`assets/minecraft/textures/${rel.replace('item/', 'items/')}.png`);
+  const want = Object.assign({}, MC_TEX_PATHS); MC_EXTRA.forEach(([k]) => { want[k] = 'item/' + k; });
+  for (const [k, rel] of Object.entries(want)) { const f = find(rel); if (f) map[k] = 'data:image/png;base64,' + await f.async('base64'); }
+  const ov = find('item/potion_overlay'); if (ov) map.potion_overlay = 'data:image/png;base64,' + await ov.async('base64');
+  if (!Object.keys(map).length) { toast('W tym pliku nie ma tekstur przedmiotów. Wybierz plik wersji gry (.jar) albo paczkę zasobów (.zip).', 7000); return; }
+  try { localStorage.setItem(MC_TEX_KEY, JSON.stringify(map)); } catch (e) { }
+  mcTexApply(map); setTimeout(() => { renderEditor(); makePosters(); }, 300); toast(`Wczytano ${Object.keys(map).length} tekstur z twojej gry`);
+}
+function mcTexClear() { Object.keys(MC_TEX).forEach(k => delete MC_TEX[k]); Object.keys(MCS).forEach(k => delete MCS[k]); try { localStorage.removeItem(MC_TEX_KEY); } catch (e) { } for (let i = MC_ITEMS.length - 1; i >= 0; i--) if (MC_EXTRA.some(x => x[0] === MC_ITEMS[i][0])) MC_ITEMS.splice(i, 1); renderEditor(); makePosters(); dirty = true; }
+function mcTexSprite(kind, col) {
+  const im = MC_TEX[kind]; if (!im) return null; const n = im.width > 32 ? 32 : 16, c = document.createElement('canvas'); c.width = c.height = n; const cg = c.getContext('2d'); cg.imageSmoothingEnabled = false;
+  const def = MC_DEF[kind], hue = col && def && col.toLowerCase() !== def.toLowerCase() ? (hexToHsl(col)[0] - hexToHsl(def)[0]) * 360 : 0;
+  if (kind === 'potion' && MC_TEX.potion_overlay) { const o = document.createElement('canvas'); o.width = o.height = n; const og = o.getContext('2d'); og.imageSmoothingEnabled = false; og.drawImage(MC_TEX.potion_overlay, 0, 0, n, n); og.globalCompositeOperation = 'source-in'; og.fillStyle = col || '#f53ea2'; og.fillRect(0, 0, n, n); og.globalCompositeOperation = 'multiply'; og.drawImage(MC_TEX.potion_overlay, 0, 0, n, n); og.globalCompositeOperation = 'destination-in'; og.drawImage(MC_TEX.potion_overlay, 0, 0, n, n); cg.drawImage(o, 0, 0); cg.drawImage(im, 0, 0, n, n); return c; }
+  if (hue) cg.filter = `hue-rotate(${hue.toFixed(0)}deg)`; cg.drawImage(im, 0, 0, im.width, Math.min(im.height, im.width), 0, 0, n, n); return c;
+}
 function mcSprite(kind, col) {
-  const key = kind + col; if (MCS[key]) return MCS[key];
+  if (kind === '__custom' && VALS.icon) return mcCustomSprite();
+  if (MC_TEX[kind]) { const k2 = kind + (col || '') + '#tex'; if (!MCS[k2]) MCS[k2] = mcTexSprite(kind, col); if (MCS[k2]) return MCS[k2]; }
+  col = col || MC_DEF[kind] || '#cccccc'; const key = kind + col; if (MCS[key]) return MCS[key];
   const N = 16, m = Array.from({ length: N }, () => Array(N).fill(null)), set = (x, y, c) => { if (x >= 0 && y >= 0 && x < N && y < N) m[y][x] = c; };
-  const line = (x0, y0, x1, y1, c, w = 1) => { const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0), 1); for (let i = 0; i <= n; i++) { const x = Math.round(x0 + (x1 - x0) * i / n), y = Math.round(y0 + (y1 - y0) * i / n); for (let a = 0; a < w; a++) for (let b = 0; b < w; b++) set(x + a, y + b, c); } };
-  const hi = mix(col, '#ffffff', .5), mid = col, lo = mix(col, '#000000', .3), wood = '#7a5230', woodLo = '#553820';
-  if (kind === 'gem') { for (let y = 1; y < 15; y++) for (let x = 1; x < 15; x++) { const dx = Math.abs(x - 7.5), dy = Math.abs(y - 7.5); if (dx + dy <= 8.6 && dx <= 5.6 && dy <= 6.6) set(x, y, x + y < 12 ? hi : x + y > 18 ? lo : mid); } line(6, 4, 9, 4, mix(col, '#ffffff', .75)); line(5, 6, 5, 8, mix(col, '#ffffff', .65)); }
-  else if (kind === 'sword') { line(5, 9, 12, 2, mid, 2); line(6, 9, 13, 2, lo); line(5, 8, 11, 2, hi); line(2, 8, 7, 13, '#3a3a3a'); line(3, 8, 7, 12, '#5a5a5a'); line(2, 12, 4, 10, wood, 2); set(1, 14, '#3a3a3a'); set(2, 13, woodLo); }
-  else if (kind === 'bow') { for (let a = 0; a <= 40; a++) { const an = a / 40 * Math.PI / 2, x = Math.round(13 - 10.5 * Math.cos(an)), y = Math.round(13 - 10.5 * Math.sin(an)); set(x, y, mid); set(x + 1, y, mid); set(x, y + 1, lo); } line(3, 13, 13, 3, '#e8e8e8'); set(2, 14, woodLo); set(14, 2, woodLo); line(7, 8, 9, 6, hi); }
-  else if (kind === 'apple') { for (let y = 3; y < 15; y++) for (let x = 2; x < 14; x++) { const d = Math.hypot(x - 7.5, (y - 9) * 1.05); if (d <= 5.6) set(x, y, d < 2.5 && x < 8 && y < 9 ? hi : x + y > 19 ? lo : mid); } set(7, 2, woodLo); set(7, 3, woodLo); set(8, 1, '#3f9a2f'); set(9, 1, '#3f9a2f'); set(9, 2, '#2f7a22'); set(5, 6, mix(col, '#ffffff', .8)); }
-  else if (kind === 'pick') { line(3, 13, 11, 5, wood, 1); line(4, 13, 12, 5, woodLo, 1); line(5, 2, 9, 2, mid); line(9, 2, 13, 6, mid); line(13, 6, 13, 10, mid); line(5, 3, 9, 3, hi); line(10, 3, 12, 5, hi); line(12, 7, 12, 10, lo); set(4, 2, lo); set(13, 11, lo); }
-  else if (kind === 'gift') { for (let y = 6; y < 15; y++) for (let x = 2; x < 14; x++) set(x, y, y > 12 ? lo : mid); for (let x = 1; x < 15; x++) { set(x, 5, hi); set(x, 6, mid); } for (let y = 5; y < 15; y++) { set(7, y, '#e3262f'); set(8, y, '#b81c24'); } for (let x = 2; x < 14; x++) set(x, 10, '#e3262f'); [[5, 2], [6, 3], [5, 4], [10, 2], [9, 3], [10, 4], [7, 4], [8, 4], [6, 4], [9, 4]].forEach(([x, y]) => set(x, y, '#ffd23f')); }
-  else if (kind === 'heart') { ['..XX..XX..', '.XXXXXXXX.', 'XXXXXXXXXX', 'XXXXXXXXXX', '.XXXXXXXX.', '..XXXXXX..', '...XXXX...', '....XX....'].forEach((r, j) => [...r].forEach((c, i) => { if (c === 'X') set(3 + i, 4 + j, j < 2 && i < 4 ? hi : j > 4 ? lo : mid); })); }
-  else if (kind === 'skull') { for (let y = 3; y < 12; y++) for (let x = 3; x < 13; x++) set(x, y, '#e8e4da'); for (let x = 5; x < 11; x++) for (let y = 12; y < 14; y++) set(x, y, '#d4cfc2'); [[5, 7], [6, 7], [5, 8], [6, 8], [9, 7], [10, 7], [9, 8], [10, 8]].forEach(([x, y]) => set(x, y, '#2a2a2a')); set(7, 10, '#2a2a2a'); set(8, 10, '#2a2a2a'); }
+  const T1 = mcTone(col, .24, -.1), T2 = mcTone(col, .08), T3 = mcTone(col, -.08), T4 = mcTone(col, -.2, .05), TW = mcTone(col, .4, -.3);
+  const WA = '#b08a4f', WB = '#8a6a35', WC = '#5e4422', GA = '#6a6a6a', GB = '#3e3e3e', cx = 7.5;
+  const MAT = new Set([T1, T2, T3, T4, TW]);
+  if (kind === 'diamond') {
+    for (let y = 3; y <= 12; y++) for (let x = 0; x < N; x++) {
+      const dx = x - cx, hw = y <= 6 ? 3.6 + (y - 3) * 1.0 : 6.6 * (1 - (y - 6.2) / 6.6); if (Math.abs(dx) > hw) continue;
+      let c = y <= 6 ? (Math.abs(dx) < 2 ? T1 : dx < 0 ? T2 : T3) : (Math.abs(dx) < 1 ? T3 : dx < 0 ? T2 : T4);
+      if (y === 6 && Math.abs(dx) < hw - .5) c = y === 6 ? T3 : c; set(x, y, c);
+    }
+    set(6, 4, TW); set(5, 5, TW); set(7, 4, TW);
+  } else if (kind === 'emerald') {
+    for (let y = 1; y <= 14; y++) for (let x = 0; x < N; x++) { const dx = x - cx, dy = y - 7.5; if (Math.abs(dx) > 4.6 || Math.abs(dx) * 1.25 + Math.abs(dy) > 8.2) continue; const inner = Math.abs(dx) * 1.25 + Math.abs(dy) < 5.2; set(x, y, inner ? (dx + dy < -1 ? T1 : dx + dy < 2 ? T2 : T3) : (dx + dy < 0 ? T2 : T4)); }
+    set(6, 4, TW); set(5, 6, TW); set(6, 5, TW);
+  } else if (kind === 'gold') {
+    ['................', '................', '................', '................', '................', '.....ooooooooo..', '....o1111111o4o.', '...o1111111o44o.', '..ooooooooo444o.', '..o2222222o444o.', '..o2222222o44o..', '..o3333333o4o...', '..ooooooooooo...'].forEach((r, y) => [...r].forEach((ch, x) => { const c = { 1: T1, 2: T2, 3: T3, 4: T4, o: T4 }[ch]; if (c) set(x, y, ch === 'o' ? mcTone(col, -.3) : c); }));
+    set(5, 6, TW); set(6, 6, TW); set(4, 9, T1);
+  } else if (kind === 'sword') {
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { const d = x + y; if (y >= 1 && y <= 10 && x >= 4 && x <= 14) { if (d === 13) set(x, y, T1); else if (d === 14) set(x, y, T1); else if (d === 15) set(x, y, T2); else if (d === 16) set(x, y, T3); } }
+    set(14, 1, T2); set(13, 0, null); set(14, 0, null); set(12, 1, T1); set(13, 1, T1);
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (m[y][x] && (x + y === 13 || x + y === 16) && y === 10) m[y][x] = null;
+    [[1, 9], [2, 10], [3, 11], [5, 13], [6, 14], [2, 9], [6, 13]].forEach(([x, y]) => set(x, y, GA)); [[4, 12]].forEach(([x, y]) => set(x, y, GB)); set(1, 10, GB); set(5, 14, GB);
+    [[3, 12, WB], [2, 13, WB], [3, 13, WC], [2, 14, WC], [1, 14, GB], [1, 15, GB], [0, 15, GB]].forEach(([x, y, c]) => set(x, y, c));
+  } else if (kind === 'pickaxe') {
+    for (let x = 4; x <= 11; x++) { set(x, 2, T1); set(x, 3, x < 11 ? T2 : T2); } set(4, 3, T3); set(11, 3, T1); set(12, 3, T2);
+    for (let y = 4; y <= 11; y++) { set(12, y, T2); set(13, y, T3); } set(13, 11, null); set(12, 11, T4); set(13, 4, T2);
+    for (let x = 2; x <= 10; x++) { set(x, 15 - x, WB); if (x >= 3) set(x, 16 - x, WC); } set(2, 13, WA);
+  } else if (kind === 'bow') {
+    for (let a = 0; a <= 80; a++) { const an = a / 80 * Math.PI / 2, x = Math.round(13.5 - 10.5 * Math.cos(an)), y = Math.round(13.5 - 10.5 * Math.sin(an)); set(x, y, a % 16 < 8 ? T1 : T2); set(x + 1, y, T2); set(x, y + 1, T3); set(x + 1, y + 1, T4); }
+    for (let i = 0; i <= 9; i++) set(3 + i, 13 - i, '#dcdcdc'); set(2, 14, GB); set(14, 2, GB); set(7, 7, GA); set(8, 8, GA);
+  } else if (kind === 'apple') {
+    for (let y = 4; y <= 14; y++) for (let x = 2; x <= 13; x++) { const d = Math.hypot(x - cx, (y - 9.2) * 1.05); if (d > 5.7) continue; if (y === 4 && Math.abs(x - cx) < 1.2) continue; set(x, y, d < 2.6 && x < 7 && y < 9 ? T1 : x + y > 19 ? T4 : x + y > 15 ? T3 : T2); }
+    set(7, 2, WC); set(7, 3, WC); set(8, 1, '#4caf3a'); set(9, 1, '#4caf3a'); set(9, 2, '#2f7a22'); set(10, 1, '#2f7a22'); set(5, 6, TW); set(4, 7, TW);
+  } else if (kind === 'heart') {
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { const X = (x - 7.5) / 6.6, Y = -(y - 7.2) / 6.6 + .1, f = Math.pow(X * X + Y * Y - 1, 3) - X * X * Y * Y * Y; if (f > 0) continue; set(x, y, x + y < 9 ? T1 : x + y > 17 ? T4 : x + y > 13 ? T3 : T2); }
+    set(4, 4, TW); set(5, 4, TW); set(3, 5, TW);
+  } else if (kind === 'potion') {
+    for (let y = 7; y <= 14; y++) for (let x = 3; x <= 12; x++) { const d = Math.hypot(x - cx, (y - 10.6) * 1.1); if (d <= 4.6) set(x, y, d < 2 && x < 7 ? T1 : x + y > 19 ? T4 : T2); }
+    for (let y = 3; y <= 6; y++) { set(6, y, '#cfe6ff'); set(7, y, '#e9f4ff'); set(8, y, '#cfe6ff'); set(9, y, '#a8c4e6'); } set(6, 2, WB); set(7, 2, WA); set(8, 2, WB); set(9, 2, WC); set(5, 9, TW);
+  } else if (kind === 'gift') {
+    for (let y = 6; y <= 14; y++) for (let x = 2; x <= 13; x++) set(x, y, y >= 13 ? T4 : x > 10 ? T3 : T2);
+    for (let x = 1; x <= 14; x++) { set(x, 5, T1); set(x, 6, x > 11 ? T2 : T1); }
+    for (let y = 5; y <= 14; y++) { set(7, y, '#f2c94c'); set(8, y, '#d4a72c'); } for (let x = 2; x <= 13; x++) set(x, 9, x === 7 ? '#f2c94c' : '#e5b83a');
+    [[5, 2], [6, 3], [5, 4], [6, 4], [10, 2], [9, 3], [10, 4], [9, 4]].forEach(([x, y]) => set(x, y, '#f2c94c'));
+  }
   const c = document.createElement('canvas'); c.width = c.height = N; const cg = c.getContext('2d');
   for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
-    if (m[y][x]) { cg.fillStyle = m[y][x]; cg.fillRect(x, y, 1, 1); }
-    else if ([[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => m[y + b]?.[x + a])) { cg.fillStyle = '#141414'; cg.fillRect(x, y, 1, 1); }
+    if (m[y][x]) { cg.fillStyle = m[y][x]; cg.fillRect(x, y, 1, 1); continue; }
+    const nb = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([a, b]) => m[y + b]?.[x + a]).filter(Boolean); if (!nb.length) continue;
+    cg.fillStyle = nb.some(n => MAT.has(n)) ? mcTone(col, -.36, .05) : '#24180c'; cg.fillRect(x, y, 1, 1);
   }
   MCS[key] = c; return c;
 }
-const MC_ITEMS = [['gem', 'Klejnot'], ['sword', 'Miecz'], ['bow', 'Łuk'], ['pick', 'Kilof'], ['apple', 'Jabłko'], ['gift', 'Prezent'], ['heart', 'Serce'], ['skull', 'Czaszka']];
 let mcGl = null;
 function mcItem(g, kind, col, cx, cy, size, rot = 0, glint = -1) {
-  if (size <= 0) return; const c = mcSprite(kind, col); g.save(); g.translate(cx, cy); g.rotate(rot); g.imageSmoothingEnabled = false; g.drawImage(c, -size / 2, -size / 2, size, size);
-  if (glint >= 0 && glint <= 1) { if (!mcGl) { mcGl = document.createElement('canvas'); mcGl.width = mcGl.height = 16; } const gg = mcGl.getContext('2d'); gg.clearRect(0, 0, 16, 16); gg.globalCompositeOperation = 'source-over'; gg.drawImage(c, 0, 0); gg.globalCompositeOperation = 'source-in'; gg.fillStyle = 'rgba(255,255,255,.75)'; const p = glint * 40 - 8; gg.beginPath(); gg.moveTo(p, 0); gg.lineTo(p + 5, 0); gg.lineTo(p - 11, 16); gg.lineTo(p - 16, 16); gg.closePath(); gg.fill(); gg.globalCompositeOperation = 'source-over'; g.drawImage(mcGl, -size / 2, -size / 2, size, size); }
+  if (size <= 0) return; const c = mcSprite(kind, col); g.save(); g.translate(cx, cy); g.rotate(rot); g.imageSmoothingEnabled = !!c._smooth; g.drawImage(c, -size / 2, -size / 2, size, size);
+  if (glint >= 0 && glint <= 1) { if (!mcGl) mcGl = document.createElement('canvas'); const n = c.width; if (mcGl.width !== n) { mcGl.width = mcGl.height = n; } const gg = mcGl.getContext('2d'), q = n / 16; gg.clearRect(0, 0, n, n); gg.globalCompositeOperation = 'source-over'; gg.drawImage(c, 0, 0); gg.globalCompositeOperation = 'source-in'; gg.fillStyle = 'rgba(255,255,255,.75)'; const p = (glint * 40 - 8) * q; gg.beginPath(); gg.moveTo(p, 0); gg.lineTo(p + 5 * q, 0); gg.lineTo(p - 11 * q, n); gg.lineTo(p - 16 * q, n); gg.closePath(); gg.fill(); gg.globalCompositeOperation = 'source-over'; g.drawImage(mcGl, -size / 2, -size / 2, size, size); }
   g.restore();
 }
 function mcText(g, s, x, y, size, color, o = {}) {
-  const sh = Math.max(2, Math.round(size * .1)), base = { size, font: o.font || 'Pixelify Sans', weight: o.weight || 600, align: o.align, maxW: o.maxW, alpha: o.alpha, scale: o.scale, rot: o.rot, ls: o.ls };
+  const sh = Math.max(2, Math.round(size * .1)), base = { size, font: o.font || 'Tiny5', weight: 400, align: o.align, maxW: o.maxW, alpha: o.alpha, scale: o.scale, rot: o.rot, ls: o.ls };
   T(g, s, x + sh, y + sh, Object.assign({}, base, { color: o.shadow || mix(color, '#000000', .74) }));
   return T(g, s, x, y, Object.assign({}, base, { color }));
 }
-const mcSel = ['item', 'select', 'Przedmiot', 'gem', MC_ITEMS];
+const mcSel = ['item', 'item', 'Przedmiot', 'diamond', MC_ITEMS];
 const mcBob = (t, u, a = 10) => Math.sin(t * 2.2) * a * u;
 const MC_TPL = [
   {
     id: 'mcPop', cat: 'Mc', name: 'Prosty pop-up przedmiotu', d: 'Pikselowy przedmiot wyskakuje na ekran, unosi się i co chwilę błyska.', dur: 3.5, keyHint: true,
-    fields: [mcSel, ['tint', 'color', 'Kolor przedmiotu', '#2fd15a']], sfx: [[.05, 'pop']],
+    fields: [mcSel, ['tint', 'color', 'Kolor przedmiotu', '']], sfx: [[.05, 'pop']],
     render(g, W, H, t, v, u) {
       const out = E.in(seg(t, 3.1, 3.5)), k = E.back(seg(t, .05, .45)) * (1 - out), s = Math.min(W, H) * .36;
       g.fillStyle = `rgba(0,0,0,${.3 * k})`; g.beginPath(); g.ellipse(W / 2, H / 2 + s * .6, s * .32 * k, s * .06 * k, 0, 0, Math.PI * 2); g.fill();
-      mcItem(g, v.item, v.tint, W / 2, H / 2 + mcBob(t, u), s * k, Math.sin(t * 1.6) * .08 - .3 * (1 - k), ((t - .55) % 1.8) / .45);
+      mcItem(g, mcKind(v), v.tint, W / 2, H / 2 + mcBob(t, u), s * k, Math.sin(t * 1.6) * .08 - .3 * (1 - k), ((t - .55) % 1.8) / .45);
     }
   },
   {
     id: 'mcItemName', cat: 'Mc', name: 'Przedmiot z nazwą', d: 'Przedmiot unosi się w powietrzu, a nad nim pojawia się pikselowa nazwa.', dur: 4, keyHint: true,
-    fields: [['name', 'text', 'Nazwa', 'Nazwa przedmiotu'], mcSel, ['tint', 'color', 'Kolor przedmiotu', '#2fd15a'], ['color', 'color', 'Kolor nazwy', '#8dff52']], sfx: [[.1, 'pop'], [.4, 'tick']],
+    fields: [['name', 'text', 'Nazwa', 'Nazwa przedmiotu'], ['item', 'item', 'Przedmiot', 'emerald', MC_ITEMS], ['tint', 'color', 'Kolor przedmiotu', ''], ['color', 'color', 'Kolor nazwy', '#8dff52']], sfx: [[.1, 'pop'], [.4, 'tick']],
     render(g, W, H, t, v, u) {
       const out = E.in(seg(t, 3.6, 4)), k = E.back(seg(t, .1, .5)) * (1 - out), s = Math.min(W, H) * .3, kt = E.back(seg(t, .35, .7)) * (1 - out);
-      mcItem(g, v.item, v.tint, W / 2, H * .58 + mcBob(t, u, 12), s * k, -.35 + Math.sin(t * 1.4) * .1, ((t - .8) % 2) / .45);
+      mcItem(g, mcKind(v), v.tint, W / 2, H * .58 + mcBob(t, u, 12), s * k, -.35 + Math.sin(t * 1.4) * .1, ((t - .8) % 2) / .45);
       mcText(g, v.name, W / 2, H * .3 + mcBob(t + .4, u, 6), 70 * u, v.color, { scale: kt, alpha: kt, maxW: W * .86, weight: 700 });
     }
   },
   {
     id: 'mcStats', cat: 'Mc', name: 'Karta przedmiotu', d: 'Fioletowa karta: rzadkość, wielka nazwa i trzy linijki opisu, a obok obracający się przedmiot.', dur: 5, keyHint: true,
-    fields: [['rarity', 'text', 'Rzadkość', 'LEGENDARNY'], ['name', 'text', 'Nazwa', 'NAZWA PRZEDMIOTU'], ['l1', 'text', 'Opis 1', 'Ostrość V'], ['l2', 'text', 'Opis 2', 'Ogień II'], ['l3', 'text', 'Opis 3', 'Niezniszczalność III'], mcSel, ['tint', 'color', 'Kolor przedmiotu', '#c04bff'], ['color', 'color', 'Kolor karty', '#5b16a8']],
+    fields: [['rarity', 'text', 'Rzadkość', 'LEGENDARNY'], ['name', 'text', 'Nazwa', 'NAZWA PRZEDMIOTU'], ['l1', 'text', 'Opis 1', 'Ostrość V'], ['l2', 'text', 'Opis 2', 'Ogień II'], ['l3', 'text', 'Opis 3', 'Niezniszczalność III'], ['item', 'item', 'Przedmiot', 'sword', MC_ITEMS], ['tint', 'color', 'Kolor przedmiotu', ''], ['color', 'color', 'Kolor karty', '#5b16a8']],
     sfx: [[.1, 'whoosh'], [.5, 'pop'], [.9, 'tick'], [1.1, 'tick'], [1.3, 'tick']],
     render(g, W, H, t, v, u) {
       const out = E.in(seg(t, 4.5, 5)), k = E.out(seg(t, .05, .45)) * (1 - out); if (k <= 0) return;
@@ -3031,36 +3138,36 @@ const MC_TPL = [
       rr(g, x, y, w, hh, 18 * u); const bg = g.createRadialGradient(x + w * .7, y + hh * .5, 0, x + w * .5, y + hh * .5, w * .7); bg.addColorStop(0, mix(v.color, '#ff4fd8', .25)); bg.addColorStop(1, mix(v.color, '#000000', .55)); g.fillStyle = bg; g.fill();
       g.globalAlpha = .08; for (let i = 0; i < 26; i++) { g.fillStyle = '#fff'; g.fillRect(x + rnd(i, 1) * w, y + rnd(i, 2) * hh, 6 * u, 6 * u); } g.globalAlpha = 1;
       const lx = x + 70 * u, tagK = E.back(seg(t, .4, .7));
-      g.save(); g.translate(lx, y + 90 * u); g.scale(tagK, tagK); g.font = `700 ${26 * u}px "Pixelify Sans"`; const tw = g.measureText(v.rarity).width + 24 * u; g.fillStyle = '#ffb21f'; g.fillRect(0, -20 * u, tw, 40 * u); T(g, v.rarity, 12 * u, 2 * u, { size: 26 * u, font: 'Pixelify Sans', weight: 700, color: '#3a1a00', align: 'left' }); g.restore();
-      const nl = proWrap(g, v.name, `700 ${110 * u}px "Pixelify Sans"`, w * .5, 2); nl.forEach((ln, i) => { const kk = E.out(seg(t, .5 + i * .1, .85 + i * .1)); mcText(g, ln, lx - (1 - kk) * 80 * u, y + 190 * u + i * 104 * u, 110 * u, '#ff4fe0', { align: 'left', alpha: kk, maxW: w * .52, weight: 700, shadow: '#3b0a55' }); });
+      g.save(); g.translate(lx, y + 90 * u); g.scale(tagK, tagK); g.font = `400 ${26 * u}px "Tiny5"`; const tw = g.measureText(v.rarity).width + 24 * u; g.fillStyle = '#ffb21f'; g.fillRect(0, -20 * u, tw, 40 * u); T(g, v.rarity, 12 * u, 2 * u, { size: 26 * u, font: 'Tiny5', weight: 400, color: '#3a1a00', align: 'left' }); g.restore();
+      const nl = proWrap(g, v.name, `400 ${110 * u}px "Tiny5"`, w * .5, 2); nl.forEach((ln, i) => { const kk = E.out(seg(t, .5 + i * .1, .85 + i * .1)); mcText(g, ln, lx - (1 - kk) * 80 * u, y + 190 * u + i * 104 * u, 110 * u, '#ff4fe0', { align: 'left', alpha: kk, maxW: w * .52, weight: 700, shadow: '#3b0a55' }); });
       [v.l1, v.l2, v.l3].forEach((s, i) => { if (!s) return; const kk = E.out(seg(t, .9 + i * .2, 1.2 + i * .2)), yy = y + 190 * u + nl.length * 104 * u + 20 * u + i * 58 * u; g.save(); g.globalAlpha *= kk; g.fillStyle = '#ffcf3a'; g.save(); g.translate(lx + 12 * u, yy); g.rotate(Math.PI / 4); g.fillRect(-8 * u, -8 * u, 16 * u, 16 * u); g.restore(); mcText(g, s, lx + 40 * u, yy, 40 * u, '#ffffff', { align: 'left', maxW: w * .45 }); g.restore(); });
-      const is = Math.min(hh * .78, w * .34); mcItem(g, v.item, v.tint, x + w * .76, y + hh / 2 + mcBob(t, u, 14), is * E.back(seg(t, .3, .8)), -.5 + Math.sin(t * 1.3) * .12, ((t - 1.2) % 2.2) / .5);
+      const is = Math.min(hh * .78, w * .34); mcItem(g, mcKind(v), v.tint, x + w * .76, y + hh / 2 + mcBob(t, u, 14), is * E.back(seg(t, .3, .8)), -.5 + Math.sin(t * 1.3) * .12, ((t - 1.2) % 2.2) / .5);
       g.restore();
     }
   },
   {
     id: 'mcObjective', cat: 'Mc', name: 'Nowy cel', d: 'Powiadomienie jak w grze wjeżdża z prawej: ikonka w zielonej ramce, NOWY CEL i opis.', dur: 4.5, keyHint: true,
-    fields: [['title', 'text', 'Napis', 'NOWY CEL'], ['desc', 'text', 'Opis', 'Zdobądź 10 diamentów'], ['item', 'select', 'Ikona', 'heart', MC_ITEMS], ['tint', 'color', 'Kolor ikony', '#e3262f'], ['color', 'color', 'Kolor napisu', '#64ff4f']],
+    fields: [['title', 'text', 'Napis', 'NOWY CEL'], ['desc', 'text', 'Opis', 'Zdobądź 10 diamentów'], ['item', 'item', 'Ikona', 'heart', MC_ITEMS], ['tint', 'color', 'Kolor ikony', ''], ['color', 'color', 'Kolor napisu', '#64ff4f']],
     sfx: [[.15, 'whoosh'], [.45, 'ding']],
     render(g, W, H, t, v, u) {
       const w = Math.min(W * .62, 760 * u), hh = 150 * u, m = 50 * u, k = E.out(seg(t, .1, .5)), out = E.in(seg(t, 3.9, 4.4)), x = W - m - w + (1 - k) * (w + m * 2), y = m - out * (hh + m * 2);
       g.save(); g.shadowColor = 'rgba(0,0,0,.5)'; g.shadowBlur = 24 * u; g.fillStyle = '#212121'; g.fillRect(x, y, w, hh); g.restore(); g.strokeStyle = '#6b6b6b'; g.lineWidth = 5 * u; g.strokeRect(x + 2.5 * u, y + 2.5 * u, w - 5 * u, hh - 5 * u);
       const isz = hh - 40 * u; g.fillStyle = '#0f0f0f'; g.fillRect(x + 20 * u, y + 20 * u, isz, isz); g.strokeStyle = v.color; g.lineWidth = 6 * u; g.strokeRect(x + 23 * u, y + 23 * u, isz - 6 * u, isz - 6 * u);
-      mcItem(g, v.item, v.tint, x + 20 * u + isz / 2, y + 20 * u + isz / 2, isz * .78 * E.back(seg(t, .4, .7)));
+      mcItem(g, mcKind(v), v.tint, x + 20 * u + isz / 2, y + 20 * u + isz / 2, isz * .78 * E.back(seg(t, .4, .7)));
       mcText(g, v.title, x + isz + 46 * u, y + 52 * u, 44 * u, v.color, { align: 'left', weight: 700, maxW: w - isz - 70 * u });
       mcText(g, v.desc, x + isz + 46 * u, y + 104 * u, 36 * u, '#ffffff', { align: 'left', maxW: w - isz - 70 * u, alpha: seg(t, .5, .8) });
     }
   },
   {
     id: 'mcDone', cat: 'Mc', name: 'Cel ukończony', d: 'Mała karta z przedmiotem i wielkim UKOŃCZONY, a w rogu wskakuje zielony znaczek.', dur: 4, keyHint: true,
-    fields: [['small', 'text', 'Mały napis', 'CEL'], ['title', 'text', 'Napis', 'UKOŃCZONY'], ['desc', 'text', 'Opis', 'Pokonaj smoka'], mcSel, ['tint', 'color', 'Kolor przedmiotu', '#2fd15a'], ['color', 'color', 'Kolor', '#ff4fe0']],
+    fields: [['small', 'text', 'Mały napis', 'CEL'], ['title', 'text', 'Napis', 'UKOŃCZONY'], ['desc', 'text', 'Opis', 'Pokonaj smoka'], ['item', 'item', 'Przedmiot', 'emerald', MC_ITEMS], ['tint', 'color', 'Kolor przedmiotu', ''], ['color', 'color', 'Kolor', '#ff4fe0']],
     sfx: [[.1, 'pop'], [.7, 'ding']],
     render(g, W, H, t, v, u) {
       const out = E.in(seg(t, 3.5, 4)), k = E.back(seg(t, .05, .45)) * (1 - out); if (k <= 0) return;
       const w = Math.min(W * .7, 720 * u), hh = 190 * u, x = W / 2 - w / 2, y = H / 2 - hh / 2;
       g.save(); g.translate(W / 2, H / 2); g.scale(k, k); g.translate(-W / 2, -H / 2);
       g.save(); g.shadowColor = 'rgba(0,0,0,.55)'; g.shadowBlur = 30 * u; g.fillStyle = '#16161a'; g.fillRect(x, y, w, hh); g.restore(); g.fillStyle = v.color; g.fillRect(x, y, 10 * u, hh);
-      mcItem(g, v.item, v.tint, x + 110 * u, y + hh / 2 + mcBob(t, u, 5), 130 * u, -.2, ((t - .6) % 2) / .45);
+      mcItem(g, mcKind(v), v.tint, x + 110 * u, y + hh / 2 + mcBob(t, u, 5), 130 * u, -.2, ((t - .6) % 2) / .45);
       mcText(g, v.small, x + 200 * u, y + 52 * u, 30 * u, '#bdbdbd', { align: 'left' });
       mcText(g, v.title, x + 200 * u, y + 102 * u, 64 * u, v.color, { align: 'left', weight: 700, maxW: w - 260 * u });
       mcText(g, v.desc, x + 200 * u, y + 152 * u, 32 * u, '#ffffff', { align: 'left', maxW: w - 260 * u });
@@ -3092,40 +3199,40 @@ const MC_TPL = [
   },
   {
     id: 'mcCraft', cat: 'Mc', name: 'Crafting z wynikiem', d: 'Okno craftingu jak w grze: siatka 3×3 zapełnia się przedmiotami, a po strzałce wskakuje wynik.', dur: 5, keyHint: true,
-    fields: [['title', 'text', 'Tytuł okna', 'Crafting'], ['item', 'select', 'Wynik', 'sword', MC_ITEMS], ['tint', 'color', 'Kolor wyniku', '#43e0ff']],
+    fields: [['title', 'text', 'Tytuł okna', 'Crafting'], ['item', 'item', 'Wynik', 'sword', MC_ITEMS], ['tint', 'color', 'Kolor wyniku', '']],
     sfx: [[.1, 'pop'], [.5, 'tick'], [.65, 'tick'], [.8, 'tick'], [.95, 'tick'], [1.1, 'tick'], [1.25, 'tick'], [1.4, 'tick'], [1.55, 'tick'], [1.7, 'tick'], [2.1, 'ding']],
     render(g, W, H, t, v, u) {
       const out = E.in(seg(t, 4.5, 5)), k = E.back(seg(t, .05, .4)) * (1 - out); if (k <= 0) return;
       const P = Math.max(2, Math.round(5 * u)), slot = 104 * u, gap = 6 * u, gw = slot * 3 + gap * 2, pw = gw + 330 * u, ph = gw + 130 * u, x = W / 2 - pw / 2, y = H / 2 - ph / 2;
-      const items = [['gem', '#ffd23f'], ['sword', '#ffd23f'], ['gem', '#ffd23f'], ['gem', '#ffd23f'], ['heart', '#43e0ff'], ['gem', '#ffd23f'], ['gem', '#7a1f2a'], ['apple', '#8a5a2b'], ['gem', '#7a1f2a']];
+      const items = [['gold', ''], ['diamond', ''], ['gold', ''], ['gold', ''], ['emerald', ''], ['gold', ''], ['apple', ''], ['potion', ''], ['apple', '']];
       g.save(); g.translate(W / 2, H / 2); g.scale(k, k); g.translate(-W / 2, -H / 2);
       g.save(); g.shadowColor = 'rgba(0,0,0,.55)'; g.shadowBlur = 40 * u; g.shadowOffsetY = 16 * u; pxPanel(g, x, y, pw, ph, P); g.restore();
-      T(g, v.title, x + 34 * u, y + 46 * u, { size: 38 * u, font: 'Pixelify Sans', weight: 600, color: '#404040', align: 'left' });
-      for (let i = 0; i < 9; i++) { const sx = x + 34 * u + (i % 3) * (slot + gap), sy = y + 84 * u + Math.floor(i / 3) * (slot + gap); pxSlot(g, sx, sy, slot, P); const kk = E.back(seg(t, .5 + i * .15, .78 + i * .15)); if (kk > 0) { mcItem(g, items[i][0], items[i][1], sx + slot / 2, sy + slot / 2, slot * .74 * kk); T(g, String(i + 1), sx + slot - 12 * u, sy + slot - 18 * u, { size: 24 * u, font: 'Pixelify Sans', weight: 700, color: '#fff', align: 'right', shadow: { color: '#3a3a3a', x: 2 * u, y: 2 * u } }); } }
+      T(g, v.title, x + 34 * u, y + 46 * u, { size: 38 * u, font: 'Tiny5', weight: 400, color: '#404040', align: 'left' });
+      for (let i = 0; i < 9; i++) { const sx = x + 34 * u + (i % 3) * (slot + gap), sy = y + 84 * u + Math.floor(i / 3) * (slot + gap); pxSlot(g, sx, sy, slot, P); const kk = E.back(seg(t, .5 + i * .15, .78 + i * .15)); if (kk > 0) { mcItem(g, items[i][0], items[i][1], sx + slot / 2, sy + slot / 2, slot * .74 * kk); T(g, String(i + 1), sx + slot - 12 * u, sy + slot - 18 * u, { size: 24 * u, font: 'Tiny5', weight: 400, color: '#fff', align: 'right', shadow: { color: '#3a3a3a', x: 2 * u, y: 2 * u } }); } }
       const ax = x + 34 * u + gw + 40 * u, ay = y + 84 * u + gw / 2; g.fillStyle = '#8b8b8b'; g.fillRect(ax, ay - 12 * u, 90 * u, 24 * u); g.beginPath(); g.moveTo(ax + 84 * u, ay - 36 * u); g.lineTo(ax + 130 * u, ay); g.lineTo(ax + 84 * u, ay + 36 * u); g.closePath(); g.fill();
-      const rs = 150 * u, rx = ax + 160 * u, ry = ay - rs / 2; pxSlot(g, rx, ry, rs, P); const kr = E.back(seg(t, 2.05, 2.4)); if (kr > 0) mcItem(g, v.item, v.tint, rx + rs / 2, ry + rs / 2, rs * .78 * kr, 0, ((t - 2.4) % 1.8) / .45);
+      const rs = 150 * u, rx = ax + 160 * u, ry = ay - rs / 2; pxSlot(g, rx, ry, rs, P); const kr = E.back(seg(t, 2.05, 2.4)); if (kr > 0) mcItem(g, mcKind(v), v.tint, rx + rs / 2, ry + rs / 2, rs * .78 * kr, 0, ((t - 2.4) % 1.8) / .45);
       g.restore();
     }
   },
   {
     id: 'mcShatter', cat: 'Mc', name: 'Przedmiot pęka jak szkło', d: 'Przedmiot unosi się, pęka i rozsypuje się na pojedyncze piksele, które spadają.', dur: 3.5, keyHint: true,
-    fields: [mcSel, ['tint', 'color', 'Kolor przedmiotu', '#ff7ad9']], sfx: [[.05, 'pop'], [1.2, 'glass']],
+    fields: [mcSel, ['tint', 'color', 'Kolor przedmiotu', '']], sfx: [[.05, 'pop'], [1.2, 'glass']],
     render(g, W, H, t, v, u) {
       const s = Math.min(W, H) * .36, cx = W / 2, cy = H / 2, k = E.back(seg(t, .05, .4)), brk = 1.2;
-      if (t < brk) { const sh = t > .9 ? (t - .9) / .3 * 8 * u : 0; mcItem(g, v.item, v.tint, cx + Math.sin(t * 90) * sh, cy + mcBob(t, u), s * k, Math.sin(t * 1.6) * .08); if (t > 1) { g.strokeStyle = 'rgba(255,255,255,.9)'; g.lineWidth = 4 * u; g.beginPath(); g.moveTo(cx - s * .1, cy - s * .3); g.lineTo(cx + s * .05, cy - s * .05); g.lineTo(cx - s * .08, cy + s * .12); g.lineTo(cx + s * .12, cy + s * .3); g.stroke(); } return; }
-      const c = mcSprite(v.item, v.tint), d = mcSprite._data || (mcSprite._data = {}), key = v.item + v.tint; if (!d[key]) d[key] = c.getContext('2d').getImageData(0, 0, 16, 16).data; const px = d[key], cs = s / 16, dt = t - brk;
-      for (let j = 0; j < 16; j++) for (let i = 0; i < 16; i++) { const o = (j * 16 + i) * 4; if (px[o + 3] < 10) continue; const id = j * 16 + i, vx = (i - 7.5) * (40 + rnd(id, 1) * 60) * u, vy = (j - 7.5) * (30 + rnd(id, 2) * 50) * u - 260 * u * rnd(id, 3);
-        const x = cx + (i - 8) * cs + vx * dt, y = cy + (j - 8) * cs + vy * dt + 900 * u * dt * dt; g.save(); g.globalAlpha = 1 - seg(dt, 1.2, 2.2); g.translate(x + cs / 2, y + cs / 2); g.rotate(dt * (rnd(id, 4) - .5) * 10); g.fillStyle = `rgb(${px[o]},${px[o + 1]},${px[o + 2]})`; g.fillRect(-cs / 2, -cs / 2, cs, cs); g.restore(); }
+      if (t < brk) { const sh = t > .9 ? (t - .9) / .3 * 8 * u : 0; mcItem(g, mcKind(v), v.tint, cx + Math.sin(t * 90) * sh, cy + mcBob(t, u), s * k, Math.sin(t * 1.6) * .08); if (t > 1) { g.strokeStyle = 'rgba(255,255,255,.9)'; g.lineWidth = 4 * u; g.beginPath(); g.moveTo(cx - s * .1, cy - s * .3); g.lineTo(cx + s * .05, cy - s * .05); g.lineTo(cx - s * .08, cy + s * .12); g.lineTo(cx + s * .12, cy + s * .3); g.stroke(); } return; }
+      const kd = mcKind(v), c = mcSprite(kd, v.tint), N2 = c.width, px = c._px || (c._px = c.getContext('2d').getImageData(0, 0, N2, N2).data), cs = s / N2, dt = t - brk, hN = N2 / 2;
+      for (let j = 0; j < N2; j++) for (let i = 0; i < N2; i++) { const o = (j * N2 + i) * 4; if (px[o + 3] < 10) continue; const id = j * N2 + i, vx = (i - hN) / N2 * 16 * (40 + rnd(id, 1) * 60) * u, vy = (j - hN) / N2 * 16 * (30 + rnd(id, 2) * 50) * u - 260 * u * rnd(id, 3);
+        const x = cx + (i - hN) * cs + vx * dt, y = cy + (j - hN) * cs + vy * dt + 900 * u * dt * dt; g.save(); g.globalAlpha = 1 - seg(dt, 1.2, 2.2); g.translate(x + cs / 2, y + cs / 2); g.rotate(dt * (rnd(id, 4) - .5) * 10); g.fillStyle = `rgb(${px[o]},${px[o + 1]},${px[o + 2]})`; g.fillRect(-cs / 2, -cs / 2, cs, cs); g.restore(); }
       const fl = 1 - seg(dt, 0, .15); if (fl > 0) { g.fillStyle = `rgba(255,255,255,${fl * .5})`; g.beginPath(); g.arc(cx, cy, s * .6, 0, Math.PI * 2); g.fill(); }
     }
   },
   {
     id: 'mcCount', cat: 'Mc', name: 'Licznik przedmiotów', d: 'Przedmiot z licznikiem w rogu: liczba rośnie do 64, a przedmiot podskakuje przy każdym dodaniu.', dur: 4, keyHint: true,
-    fields: [['max', 'text', 'Do ilu', '64'], ['item', 'select', 'Przedmiot', 'gift', MC_ITEMS], ['tint', 'color', 'Kolor przedmiotu', '#8a3ad6']], sfx: [[.1, 'pop'], [.5, 'tick'], [.8, 'tick'], [1.1, 'tick'], [1.4, 'tick'], [1.8, 'ding']],
+    fields: [['max', 'text', 'Do ilu', '64'], ['item', 'item', 'Przedmiot', 'gift', MC_ITEMS], ['tint', 'color', 'Kolor przedmiotu', '']], sfx: [[.1, 'pop'], [.5, 'tick'], [.8, 'tick'], [1.1, 'tick'], [1.4, 'tick'], [1.8, 'ding']],
     render(g, W, H, t, v, u) {
       const out = E.in(seg(t, 3.6, 4)), mx = Math.max(1, parseInt(v.max) || 64), f = E.out(seg(t, .35, 1.8)), n = Math.max(1, Math.round(mx * f)), step = f * 12, bump = 1 + .12 * Math.max(0, 1 - (step % 1) * 4) * (f < 1 ? 1 : 0);
       const k = E.back(seg(t, .05, .4)) * (1 - out), s = Math.min(W, H) * .3;
-      mcItem(g, v.item, v.tint, W / 2, H / 2 + mcBob(t, u, 6), s * k * bump, 0);
+      mcItem(g, mcKind(v), v.tint, W / 2, H / 2 + mcBob(t, u, 6), s * k * bump, 0);
       if (k > 0) mcText(g, 'x' + n, W / 2 + s * .42, H / 2 + s * .38, 64 * u, '#ffffff', { align: 'left', alpha: k, scale: bump });
     }
   },
@@ -3144,12 +3251,12 @@ const MC_TPL = [
   },
   {
     id: 'mcComment', cat: 'Mc', name: 'Zostaw komentarz', d: 'Komentarz z awatarem pisze się sam, a pod nim duży biały przycisk KOMENTUJ, który kursor klika.', dur: 5, keyHint: true,
-    fields: [['user', 'text', 'Nazwa', 'Użytkownik'], ['text', 'text', 'Komentarz', 'Napisz komentarz poniżej!'], ['btn', 'text', 'Przycisk', 'KOMENTUJ'], ['color', 'color', 'Kolor po kliknięciu', '#2f6bff']],
+    fields: [['avatar', 'image', 'Zdjęcie profilowe', null], ['user', 'text', 'Nazwa', 'Użytkownik'], ['text', 'text', 'Komentarz', 'Napisz komentarz poniżej!'], ['btn', 'text', 'Przycisk', 'KOMENTUJ'], ['color', 'color', 'Kolor po kliknięciu', '#2f6bff']],
     sfx: [[.1, 'pop'], [2.3, 'click'], [2.35, 'pop']],
     render(g, W, H, t, v, u) {
       const out = E.in(seg(t, 4.5, 5)), k = E.back(seg(t, .05, .45)) * (1 - out); if (k <= 0) return; const w = Math.min(W * .78, 860 * u), x = W / 2 - w / 2, y = H / 2 - 110 * u, clicked = t > 2.35, press = t > 2.25 && t < 2.42;
       g.save(); g.translate(W / 2, H / 2); g.scale(k, k); g.translate(-W / 2, -H / 2);
-      g.fillStyle = '#5a8dff'; g.beginPath(); g.arc(x + 46 * u, y + 46 * u, 46 * u, 0, Math.PI * 2); g.fill(); g.fillStyle = '#dfe8ff'; g.beginPath(); g.arc(x + 46 * u, y + 36 * u, 16 * u, 0, Math.PI * 2); g.fill(); g.beginPath(); g.ellipse(x + 46 * u, y + 76 * u, 28 * u, 18 * u, 0, Math.PI, 0); g.fill();
+      g.fillStyle = '#5a8dff'; g.beginPath(); g.arc(x + 46 * u, y + 46 * u, 46 * u, 0, Math.PI * 2); g.fill(); g.fillStyle = '#dfe8ff'; g.beginPath(); g.arc(x + 46 * u, y + 36 * u, 16 * u, 0, Math.PI * 2); g.fill(); g.beginPath(); g.ellipse(x + 46 * u, y + 76 * u, 28 * u, 18 * u, 0, Math.PI, 0); g.fill(); avatarImg(g, v.avatar, x + 46 * u, y + 46 * u, 46 * u);
       T(g, `${v.user} · 14 minut temu`, x + 116 * u, y + 24 * u, { size: 28 * u, weight: 500, color: '#c9c9d1', align: 'left' });
       const n = Math.ceil([...v.text].length * seg(t, .5, 1.6)); T(g, [...v.text].slice(0, n).join(''), x + 116 * u, y + 66 * u, { size: 36 * u, weight: 600, color: '#fff', align: 'left', maxW: w - 130 * u });
       g.fillStyle = 'rgba(255,255,255,.75)'; g.fillRect(x + 116 * u, y + 96 * u, (w - 116 * u) * E.out(seg(t, .5, 1.6)), 3 * u);
@@ -3163,25 +3270,25 @@ const MC_TPL = [
   },
   {
     id: 'mcXp', cat: 'Mc', name: 'Neonowy pasek postępu', d: 'Kółko z klejnotem i neonowy pasek, który się zapełnia, z napisem nad nim.', dur: 4, keyHint: true,
-    fields: [['text', 'text', 'Napis', 'Postęp'], ['color', 'color', 'Kolor', '#e83cff'], ['tint', 'color', 'Kolor klejnotu', '#43e0ff']], sfx: [[.1, 'pop'], [.5, 'riser'], [2, 'ding']],
+    fields: [['text', 'text', 'Napis', 'Postęp'], ['color', 'color', 'Kolor', '#e83cff'], ['tint', 'color', 'Kolor klejnotu', '']], sfx: [[.1, 'pop'], [.5, 'riser'], [2, 'ding']],
     render(g, W, H, t, v, u) {
       const out = E.in(seg(t, 3.6, 4)), k = E.out(seg(t, .05, .4)) * (1 - out); if (k <= 0) return; const bw = Math.min(W * .7, 900 * u), bx = W / 2 - bw / 2 + 50 * u, by = H / 2, f = E.inOut(seg(t, .5, 2));
       g.save(); g.globalAlpha = k; g.fillStyle = 'rgba(255,255,255,.12)'; rr(g, bx, by - 9 * u, bw, 18 * u, 9 * u); g.fill();
       g.shadowColor = v.color; g.shadowBlur = 26 * u; g.fillStyle = v.color; rr(g, bx, by - 9 * u, Math.max(18 * u, bw * f), 18 * u, 9 * u); g.fill(); g.shadowColor = 'transparent';
-      const r = 56 * u, cx = bx - 20 * u, kc = E.back(seg(t, .05, .4)); g.save(); g.translate(cx, by); g.scale(kc, kc); g.shadowColor = v.color; g.shadowBlur = 30 * u; g.fillStyle = '#1a0a22'; g.beginPath(); g.arc(0, 0, r, 0, Math.PI * 2); g.fill(); g.shadowColor = 'transparent'; g.lineWidth = 9 * u; g.strokeStyle = v.color; g.stroke(); mcItem(g, 'gem', v.tint, 0, 0, r * 1.2, -.4); g.restore();
+      const r = 56 * u, cx = bx - 20 * u, kc = E.back(seg(t, .05, .4)); g.save(); g.translate(cx, by); g.scale(kc, kc); g.shadowColor = v.color; g.shadowBlur = 30 * u; g.fillStyle = '#1a0a22'; g.beginPath(); g.arc(0, 0, r, 0, Math.PI * 2); g.fill(); g.shadowColor = 'transparent'; g.lineWidth = 9 * u; g.strokeStyle = v.color; g.stroke(); mcItem(g, 'diamond', v.tint, 0, 0, r * 1.2, -.4); g.restore();
       mcText(g, v.text, bx + 40 * u, by - 46 * u, 38 * u, '#ffffff', { align: 'left', shadow: mix(v.color, '#000000', .5), weight: 700 });
       g.restore();
     }
   },
   {
     id: 'mcChat', cat: 'Mc', name: 'Wiadomość z czatu', d: 'Ciemna karta wiadomości z różową ikonką, nazwą, godziną i tekstem. Jak powiadomienie z serwera czatu.', dur: 4.5, keyHint: true,
-    fields: [['user', 'text', 'Nazwa', 'Użytkownik'], ['text', 'text', 'Wiadomość', 'Tu wpisz treść wiadomości. Może mieć dwie linijki tekstu.'], ['color', 'color', 'Kolor ikonki', '#ff3fc8']], sfx: [[.1, 'pop'], [.3, 'ding']],
+    fields: [['avatar', 'image', 'Zdjęcie profilowe', null], ['user', 'text', 'Nazwa', 'Użytkownik'], ['text', 'text', 'Wiadomość', 'Tu wpisz treść wiadomości. Może mieć dwie linijki tekstu.'], ['color', 'color', 'Kolor ikonki', '#ff3fc8']], sfx: [[.1, 'pop'], [.3, 'ding']],
     render(g, W, H, t, v, u) {
       const out = E.in(seg(t, 4, 4.5)), k = E.back(seg(t, .05, .45)) * (1 - out); if (k <= 0) return; const w = Math.min(W * .84, 980 * u), hh = 210 * u, x = W / 2 - w / 2, y = H / 2 - hh / 2;
       g.save(); g.translate(W / 2, H / 2); g.scale(k, k); g.translate(-W / 2, -H / 2);
       g.save(); g.shadowColor = 'rgba(0,0,0,.5)'; g.shadowBlur = 40 * u; g.shadowOffsetY = 14 * u; rr(g, x, y, w, hh, 46 * u); g.fillStyle = '#2b2d33'; g.fill(); g.restore();
       const ir = 70 * u, ix = x + 40 * u + ir, iy = y + hh / 2; g.fillStyle = v.color; g.beginPath(); g.arc(ix, iy, ir, 0, Math.PI * 2); g.fill();
-      g.fillStyle = '#fff'; rr(g, ix - ir * .55, iy - ir * .3, ir * 1.1, ir * .62, ir * .28); g.fill(); g.fillStyle = v.color; g.beginPath(); g.arc(ix - ir * .22, iy, ir * .1, 0, Math.PI * 2); g.arc(ix + ir * .22, iy, ir * .1, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#fff'; rr(g, ix - ir * .55, iy - ir * .3, ir * 1.1, ir * .62, ir * .28); g.fill(); g.fillStyle = v.color; g.beginPath(); g.arc(ix - ir * .22, iy, ir * .1, 0, Math.PI * 2); g.arc(ix + ir * .22, iy, ir * .1, 0, Math.PI * 2); g.fill(); avatarImg(g, v.avatar, ix, iy, ir);
       const tx = ix + ir + 34 * u, tw = w - (tx - x) - 40 * u; g.font = `700 ${40 * u}px Inter`; const nw = Math.min(tw * .6, g.measureText(v.user).width);
       T(g, v.user, tx, y + 62 * u, { size: 40 * u, weight: 700, color: '#ffffff', align: 'left', maxW: tw * .6 }); T(g, 'Dziś o 19:30', tx + nw + 18 * u, y + 64 * u, { size: 24 * u, weight: 500, color: '#9a9ca6', align: 'left' });
       const lines = proWrap(g, v.text, `500 ${32 * u}px Inter`, tw, 2); lines.forEach((ln, i) => T(g, ln, tx, y + 116 * u + i * 42 * u, { size: 32 * u, weight: 500, color: '#dcdde2', align: 'left', alpha: seg(t, .35 + i * .1, .6 + i * .1), maxW: tw }));
@@ -3190,7 +3297,7 @@ const MC_TPL = [
   },
   {
     id: 'mcServer', cat: 'Mc', name: 'Dołączanie do serwera', d: 'Ekran wyboru serwera jak w grze: kursor zaznacza serwer na zielono i klika Dołącz.', dur: 5, keyHint: true,
-    fields: [['title', 'text', 'Tytuł', 'Zagraj'], ['name', 'text', 'Nazwa serwera', 'Mój Serwer'], ['desc', 'text', 'Opis', 'Wbijaj, gramy razem!'], ['tint', 'color', 'Kolor ikony', '#43e0ff']],
+    fields: [['title', 'text', 'Tytuł', 'Zagraj'], ['name', 'text', 'Nazwa serwera', 'Mój Serwer'], ['desc', 'text', 'Opis', 'Wbijaj, gramy razem!'], ['tint', 'color', 'Kolor ikony', '']],
     sfx: [[.1, 'whoosh'], [1.3, 'click'], [2.4, 'click'], [2.45, 'ding']],
     render(g, W, H, t, v, u) {
       const out = E.in(seg(t, 4.5, 5)), k = E.out(seg(t, .05, .45)) * (1 - out); if (k <= 0) return; const P = Math.max(2, Math.round(5 * u)), bandH = H * .16, sel = t > 1.3, joined = t > 2.45;
@@ -3199,7 +3306,7 @@ const MC_TPL = [
       dirt(0, bandH); dirt(H - bandH, bandH); g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(0, bandH, W, H - bandH * 2);
       mcText(g, v.title, W / 2, bandH / 2, 40 * u, '#ffe14d', { weight: 600 });
       const bw = Math.min(W * .62, 760 * u), bh = 150 * u, bx = W / 2 - bw / 2, by = H / 2 - bh / 2; g.fillStyle = sel ? 'rgba(0,0,0,.6)' : 'rgba(0,0,0,.3)'; g.fillRect(bx, by, bw, bh); g.strokeStyle = sel ? '#55ff55' : '#d0d0d0'; g.lineWidth = 5 * u; g.strokeRect(bx + 2.5 * u, by + 2.5 * u, bw - 5 * u, bh - 5 * u);
-      g.fillStyle = '#1d1d24'; g.fillRect(bx + 20 * u, by + 20 * u, bh - 40 * u, bh - 40 * u); mcItem(g, 'gem', v.tint, bx + bh / 2, by + bh / 2, (bh - 40 * u) * .8);
+      g.fillStyle = '#1d1d24'; g.fillRect(bx + 20 * u, by + 20 * u, bh - 40 * u, bh - 40 * u); mcItem(g, 'emerald', v.tint, bx + bh / 2, by + bh / 2, (bh - 40 * u) * .8);
       mcText(g, v.name, bx + bh + 10 * u, by + 50 * u, 40 * u, joined ? '#55ff55' : '#ffffff', { align: 'left', maxW: bw - bh - 30 * u });
       mcText(g, v.desc, bx + bh + 10 * u, by + 100 * u, 32 * u, '#a8a8a8', { align: 'left', maxW: bw - bh - 30 * u });
       const btn = (label, cx, hl) => { const w2 = 300 * u, h2 = 64 * u; pxPanel(g, cx - w2 / 2, H - bandH / 2 - h2 / 2, w2, h2, P, hl ? '#8a8a8a' : '#6e6e6e', hl ? '#c4c4c4' : '#a0a0a0', '#383838'); mcText(g, label, cx, H - bandH / 2, 30 * u, '#ffffff', {}); };
@@ -3229,14 +3336,16 @@ Object.entries({ mcPop: 1.2, mcItemName: 1.4, mcStats: 2.4, mcObjective: 1.6, mc
 Object.entries({ bounceTitle: 1.6, boxReveal: 1.8, outlineFill: 2.3, scramble: 2.6, stackWords: 1.6, zoomThrough: 2.3, signature: 2.6, liveBadge: 2.8, pollBox: 2.8, commentPop: 2.6, milestone: 3.0, shockwave: .42, lockOn: 2.2, vhs: 1, spotlight: 2.8, peek: 2, point: 2.6, think: 1.8, xpOrbs: 2.6, killfeed: 2.4, bossBar: 2.4 }).forEach(([id, p]) => { const x = TEMPLATES.find(t => t.id === id); if (x) x.pt = p; });
 
 
-const CATS = ['Wszystkie', 'Mc', 'Pro', 'Napisy', 'Kanał', 'Montaż', 'Przejścia', 'Postać', 'Film', 'Gry'];
-const CAT_NAMES = { 'Mc': 'Styl gry', 'Pro': 'Styl PRO', 'Gry': 'Gry i bloki', 'Film': 'Efekty na Twoim filmie', 'Montaż': 'Do montażu', 'Postać': 'Postać ze skinem', 'Napisy': 'Napisy i intro', 'Kanał': 'Kanał', 'Przejścia': 'Przejścia' };
+/* weakest older pieces are kept in code but left out of the lists */
+['glitchov', 'rec', 'bars', 'smoke', 'dustov', 'lightning', 'fire', 'flare', 'pulse', 'crack', 'leak', 'burn', 'bgLoop', 'frameBorder', 'arrow', 'emoji', 'comic', 'splitText', 'callout', 'typewriter', 'hearts', 'runwipe', 'land', 'shockwave'].forEach(id => { const x = TEMPLATES.find(t => t.id === id); if (x) x.hidden = true; });
+const CATS = ['Wszystkie', 'AI', 'Mc', 'Pro', 'Napisy', 'Kanał', 'Montaż', 'Przejścia', 'Postać', 'Film', 'Gry'];
+const CAT_NAMES = { 'AI': 'Twoje AI', 'Mc': 'Styl gry', 'Pro': 'Styl PRO', 'Gry': 'Gry i bloki', 'Film': 'Efekty na Twoim filmie', 'Montaż': 'Do montażu', 'Postać': 'Postać ze skinem', 'Napisy': 'Napisy i intro', 'Kanał': 'Kanał', 'Przejścia': 'Przejścia' };
 let cineCv = null; function cineCanvas(W, H) { if (!cineCv) cineCv = document.createElement('canvas'); if (cineCv.width !== W || cineCv.height !== H) { cineCv.width = W; cineCv.height = H; } return cineCv; }
 const tintCvs = {}; function tintCanvas(src, col, W, H) { let c = tintCvs[col]; if (!c) c = tintCvs[col] = document.createElement('canvas'); if (c.width !== W || c.height !== H) { c.width = W; c.height = H; } const g = c.getContext('2d'); g.clearRect(0, 0, W, H); g.drawImage(src, 0, 0); g.globalCompositeOperation = 'source-in'; g.fillStyle = col; g.fillRect(0, 0, W, H); g.globalCompositeOperation = 'source-over'; return c; }
 
 /* ================= state ================= */
 const FORMATS = { '16:9': [1280, 720], '9:16': [720, 1280], '1:1': [1080, 1080] };
-const ST = { q: .5, tpl: TEMPLATES[0], fmt: '16:9', bg: 'dark', bgAuto: true, bgColor: '#101018', bgImg: null, playing: true, loop: true, sound: true, t: 0, speed: 1, cat: 'Wszystkie' };
+const ST = { q: 1, tpl: TEMPLATES[0], fmt: '16:9', bg: 'dark', bgAuto: true, bgColor: '#101018', bgImg: null, playing: true, loop: true, sound: true, t: 0, speed: 1, cat: 'Wszystkie' };
 const VALS = {}; // shared values by field key, so a nick typed once fills every template
 const valsFor = tpl => { const o = {}; for (const [k, , , def] of tpl.fields) o[k] = VALS[k] ?? def; return o; };
 const durOf = tpl => (tpl.durFn ? tpl.durFn(valsFor(tpl)) : tpl.dur);
@@ -3347,17 +3456,17 @@ function renderFmt() {
   $('#fmtSeg').replaceChildren(...Object.keys(FORMATS).map(f => h('button', { class: ST.fmt === f ? 'on' : '', onclick: () => { ST.fmt = f; renderFmt(); sizeView(); dirty = true; } }, f === '16:9' ? '16:9 YouTube' : f === '9:16' ? '9:16 TikTok' : '1:1')));
 }
 function renderCats() {
-  $('#cats').replaceChildren(...CATS.map(c => { const n = c === 'Wszystkie' ? TEMPLATES.length : TEMPLATES.filter(t => t.cat === c).length; return h('button', { class: `cat${ST.cat === c ? ' on' : ''}`, onclick: () => { ST.cat = c; renderCats(); renderGallery(); } }, c === 'Wszystkie' ? c : CAT_NAMES[c], h('small', null, n)); }));
+  $('#cats').replaceChildren(...CATS.filter(c => c !== 'AI' || TEMPLATES.some(t => t.ai)).map(c => { const vis = TEMPLATES.filter(t => !t.hidden), n = c === 'Wszystkie' ? vis.length : vis.filter(t => t.cat === c).length; return h('button', { class: `cat${ST.cat === c ? ' on' : ''}`, onclick: () => { ST.cat = c; renderCats(); renderGallery(); } }, c === 'Wszystkie' ? c : CAT_NAMES[c], h('small', null, n)); }));
 }
 const posters = new Map(); let hoverCard = null, hoverStep = -1;
 const norm = x => x.toLocaleLowerCase('pl').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ł/g, 'l');
 const fmtTC = t => `${String(Math.floor(t)).padStart(2, '0')}:${String(Math.floor((t % 1) * 30)).padStart(2, '0')}`;
 function renderGallery() {
-  const order = ['Mc', 'Pro', 'Napisy', 'Kanał', 'Montaż', 'Przejścia', 'Postać', 'Film', 'Gry'];
+  const order = ['AI', 'Mc', 'Pro', 'Napisy', 'Kanał', 'Montaż', 'Przejścia', 'Postać', 'Film', 'Gry'];
   const q = norm(($('#q') && $('#q').value) || '').trim();
-  const list = TEMPLATES.filter(t => (ST.cat === 'Wszystkie' || t.cat === ST.cat) && (!q || norm(t.name + ' ' + t.d + ' ' + (CAT_NAMES[t.cat] || '') + (t.skin ? ' skin postac' : '')).includes(q)))
+  const list = TEMPLATES.filter(t => !t.hidden && (ST.cat === 'Wszystkie' || t.cat === ST.cat) && (!q || norm(t.name + ' ' + t.d + ' ' + (CAT_NAMES[t.cat] || '') + (t.skin ? ' skin postac' : '')).includes(q)))
     .sort((a, b) => ST.cat === 'Wszystkie' ? order.indexOf(a.cat) - order.indexOf(b.cat) : 0);
-  $('#galCount').textContent = `${list.length}/${TEMPLATES.length}`;
+  $('#galCount').textContent = `${list.length}/${TEMPLATES.filter(t => !t.hidden).length}`;
   $('#glist').replaceChildren(...(list.length ? list.map(tpl => {
     const cv = h('canvas', { width: 320, height: 180, 'data-tpl': tpl.id });
     const card = h('button', { class: `tcard${ST.tpl === tpl ? ' on' : ''}`, title: tpl.d, onclick: () => selectTpl(tpl) },
@@ -3461,6 +3570,24 @@ function textCtl(key, def, label) {
   ta.addEventListener('input', () => { VALS[key] = ta.value.replace(/\n/g, ' '); dirty = true; updateTitle(); });
   ta.addEventListener('change', () => repost(key)); return ta;
 }
+const repostItems = () => makePosters(t => t.fields.some(f => f[1] === 'item'));
+function pickImage(cb) { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.onchange = () => { const f = inp.files[0]; if (!f) return; const im = new Image(); im.onload = () => cb(im); im.onerror = () => toast('Nie udało się wczytać obrazka'); im.src = URL.createObjectURL(f); }; inp.click(); }
+function itemCtl(key, def, opts) {
+  const cur = VALS.icon ? '__custom' : String(VALS[key] ?? def), grid = h('div', { class: 'items' });
+  opts.forEach(([k, l]) => { const cv = h('canvas', { width: 48, height: 48 }), cg = cv.getContext('2d'); cg.imageSmoothingEnabled = false; cg.drawImage(mcSprite(k), 6, 6, 36, 36);
+    grid.append(h('button', { type: 'button', class: 'itm' + (cur === k ? ' on' : ''), title: l, 'aria-label': l, onclick: () => { VALS[key] = k; VALS.icon = null; delete VALS.tint; dirty = true; renderEditor(); repostItems(); } }, cv)); });
+  const up = h('button', { type: 'button', class: 'itm up' + (cur === '__custom' ? ' on' : ''), title: 'Własny obrazek (PNG)', onclick: () => pickImage(im => { VALS.icon = im; dirty = true; renderEditor(); repostItems(); toast('Własny przedmiot wgrany'); }) });
+  if (VALS.icon) { const cv = h('canvas', { width: 48, height: 48 }), cg = cv.getContext('2d'); cg.drawImage(mcCustomSprite(), 6, 6, 36, 36); up.append(cv); } else up.append(h('span', { html: ICON.upload, style: 'display:grid' }));
+  grid.append(up);
+  const texBtn = h('button', { class: 'btn', style: 'justify-content:flex-start', onclick: () => { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.jar,.zip'; inp.onchange = () => { if (inp.files[0]) mcTexImport(inp.files[0]).catch(() => toast('Nie udało się odczytać tego pliku.')); }; inp.click(); } }, h('span', { html: ICON.upload, style: 'display:grid' }), mcTexLoaded() ? 'Wczytaj inne tekstury z gry' : 'Wczytaj tekstury z twojego Minecrafta');
+  const texInfo = mcTexLoaded() ? h('div', { class: 'hint' }, 'Używasz tekstur ze swojej gry. ', h('button', { type: 'button', class: 'linkbtn', onclick: mcTexClear }, 'Wróć do wbudowanych')) : h('div', { class: 'hint' }, 'Wybierz plik gry: Windows + R, wpisz %appdata%\\.minecraft\\versions, otwórz folder wersji i wskaż plik .jar (albo paczkę zasobów .zip). Plik czyta tylko twoja przeglądarka, nic nie jest wysyłane.');
+  return [grid, texBtn, texInfo, h('div', { class: 'hint' }, VALS.icon ? 'Używasz własnego obrazka. Kliknij przedmiot z listy, żeby wrócić do gotowych.' : 'Kliknij przedmiot albo wgraj własny obrazek PNG (najlepiej kwadratowy, z przezroczystym tłem).')];
+}
+function imageCtl(key, label) {
+  const im = VALS[key], prev = h('canvas', { width: 72, height: 72, 'aria-label': label });
+  const pg = prev.getContext('2d'); if (im) avatarImg(pg, im, 36, 36, 36); else { pg.fillStyle = '#26262c'; pg.beginPath(); pg.arc(36, 36, 36, 0, Math.PI * 2); pg.fill(); }
+  return h('div', { class: 'skinbox' }, prev, h('div', { class: 'col' }, h('button', { class: 'btn', onclick: () => pickImage(img => { VALS[key] = img; dirty = true; renderEditor(); repost(key); }) }, h('span', { html: ICON.upload, style: 'display:grid' }), im ? 'Zmień obrazek' : 'Wgraj obrazek'), h('div', { class: 'hint' }, im ? 'Obrazek wgrany.' : key === 'icon' ? 'Bez obrazka zostanie przedmiot z animacji.' : 'Bez obrazka pokaże się pierwsza litera nicku.')));
+}
 function selCtl(key, def, opts) {
   const sg = h('div', { class: 'seg wrap' });
   const draw = () => { const v = String(VALS[key] ?? def); sg.replaceChildren(...opts.map(([v2, l]) => h('button', { type: 'button', class: String(v2) === v ? 'on' : '', onclick: () => { VALS[key] = v2; dirty = true; draw(); repost(key); } }, l))); };
@@ -3496,9 +3623,11 @@ function renderEditor() {
     tpl.footage && (ST.bgVid ? 'Efekt działa na Twoim wgranym filmie.' : 'Ten efekt zmienia Twój film. Wgraj nagranie, a zobaczysz efekt od razu.')].filter(Boolean);
   const rows = [], fs = tpl.fields, find = k => fs.find(f => f[0] === k && f[1] === 'color'), used = new Set();
   const del = keys => () => { keys.forEach(k => delete VALS[k]); dirty = true; renderEditor(); keys.forEach(repost); updateTitle(); };
-  fs.filter(f => f[1] !== 'color' && f[1] !== 'select').forEach(([k, , l, d]) => rows.push(pRow(k, l, 'text', textCtl(k, d, l), { copy: () => String(VALS[k] ?? d), reset: del([k]) })));
+  fs.filter(f => !['color', 'select', 'item', 'image'].includes(f[1])).forEach(([k, , l, d]) => rows.push(pRow(k, l, 'text', textCtl(k, d, l), { copy: () => String(VALS[k] ?? d), reset: del([k]) })));
+  fs.filter(f => f[1] === 'item').forEach(([k, , l, d, o]) => rows.push(pRow(k, l, 'media', itemCtl(k, d, o), { reset: () => { delete VALS[k]; VALS.icon = null; delete VALS.tint; dirty = true; renderEditor(); repostItems(); } })));
+  fs.filter(f => f[1] === 'image').forEach(([k, , l]) => rows.push(pRow(k, l, 'media', imageCtl(k, l), { reset: VALS[k] ? () => { VALS[k] = null; dirty = true; renderEditor(); repost(k); } : null })));
   if (find('c1') && find('c2')) { const [, , l1, d1] = find('c1'), [, , l2, d2] = find('c2'); used.add('c1'); used.add('c2'); rows.push(pRow('c1c2', 'Gradient: ' + l1.toLowerCase() + ' → ' + l2.toLowerCase(), 'color', gradCtl('c1', d1, 'c2', d2), { copy: () => `${VALS.c1 ?? d1} → ${VALS.c2 ?? d2}`.toUpperCase(), reset: del(['c1', 'c2']) })); }
-  fs.filter(f => f[1] === 'color' && !used.has(f[0])).forEach(([k, , l, d]) => rows.push(pRow(k, l, 'color', colorCtl(k, d), { copy: () => String(VALS[k] ?? d).toUpperCase(), reset: del([k]) })));
+  fs.filter(f => f[1] === 'color' && !used.has(f[0])).forEach(([k, , l, d]) => { const dd = d || (k === 'tint' ? MC_DEF[VALS.item ?? (fs.find(f => f[1] === 'item') || [])[3]] : '') || '#ffffff'; rows.push(pRow(k, l, 'color', colorCtl(k, dd), { copy: () => String(VALS[k] ?? dd).toUpperCase(), reset: del([k]) })); });
   if (tpl.skin) rows.push(pRow('skin', 'Twój skin', 'media', skinBody(), { reset: skinIsDefault ? null : () => { paintDefaultSkin(); c3Skin(); renderEditor(); makePosters(t => t.skin); } }));
   rows.push(pRow('bg', 'Tło', 'media', bgBody(), { reset: () => { ST.bg = 'dark'; ST.bgAuto = true; renderEditor(); updateTitle(); sizeView(); dirty = true; } }));
   fs.filter(f => f[1] === 'select').forEach(([k, , l, d, o]) => rows.push(pRow(k, l, 'values', selCtl(k, d, o), { reset: del([k]) })));
@@ -3633,9 +3762,303 @@ $('#exportBtn').addEventListener('click', openExport);
 /* ================= boot ================= */
 $('#logoMark').innerHTML = ICON.logo;
 paintDefaultSkin();
+
+/* ================= AI animations: a scene description (JSON) and the renderer that plays it ================= */
+const AI_FONTS = { display: ['Anton', 400], bold: ['Montserrat', 900], wide: ['Syne', 800], script: ['Pacifico', 400], chunky: ['Lilita One', 400], pixel: ['Tiny5', 400], game3d: ['Silkscreen', 700], glow: ['Lilita One', 400] };
+const aiNum = (x, d, a, b) => { x = Number(x); if (!isFinite(x)) x = d; return clamp(x, a, b); };
+const aiCol = (c, d) => (typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c.trim()) ? c.trim().toLowerCase() : d);
+function aiSanitize(spec) {
+  const s = spec && typeof spec === 'object' ? spec : {}, D = aiNum(s.duration, 5, 2, 10);
+  const types = ['text', 'item', 'shape', 'panel', 'button', 'bar', 'counter', 'burst', 'rays', 'splash', 'character', 'avatar', 'cursor', 'particles', 'line'];
+  const anims = ['pop', 'fade', 'slideUp', 'slideDown', 'slideLeft', 'slideRight', 'zoom', 'drop', 'spin', 'type', 'wipe', 'none'];
+  const layers = (Array.isArray(s.layers) ? s.layers : []).filter(l => l && types.includes(l.type)).slice(0, 18).map(l => ({
+    ...l, x: aiNum(l.x, .5, -0.2, 1.2), y: aiNum(l.y, .5, -0.2, 1.2), size: aiNum(l.size, .1, .01, 1.2), w: aiNum(l.w, .4, .01, 1.2), h: aiNum(l.h, .2, .005, 1.2),
+    start: aiNum(l.start, 0, 0, D), end: aiNum(l.end, D, 0, D), inDur: aiNum(l.inDur, l.in === 'type' ? 1 : .45, .05, 4), rotate: aiNum(l.rotate, 0, -180, 180),
+    in: anims.includes(l.in) ? l.in : 'pop', out: anims.includes(l.out) ? l.out : 'fade', loop: ['none', 'float', 'pulse', 'wiggle', 'spin', 'glint', 'shake'].includes(l.loop) ? l.loop : 'none',
+    color: aiCol(l.color, '#ffffff'), color2: aiCol(l.color2, ''), text: String(l.text ?? '').slice(0, 80), pressedText: String(l.pressedText ?? '').slice(0, 40), prefix: String(l.prefix ?? '').slice(0, 8), suffix: String(l.suffix ?? '').slice(0, 12)
+  }));
+  return { title: String(s.title || 'Animacja AI').slice(0, 40), duration: D, background: s.background === undefined ? 'none' : s.background, layers, aspect: s.aspect || ST.fmt };
+}
+function aiPose(kind, t) {
+  const p = Object.assign({}, idlePose(t));
+  if (kind === 'wave') p.armR = [0, -2.6 + Math.sin(t * 9) * .35];
+  else if (kind === 'win') { p.armR = [0, -2.7 + Math.sin(t * 9) * .15]; p.armL = [0, 2.7 - Math.sin(t * 9) * .15]; p.y = Math.abs(Math.sin(t * 4)) * 3; }
+  else if (kind === 'point') { p.armL = [0, 1.5]; p.rotY = .35; p.head = [0, .3]; }
+  else if (kind === 'walk') Object.assign(p, walkPose(t * 9));
+  else if (kind === 'think') { p.armR = [-2.5 + Math.sin(t * 8) * .1, .5]; p.head = [.12, .3]; p.rotY = .25; }
+  return p;
+}
+function aiBg(g, W, H, bg, t) {
+  if (!bg || bg === 'none') return;
+  if (typeof bg === 'string' && /^#/.test(bg)) { g.fillStyle = aiCol(bg, '#111114'); g.fillRect(0, 0, W, H); return; }
+  if (typeof bg === 'object' && Array.isArray(bg.gradient)) { const a = aiNum(bg.angle, 135, 0, 360) * Math.PI / 180, c1 = aiCol(bg.gradient[0], '#1a1a2e'), c2 = aiCol(bg.gradient[1], '#0a0a12'), dx = Math.cos(a) * W / 2, dy = Math.sin(a) * H / 2, gr = g.createLinearGradient(W / 2 - dx, H / 2 - dy, W / 2 + dx, H / 2 + dy); gr.addColorStop(0, c1); gr.addColorStop(1, c2); g.fillStyle = gr; g.fillRect(0, 0, W, H); }
+}
+function renderSpec(g, W, H, t, spec, u) {
+  const D = spec.duration; aiBg(g, W, H, spec.background, t);
+  spec.layers.forEach((L, i) => {
+    if (t < L.start || t > L.end + .001) return;
+    const kin = clamp((t - L.start) / L.inDur, 0, 1), outDur = Math.min(.4, (L.end - L.start) * .3), kout = L.out === 'none' || L.end >= D - .001 && L.outAtEnd === false ? 0 : clamp((t - (L.end - outDur)) / outDur, 0, 1);
+    let a = 1, sc = 1, dx = 0, dy = 0, rot = L.rotate * Math.PI / 180, reveal = 1; const e = E.out(kin);
+    switch (L.in) { case 'pop': sc *= E.back(kin); a = Math.min(1, kin * 3); break; case 'fade': a = e; break; case 'slideUp': dy += (1 - e) * H * .12; a = e; break; case 'slideDown': dy -= (1 - e) * H * .12; a = e; break;
+      case 'slideLeft': dx += (1 - e) * W * .2; a = e; break; case 'slideRight': dx -= (1 - e) * W * .2; a = e; break; case 'zoom': sc *= lerp(2.2, 1, e); a = kin; break; case 'drop': dy -= (1 - E.bounce(kin)) * H * .5; a = Math.min(1, kin * 4); break;
+      case 'spin': rot -= (1 - e) * Math.PI; sc *= E.back(kin); break; case 'type': case 'wipe': reveal = L.in === 'type' ? kin : E.inOut(kin); break; }
+    if (kout > 0) { const ko = E.in(kout); a *= 1 - kout; if (L.out === 'pop' || L.out === 'zoom') sc *= 1 - ko * .6; if (L.out === 'slideUp') dy -= ko * H * .12; if (L.out === 'slideDown') dy += ko * H * .12; if (L.out === 'slideLeft') dx -= ko * W * .2; if (L.out === 'slideRight') dx += ko * W * .2; if (L.out === 'spin') rot += ko * Math.PI; }
+    if (L.loop === 'float') dy += Math.sin(t * 2.2 + i) * H * .012; else if (L.loop === 'pulse') sc *= 1 + Math.sin(t * 4 + i) * .04; else if (L.loop === 'wiggle') rot += Math.sin(t * 6 + i) * .06; else if (L.loop === 'spin') rot += t * 1.4; else if (L.loop === 'shake') { dx += Math.sin(t * 70 + i) * H * .005; dy += Math.cos(t * 61 + i) * H * .005; }
+    if (a <= .002 || sc <= .002) return;
+    const px = L.x * W + dx, py = L.y * H + dy, S = L.size * H, c1 = L.color, c2 = L.color2 || L.color;
+    g.save(); g.globalAlpha *= clamp(a, 0, 1);
+    if (L.type === 'burst') { g.restore(); const at = aiNum(L.at, L.start, 0, D), kinds = { confetti: null, stars: ['star', 'spark'], sparks: ['spark'], hearts: ['heart', 'star'], coins: ['circle'] }[L.kind] ?? null; if (!kinds) confetti(g, W, H, at, t, aiNum(L.count, 80, 10, 200), [{ x: px, y: py, a: -Math.PI / 2, spread: 3 }], u, [c1, c2, '#ffffff', '#ffd23f']); else proBurst(g, px, py, at, t, aiNum(L.count, 14, 4, 40), S * 3, kinds, [c1, c2, '#ffffff'], u, i + 3); return; }
+    if (L.type === 'rays') { proRays(g, px, py, Math.hypot(W, H), aiNum(L.count, 14, 6, 30), t * .2, c1, aiNum(L.alpha, .1, .02, .4) * a); g.restore(); return; }
+    if (L.type === 'particles') { const n = aiNum(L.count, 40, 5, 120); for (let k = 0; k < n; k++) { const sp = .02 + rnd(k, 2) * .05, xx = ((rnd(k, 1) + t * sp * (L.kind === 'snow' ? .3 : .15)) % 1) * W, yy = L.kind === 'embers' ? H - ((rnd(k, 3) + t * sp * 1.5) % 1) * H : ((rnd(k, 3) + t * sp * 1.2) % 1) * H, r = (1.5 + rnd(k, 4) * 3) * u * (L.kind === 'snow' ? 2 : 1); g.fillStyle = rgba(c1, .25 + rnd(k, 5) * .5); g.beginPath(); g.arc(xx, yy, r, 0, Math.PI * 2); g.fill(); } g.restore(); return; }
+    if (L.type === 'character') { g.restore(); if (!C3.ok) return; const p = aiPose(L.pose, t); p.scale = sc; if (L.pose === 'walk' && L.walkFrom !== undefined) p.x = 0; drawChar(g, W, H, p, frameCam(W, H, clamp(L.size, .2, 1), L.x, L.y), { rim: c1 }); return; }
+    if (L.type === 'cursor') { g.restore(); const ca = aiNum(L.clickAt, L.start + 1, 0, D), fx = aiNum(L.fromX, .9, -0.2, 1.2) * W, fy = aiNum(L.fromY, 1.05, -0.2, 1.3) * H, m = E.inOut(seg(t, L.start, ca - .1)); cursor(g, lerp(fx, L.x * W, m), lerp(fy, L.y * H, m), u * 1.2, t > ca - .08 && t < ca + .1 ? 1 : 0); return; }
+    if (L.type === 'line') { const w = L.w * W * reveal * e; g.fillStyle = c1; rr(g, px - L.w * W / 2, py - Math.max(2, L.h * H) / 2, w, Math.max(2, L.h * H), Math.max(1, L.h * H / 2)); g.fill(); g.restore(); return; }
+    g.translate(px, py); g.rotate(rot); g.scale(sc, sc);
+    if (L.type === 'text') {
+      const f = AI_FONTS[L.font] || AI_FONTS.display, lines = String(L.text).split('\n'), maxW = aiNum(L.maxW, .9, .1, 1.2) * W, align = ['left', 'center', 'right'].includes(L.align) ? L.align : 'center';
+      let shown = L.text; if (L.in === 'type') { const n = Math.ceil([...L.text].length * reveal); shown = [...L.text].slice(0, n).join(''); } const sl = shown.split('\n');
+      if (L.in === 'wipe') { g.beginPath(); g.rect(-maxW / 2 - S, -S * lines.length, (maxW + S * 2) * reveal, S * lines.length * 2); g.clip(); }
+      sl.forEach((ln, j) => { const y = (j - (lines.length - 1) / 2) * S * 1.08; if (!ln) return;
+        if (L.font === 'pixel') mcText(g, ln, 0, y, S, c1, { align, maxW });
+        else if (L.font === 'game3d' || L.font === 'glow') { g.save(); g.font = `${f[1]} ${S}px "${f[0]}", Inter, sans-serif`; g.textAlign = align; g.textBaseline = 'middle'; g.lineJoin = 'round'; const tw = g.measureText(ln).width, k = Math.min(1, maxW / tw); g.scale(k, k); const d = Math.round(S * .1);
+          if (L.font === 'glow') { g.shadowColor = rgba(c2, .9); g.shadowBlur = S * .6; } g.fillStyle = mix(c2, '#000000', .55); g.fillText(ln, 0, y + d); g.shadowColor = 'transparent'; for (let q = d; q > 0; q -= Math.max(1, d / 10)) { g.fillStyle = mix(c2, '#000000', .5); g.fillText(ln, 0, y + q); }
+          g.lineWidth = S * .07; g.strokeStyle = mix(c2, '#000000', .7); g.strokeText(ln, 0, y); const gr = g.createLinearGradient(0, y - S * .5, 0, y + S * .5); gr.addColorStop(0, mix(c1, '#ffffff', .35)); gr.addColorStop(1, c1); g.fillStyle = gr; g.fillText(ln, 0, y); g.restore(); }
+        else proText(g, ln, 0, y, { size: S, font: f[0], weight: f[1], c1, c2, align, maxW, stroke: L.stroke ? { w: S * .12, color: aiCol(L.strokeColor, '#111111') } : null, glow: L.glowColor ? rgba(aiCol(L.glowColor, c2), .6) : null, gloss: L.font !== 'script' });
+      });
+    } else if (L.type === 'item') {
+      const kind = VALS.icon && L.custom ? '__custom' : (MC_DEF[L.item] ? L.item : 'diamond'); mcItem(g, kind, L.tint ? aiCol(L.tint, '') : '', 0, 0, S, 0, L.loop === 'glint' ? ((t - L.start - .5) % 2) / .45 : -1);
+    } else if (L.type === 'shape') {
+      const sh = L.shape;
+      if (['star', 'heart', 'diamond', 'bolt', 'spark'].includes(sh)) proShape(g, sh, 0, 0, S / 2, 0, c1, L.glow !== false);
+      else if (sh === 'circle') { g.fillStyle = c1; g.beginPath(); g.arc(0, 0, S / 2, 0, Math.PI * 2); g.fill(); }
+      else if (sh === 'ring') { g.strokeStyle = c1; g.lineWidth = Math.max(2, S * .08); g.beginPath(); g.arc(0, 0, S / 2 * (L.in === 'wipe' ? 1 : 1), -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * reveal); g.stroke(); }
+      else if (sh === 'arrow') { const s = S; g.beginPath(); g.moveTo(-s * .55, -s * .16); g.lineTo(s * .1, -s * .16); g.lineTo(s * .1, -s * .42); g.lineTo(s * .62, 0); g.lineTo(s * .1, s * .42); g.lineTo(s * .1, s * .16); g.lineTo(-s * .55, s * .16); g.closePath(); g.lineJoin = 'round'; g.lineWidth = s * .09; g.strokeStyle = '#ffffff'; g.stroke(); g.fillStyle = c1; g.fill(); }
+      else { const w = L.w * W * (L.in === 'wipe' ? reveal : 1), h = L.h * H, r = sh === 'roundrect' ? Math.min(h / 2, aiNum(L.radius, .2, 0, .5) * h * 2) : 0; rr(g, -L.w * W / 2, -h / 2, w, h, r); if (L.color2) { const gr = g.createLinearGradient(-L.w * W / 2, 0, L.w * W / 2, 0); gr.addColorStop(0, c1); gr.addColorStop(1, c2); g.fillStyle = gr; } else g.fillStyle = c1; g.fill(); }
+    } else if (L.type === 'panel') {
+      const w = L.w * W, h = L.h * H; if (L.style === 'game') pxPanel(g, -w / 2, -h / 2, w, h, Math.max(2, 5 * u)); else if (L.style === 'sticker') stk(g, -w / 2, -h / 2, w, h, Math.min(h * .25, 30 * u), c1, u, { so: 10 }); else if (L.style === 'card') { g.shadowColor = 'rgba(0,0,0,.4)'; g.shadowBlur = 40 * u; g.shadowOffsetY = 14 * u; rr(g, -w / 2, -h / 2, w, h, Math.min(h / 2, 34 * u)); g.fillStyle = c1; g.fill(); g.shadowColor = 'transparent'; } else proPanel(g, -w / 2, -h / 2, w, h, Math.min(h / 2, 34 * u), mix(c1, '#ffffff', .05), mix(c2, '#000000', .45), u);
+    } else if (L.type === 'button') {
+      const pa = aiNum(L.pressAt, -1, -1, D), pressed = pa >= 0 && t > pa, press = pa >= 0 && t > pa - .08 && t < pa + .12 ? .93 : 1, w = L.w * W, h = L.h * H, col = pressed && L.pressedColor ? aiCol(L.pressedColor, c1) : c1, col2 = pressed && L.pressedColor ? aiCol(L.pressedColor, c2) : c2;
+      g.scale(press, press); g.shadowColor = rgba(col, .45); g.shadowBlur = 30 * u; g.shadowOffsetY = 10 * u; rr(g, -w / 2, -h / 2, w, h, h / 2); const gr = g.createLinearGradient(-w / 2, 0, w / 2, 0); gr.addColorStop(0, col); gr.addColorStop(1, col2); g.fillStyle = gr; g.fill(); g.shadowColor = 'transparent';
+      g.save(); rr(g, -w / 2, -h / 2, w, h, h / 2); g.clip(); g.fillStyle = 'rgba(255,255,255,.22)'; g.fillRect(-w / 2, -h / 2, w, h * .45); g.restore();
+      T(g, pressed && L.pressedText ? L.pressedText : L.text, 0, 2 * u, { size: h * .46, font: 'Lilita One', weight: 400, color: aiCol(L.textColor, '#ffffff'), maxW: w * .84 });
+    } else if (L.type === 'bar') {
+      const w = L.w * W, h = Math.max(8 * u, L.h * H), f = lerp(aiNum(L.from, 0, 0, 1), aiNum(L.to, 1, 0, 1), E.inOut(seg(t, L.start + .3, L.start + .3 + aiNum(L.fill, 1.4, .2, 6))));
+      rr(g, -w / 2, -h / 2, w, h, h / 2); g.fillStyle = 'rgba(255,255,255,.14)'; g.fill(); g.shadowColor = c1; g.shadowBlur = 20 * u; rr(g, -w / 2, -h / 2, Math.max(h, w * f), h, h / 2); const gr = g.createLinearGradient(-w / 2, 0, w / 2, 0); gr.addColorStop(0, c1); gr.addColorStop(1, c2); g.fillStyle = gr; g.fill(); g.shadowColor = 'transparent';
+      if (L.text) T(g, L.text, -w / 2, -h / 2 - h * .9, { size: Math.max(22 * u, h * 1.1), weight: 800, align: 'left', color: '#ffffff', maxW: w * .7 }); if (L.showPercent) T(g, Math.round(f * 100) + '%', w / 2, -h / 2 - h * .9, { size: Math.max(22 * u, h * 1.1), weight: 800, align: 'right', color: '#ffffff' });
+    } else if (L.type === 'counter') {
+      const f = E.out(seg(t, L.start + .15, L.start + .15 + aiNum(L.countDur, 1.4, .2, 6))), v0 = aiNum(L.from, 0, -1e9, 1e9), v1 = aiNum(L.to, 100, -1e9, 1e9), n = Math.round(lerp(v0, v1, f)), s = `${L.prefix}${n.toLocaleString('pl-PL')}${L.suffix}`;
+      g.font = `400 ${S}px "Lilita One", sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round'; const d = Math.round(S * .1); g.shadowColor = rgba(c1, .6); g.shadowBlur = S * .35; g.fillStyle = mix(c1, '#000000', .55); g.fillText(s, 0, d); g.shadowColor = 'transparent';
+      for (let q = d; q > 0; q -= Math.max(1, d / 10)) { g.fillStyle = mix(c1, '#000000', .45); g.fillText(s, 0, q); } g.lineWidth = S * .06; g.strokeStyle = mix(c1, '#000000', .55); g.strokeText(s, 0, 0); const gr = g.createLinearGradient(0, -S * .5, 0, S * .5); gr.addColorStop(0, mix(c1, '#ffffff', .55)); gr.addColorStop(1, c1); g.fillStyle = gr; g.fillText(s, 0, 0);
+    } else if (L.type === 'splash') { g.scale(aiNum(L.stretch, 1.4, .5, 3), 1); proSplash(g, 0, 0, S / 2, E.back(kin), c1, i + 5, t); }
+    else if (L.type === 'avatar') { const r = S / 2, gr = g.createLinearGradient(-r, -r, r, r); gr.addColorStop(0, c1); gr.addColorStop(1, c2); g.fillStyle = '#ffffff'; g.beginPath(); g.arc(0, 0, r + 5 * u, 0, Math.PI * 2); g.fill(); g.fillStyle = gr; g.beginPath(); g.arc(0, 0, r, 0, Math.PI * 2); g.fill(); if (VALS.avatar) avatarImg(g, VALS.avatar, 0, 0, r); else T(g, (L.text || '?')[0].toUpperCase(), 0, 3 * u, { size: r * 1.1, font: 'Syne', weight: 800 }); }
+    g.restore();
+  });
+}
+
+/* layout editor for AI drafts: measures every element, removes duplicates, unstacks overlaps, keeps margins, sizes and reading-order timing */
+let aiMeasureCv = null;
+function aiBox(L, W, H) {
+  const cx = L.x * W, cy = L.y * H, S = L.size * H; if (!aiMeasureCv) aiMeasureCv = document.createElement('canvas'); const m = aiMeasureCv.getContext('2d');
+  if (L.type === 'text') { const f = AI_FONTS[L.font] || AI_FONTS.display; m.font = `${f[1]} ${S}px "${f[0]}", Inter, sans-serif`; const lines = String(L.text).split('\n'); const w = Math.min(Math.max(...lines.map(l => m.measureText(l).width)) * (L.font === 'game3d' || L.font === 'glow' ? 1.04 : 1), (L.maxW || .9) * W), h = S * 1.08 * lines.length + (L.font === 'game3d' || L.font === 'glow' ? S * .1 : 0); const x0 = L.align === 'left' ? cx : L.align === 'right' ? cx - w : cx - w / 2; return { x0, y0: cy - h / 2, x1: x0 + w, y1: cy + h / 2 }; }
+  if (L.type === 'item' || L.type === 'avatar') return { x0: cx - S / 2, y0: cy - S / 2, x1: cx + S / 2, y1: cy + S / 2 };
+  if (L.type === 'counter') { m.font = `400 ${S}px "Lilita One", sans-serif`; const w = m.measureText(`${L.prefix}${Number(L.to || 0).toLocaleString('pl-PL')}${L.suffix}`).width; return { x0: cx - w / 2, y0: cy - S * .55, x1: cx + w / 2, y1: cy + S * .6 }; }
+  if (L.type === 'button') return { x0: cx - L.w * W / 2, y0: cy - L.h * H / 2, x1: cx + L.w * W / 2, y1: cy + L.h * H / 2 };
+  if (L.type === 'bar') { const h = Math.max(8, L.h * H); return { x0: cx - L.w * W / 2, y0: cy - h / 2 - (L.text ? h * 2.2 : 0), x1: cx + L.w * W / 2, y1: cy + h / 2 }; }
+  if (L.type === 'character') { const hh = clamp(L.size, .2, 1) * H; return { x0: cx - hh * .22, y0: cy - hh / 2, x1: cx + hh * .22, y1: cy + hh / 2 }; }
+  return null;
+}
+const AI_DECOR = ['panel', 'splash', 'rays', 'line', 'burst', 'particles', 'cursor'];
+function aiPolish(spec) {
+  const [W, H] = ST.fmt === '9:16' ? [1080, 1920] : ST.fmt === '1:1' ? [1080, 1080] : [1920, 1080], gap = .028 * H, mx = .06 * W, my = .07 * H, notes = [];
+  let L = spec.layers.map(x => ({ ...x }));
+  // texts: drop empty, keep the 3 biggest, sensible sizes
+  L = L.filter(x => x.type !== 'text' || String(x.text).trim()); const texts = L.filter(x => x.type === 'text').sort((a, b) => b.size - a.size);
+  if (texts.length > 3) { texts.slice(3).forEach(x => { L.splice(L.indexOf(x), 1); }); notes.push(`usunięto ${texts.length - 3} nadmiarowe napisy`); }
+  L.forEach(x => { if (x.type === 'text') { x.size = clamp(x.size, .045, .24); x.maxW = clamp(x.maxW || .88, .3, .88); } if (x.type === 'item') x.size = clamp(x.size, .1, .48); if (x.type === 'counter') x.size = clamp(x.size, .1, .3); });
+  // a number shown as a counter is not repeated as text
+  L.filter(x => x.type === 'counter').forEach(c => { if (!/^[\p{L}\d$€£#x+\-: ]{0,6}$/u.test(c.prefix)) c.prefix = ''; if (!/^[\p{L}\d%$€£ .+\-]{0,12}$/u.test(c.suffix)) c.suffix = ''; const sw = c.suffix.trim().toLowerCase(); if (sw.length > 1) L.filter(x => x.type === 'text' && x.text.toLowerCase().replace(/\s+/g, ' ').trim() === sw).forEach(x => { L.splice(L.indexOf(x), 1); notes.push('usunięto napis powtarzający licznik'); }); const num = String(Math.round(Number(c.to) || 0)); L.filter(x => x.type === 'text' && x.text.includes(num)).forEach(x => { const rest = x.text.replace(num, '').replace(/^\s+|\s+$/g, '').replace(/\n+/g, ' '); if (rest.length < 2) L.splice(L.indexOf(x), 1); else x.text = rest; notes.push(`liczba ${num} nie powtarza się już w napisie`); }); });
+  // decorations follow the element they sit behind
+  const content = L.filter(x => !AI_DECOR.includes(x.type) && x.type !== 'shape' && aiBox(x, W, H));
+  const owner = new Map(); L.filter(x => ['panel', 'splash', 'line', 'burst', 'rays'].includes(x.type)).forEach(d => { let best = null, bd = 1e9; content.forEach(c => { const b = aiBox(c, W, H), dx = Math.max(b.x0 - d.x * W, 0, d.x * W - b.x1), dy = Math.max(b.y0 - d.y * H, 0, d.y * H - b.y1), dist = Math.hypot(dx, dy); if (dist < bd) { bd = dist; best = c; } }); if (best && bd < .18 * H) owner.set(d, best); });
+  const shift = (c, dy) => { c.y += dy / H; owner.forEach((o, d) => { if (o === c) { d.y += dy / H; if (d.at !== undefined) { } } }); };
+  // unstack: anything that overlaps horizontally is pushed below the element above it
+  content.sort((a, b) => aiBox(a, W, H).y0 - aiBox(b, W, H).y0); let moved = 0;
+  for (let j = 1; j < content.length; j++) for (let i = 0; i < j; i++) { const A = aiBox(content[i], W, H), B = aiBox(content[j], W, H), ox = Math.min(A.x1, B.x1) - Math.max(A.x0, B.x0); if (ox > .12 * Math.min(A.x1 - A.x0, B.x1 - B.x0) && B.y0 < A.y1 + gap) { shift(content[j], A.y1 + gap - B.y0); moved++; } }
+  if (moved) notes.push(`rozsunięto ${moved} nachodzących elementów`);
+  // fit the whole group inside the safe area, scaling it down if needed, and centre it vertically when it is one stack
+  if (content.length) {
+    let bx = content.map(c => aiBox(c, W, H)), y0 = Math.min(...bx.map(b => b.y0)), y1 = Math.max(...bx.map(b => b.y1)), k = Math.min(1, (H - 2 * my) / (y1 - y0));
+    if (k < .999) { const cy0 = (y0 + y1) / 2; content.forEach(c => { c.size *= k; if (c.w) c.w *= k; if (c.h) c.h *= k; const ny = H / 2 + (c.y * H - cy0) * k; shift(c, ny - c.y * H); }); owner.forEach((o, d) => { d.size *= k; if (d.w && d.type !== 'line') d.w *= k; if (d.h) d.h *= k; }); notes.push('zmniejszono całość, żeby zmieściła się w kadrze'); bx = content.map(c => aiBox(c, W, H)); y0 = Math.min(...bx.map(b => b.y0)); y1 = Math.max(...bx.map(b => b.y1)); }
+    const dyFix = y0 < my ? my - y0 : y1 > H - my ? H - my - y1 : 0; if (dyFix) content.forEach(c => shift(c, dyFix));
+    content.forEach(c => { const b = aiBox(c, W, H); if (b.x0 < mx) c.x += (mx - b.x0) / W; else if (b.x1 > W - mx) c.x -= (b.x1 - (W - mx)) / W; });
+  }
+  // timing: reading order, staggered, all in by half time; bursts fire when their element lands
+  const D = spec.duration, order = content.slice().sort((a, b) => aiBox(a, W, H).y0 - aiBox(b, W, H).y0); let prev = -1;
+  order.forEach(c => { c.start = Math.max(c.start, prev + .14); if (c.start + c.inDur > D * .5) c.start = Math.max(0, D * .5 - c.inDur); prev = c.start; c.end = Math.max(c.end, Math.min(D, c.start + 1.5)); });
+  owner.forEach((o, d) => { if (d.type === 'burst') d.at = Math.max(Number(d.at) || 0, o.start + .2); else d.start = Math.min(d.start, o.start); });
+  return Object.assign({}, spec, { layers: L, _notes: notes });
+}
+
+
+/* ================= AI tab: describe → Claude designs a scene → page renders frames → Claude reviews and fixes ================= */
+const AI_KEY = 'faketok_ai_v1', AI_LEVELS = [['0', 'Szybko'], ['1', 'Starannie'], ['2', 'Perfekcyjnie']];
+let aiSample, aiImages = false, aiCtl = null, aiBusy = false, aiLevel = '1', aiSteps = [], aiT0 = 0, aiTimer = null, aiMsg = '', aiProv = null, aiLocalSize = '1.5', aiLoadMsg = '';
+const AI_IN_VIEWER = !!(window.claude && typeof window.claude.use === 'function'), AI_HAS_GPU = !!navigator.gpu;
+const AI_PROVS = () => [AI_IN_VIEWER ? null : ['local', 'Na komputerze', AI_HAS_GPU ? 'Prawdziwe AI działa w twojej przeglądarce: za darmo, bez konta i bez limitu. Za pierwszym razem pobiera model (1 GB albo 2 GB) i zapamiętuje go, potem działa od razu, nawet bez internetu. Potrzebny Chrome lub Edge i karta graficzna.' : 'Twoja przeglądarka nie obsługuje WebGPU, więc ten tryb tu nie zadziała. Spróbuj w Chrome lub Edge na komputerze.'], aiSample ? ['claude', 'Claude', 'Najlepsza jakość. Korzysta z twojego konta Claude.'] : null].filter(Boolean);
+const aiWait = (ms, signal) => new Promise((res, rej) => { const t = setTimeout(res, ms); signal?.addEventListener('abort', () => { clearTimeout(t); rej({ code: 'cancelled' }); }, { once: true }); });
+function aiParse(txt) { const a = String(txt).indexOf('{'), b = String(txt).lastIndexOf('}'); if (a < 0 || b <= a) throw { code: 'invalid_json' }; try { return JSON.parse(String(txt).slice(a, b + 1)); } catch (e) { throw { code: 'invalid_json' }; } }
+async function aiOnline(prompt, signal) {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    let r; try { r = await fetch('https://text.pollinations.ai/openai', { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal, body: JSON.stringify({ model: 'openai', messages: [{ role: 'user', content: prompt }], response_format: { type: 'json_object' }, seed: Math.floor(Math.random() * 1e9), referrer: 'faketok' }) }); }
+    catch (e) { if (signal?.aborted) throw { code: 'cancelled' }; throw { code: 'offline' }; }
+    if (r.status === 429 && attempt === 0) { await aiWait(1000 * (Number(r.headers.get('Retry-After')) || 10), signal); continue; }
+    if (r.status === 429 || r.status === 402) throw { code: 'rate_limited' }; if (!r.ok) throw { code: 'online_error' };
+    const j = await r.json(); return aiParse(j?.choices?.[0]?.message?.content || '');
+  }
+  throw { code: 'rate_limited' };
+}
+let wlEngine = null, wlModel = null;
+async function aiLocal(prompt, signal) {
+  if (!AI_HAS_GPU) throw { code: 'no_webgpu' };
+  if (!wlEngine) { let ad = null; try { ad = await navigator.gpu.requestAdapter(); } catch (e) { } if (!ad) throw { code: 'no_webgpu' }; }
+  const id = aiLocalSize === '3' ? 'Qwen2.5-3B-Instruct-q4f16_1-MLC' : 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC';
+  if (!wlEngine || wlModel !== id) {
+    aiLoadMsg = 'Ładuję bibliotekę AI…'; renderAiLoad();
+    let webllm; try { webllm = await import('https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.87/+esm'); } catch (e) { throw { code: 'offline' }; }
+    try { wlEngine = await webllm.CreateMLCEngine(id, { initProgressCallback: p => { aiLoadMsg = `Pobieram i uruchamiam model: ${Math.round((p.progress || 0) * 100)}%`; renderAiLoad(); } }); wlModel = id; }
+    catch (e) { wlEngine = null; throw { code: 'local_failed', message: String(e && e.message || e) }; }
+    aiLoadMsg = ''; renderAiLoad();
+  }
+  const stop = () => { try { wlEngine.interruptGenerate(); } catch (e) { } }; signal?.addEventListener('abort', stop, { once: true });
+  try { const r = await wlEngine.chat.completions.create({ messages: [{ role: 'user', content: prompt }], response_format: { type: 'json_object' }, temperature: .7, max_tokens: 2200 }); if (signal?.aborted) throw { code: 'cancelled' }; return aiParse(r.choices[0].message.content); }
+  finally { signal?.removeEventListener('abort', stop); }
+}
+async function aiCall(prompt, signal, images) {
+  if (aiProv === 'online') return aiOnline(prompt, signal);
+  if (aiProv === 'local') return aiLocal(prompt, signal);
+  const o = { modelTier: 'complex', signal, cache: false }; if (images && aiImages) o.images = images;
+  try { return await aiSample.json(prompt, o); } catch (e) { if (e && e.code === 'images_unavailable') { aiImages = false; return aiSample.json(prompt, { modelTier: 'complex', signal, cache: false }); } throw e; }
+}
+function renderAiLoad() { const el = $('#aiLoad'); if (el) el.textContent = aiLoadMsg; }
+const AI_EXAMPLES = ['Intro na kanał o Minecraft PvP z nickiem MaksPVP, fioletowo-zielone, z mieczem i iskrami', 'Powiadomienie: przetrwałem 100 dni w hardcore, złote kolory', 'Przycisk subskrybuj z dzwonkiem, różowo-niebieski, kursor go klika', 'Moja postać macha, obok napis MaksPVP i krótki opis', 'Licznik zabójstw rośnie do 50, czerwona poświata'];
+const AI_SCHEMA = `Canvas: normalized coordinates. x,y = the CENTRE of a layer as a fraction of width/height (0..1). Keep important content inside 0.06..0.94. "size" = fraction of the frame HEIGHT (0.12 = 12% of height). w/h of panels, shapes, buttons, bars, lines = fractions of width/height.
+
+Reply with ONE JSON object:
+{"title": string (Polish, 2-4 words), "duration": seconds 3-8, "background": "none" | "#rrggbb" | {"gradient":["#rrggbb","#rrggbb"],"angle":deg}, "layers": [ at most 16 layers, drawn in order, later = on top ]}
+
+Every layer: {"type", "x", "y", "start", "end" (seconds; default = duration), "in": "pop|fade|slideUp|slideDown|slideLeft|slideRight|zoom|drop|spin|type|wipe|none", "inDur" (seconds, default 0.45; ~1 for "type"), "out": same values (plays in the last 0.4 s before end), "loop": "none|float|pulse|wiggle|spin|glint|shake", "rotate" (degrees), "color": "#rrggbb", "color2": "#rrggbb" (gradient end, optional)}
+
+Types and their extra fields:
+- "text": text ("\\n" = new line), size, font: "display" (tall condensed bold) | "bold" (heavy geometric) | "wide" (wide modern) | "chunky" (rounded game-like) | "pixel" (pixel game font with hard shadow) | "game3d" (blocky extruded 3D title) | "glow" (3D with strong glow in color2) | "script" (handwritten); align: left|center|right; maxW (fraction of width); stroke: true|false; glowColor.
+- "item": item: diamond|emerald|gold|sword|pickaxe|bow|apple|heart|potion|gift (pixel game items), size; tint only to recolour (omit to keep the natural colour); loop "glint"/"float" gives life; custom: true uses the viewer's uploaded item picture.
+- "shape": shape: star|heart|diamond|bolt|spark (glossy stickers; size) | circle | ring (size; with in "wipe" it draws itself) | rect | roundrect (w, h, radius 0..0.5) | arrow (size; aim with rotate).
+- "panel": w, h, style: "glass" (dark glossy card, color→color2) | "game" (grey game-menu window) | "sticker" (flat colour, thick outline, hard shadow) | "card" (flat colour card with soft shadow).
+- "button": text, w, h, color, color2, textColor, pressAt (seconds: it squishes, then shows pressedText / pressedColor). Pair it with a "cursor".
+- "cursor": x, y (target), fromX, fromY (start, e.g. 0.9, 1.05), start, clickAt.
+- "bar": w, h, from 0..1, to 0..1, fill (seconds to fill), text (label above), showPercent.
+- "counter": from, to, prefix, suffix, size, countDur (seconds), color (3D number with glow).
+- "burst": kind confetti|stars|sparks|hearts|coins, at (seconds), count, size (spread), color, color2.
+- "rays": color, alpha 0.03..0.2 (soft light rays behind a hero element).
+- "splash": size, stretch (horizontal scale), color (paint splash behind a title).
+- "character": the viewer's 3D blocky skin; size = how much of the height it fills (0.4..0.9); pose idle|wave|win|point|walk|think; color = rim light.
+- "avatar": size, text (nick; first letter shown), color, color2 (profile circle; shows the viewer's picture if uploaded).
+- "particles": kind dust|snow|embers, count, color (ambient over the whole frame).
+- "line": w, h (thin), color (accent underline that grows in).
+
+Pick ONE composition and follow its positions:
+A) centred stack: hero (item, character, counter or avatar) at x 0.5, y 0.34, size 0.26-0.34; title at y 0.62, size 0.13-0.18; optional subtitle at y 0.74, size 0.05-0.06.
+B) hero left, text right: hero at x 0.27, y 0.5; texts align "left" at x 0.47, maxW 0.46 (title y 0.44, size 0.12-0.15; subtitle y 0.58, size 0.05).
+C) toast in a corner: panel (style glass or game) w 0.42 h 0.17 at x 0.74 y 0.14; small item at x 0.58 y 0.14 size 0.1; texts align "left" at x 0.64 (title y 0.115 size 0.05, line 2 y 0.17 size 0.035).
+D) big title: one title at x 0.5 y 0.46 size 0.16-0.22 with splash or rays behind, subtitle at y 0.62.
+E) call to action: avatar or item at y 0.3, button (w 0.34 h 0.11) at x 0.5 y 0.62 with a cursor that clicks it.
+Texts: at most 3; short natural Polish a creator would really show (e.g. "NOWY REKORD", "Przetrwałem 100 dni", "Subskrybuj!", "Witaj na kanale", the creator's nick); never filler or random words like REKLAMA, START, ODCZYT, TEKST, TITLE; never show the same information twice (a counter and the same number in a text).
+Work like a senior motion designer: one hero element and a clear reading order; 2-3 colours plus white that fit the topic; big readable text (titles 0.12-0.22, labels at least 0.05); text never overlaps other text and never runs off the frame; balanced composition with margins; stagger entrances by 0.1-0.3 s; everything readable by ~40% of the duration, then hold, then exits near the end; a few accents (burst, rays, stickers, glint) without clutter; texts in Polish unless the request uses another language; use the creator's own words and nick from the request; background "none" unless the request asks for one, because these overlays go on top of the creator's video.
+
+Example (shape only, not a design to copy):
+{"title":"Nowy rekord","duration":5,"background":"none","layers":[{"type":"rays","x":0.5,"y":0.42,"color":"#ffd23f","alpha":0.08,"in":"fade"},{"type":"item","item":"gold","x":0.5,"y":0.38,"size":0.3,"in":"pop","loop":"glint"},{"type":"text","text":"NOWY REKORD","font":"glow","x":0.5,"y":0.66,"size":0.15,"color":"#ffe14d","color2":"#ff8a00","start":0.3,"in":"zoom"},{"type":"burst","kind":"confetti","x":0.5,"y":0.4,"at":0.35,"count":90,"color":"#ffd23f","color2":"#ffffff"}]}`;
+function aiPromptText(req) { return `You design overlay animations for YouTube and TikTok creators (many make Minecraft videos). Design ONE animation for the request below.\nAspect ratio of the frame: ${ST.fmt}.\n\n${AI_SCHEMA}\n\nRequest from the creator: «${req}»\n\nReply with only the JSON object.`; }
+function aiCritiqueText(req, spec, times, withImages) {
+  const notes = (spec._notes || []).length ? `\nThe page's layout checker already fixed: ${spec._notes.join('; ')}. Keep those fixes.` : '';
+  return `You designed this overlay animation for the request «${req}» (aspect ${ST.fmt}).${notes}\n${withImages ? `The attached images are frames rendered from it at ${times.map(x => x.toFixed(1)).join(', ')} s, shown on a dark preview background (the real background will be the creator's video).` : 'Picture how it renders frame by frame from the JSON. Check every text: is it natural Polish a creator would show? Replace filler or nonsense words.'}\nReview it like a strict senior motion designer: readability and sizes, alignment and spacing, overlaps, anything cut off at the edges, empty or unbalanced areas, colour harmony, timing (is each element on screen long enough, do entrances feel staggered), polish and wow-factor. Then reply with ONLY the improved complete JSON in the same format: keep what works, fix every problem you found, add or remove layers if it makes it better.\n\n${AI_SCHEMA}\n\nCurrent JSON:\n${JSON.stringify(spec)}`;
+}
+function aiTemplate(rec) {
+  const spec = rec.spec, id = rec.id, texts = spec.layers.map((L, i) => [L, i]).filter(([L]) => ['text', 'button', 'bar'].includes(L.type) && L.text);
+  const fields = texts.map(([L, i], n) => [id + '_t' + i, 'text', (L.type === 'button' ? 'Przycisk ' : 'Napis ') + (n + 1), L.text]);
+  const cols = [...new Set(spec.layers.flatMap(L => [L.color, L.color2]).filter(c => c && c !== '#ffffff'))].slice(0, 3); cols.forEach((c, j) => fields.push([id + '_c' + j, 'color', 'Kolor ' + (j + 1), c]));
+  if (spec.layers.some(L => L.type === 'item')) fields.push(['icon', 'image', 'Własny przedmiot', null]);
+  return { id, cat: 'AI', name: spec.title, d: 'Z AI: ' + rec.prompt, dur: spec.duration, keyHint: true, ai: true, skin: spec.layers.some(L => L.type === 'character'), fields, spec, pt: spec.duration * .55,
+    render(g, W, H, t, v, u) { const map = {}; cols.forEach((c, j) => { map[c] = v[id + '_c' + j] || c; });
+      renderSpec(g, W, H, t, { ...spec, layers: spec.layers.map((L, i) => { const o = { ...L }; if (v[id + '_t' + i] !== undefined && L.text) o.text = v[id + '_t' + i]; if (map[o.color]) o.color = map[o.color]; if (o.color2 && map[o.color2]) o.color2 = map[o.color2]; if (L.type === 'item' && VALS.icon) o.custom = true; return o; }) }, u); } };
+}
+function aiStore() { try { return JSON.parse(localStorage.getItem(AI_KEY) || '[]'); } catch (e) { return []; } }
+function aiSave(list) { try { localStorage.setItem(AI_KEY, JSON.stringify(list.slice(0, 30))); } catch (e) { } }
+function aiRegister(rec) { const tp = aiTemplate(rec), i = TEMPLATES.findIndex(x => x.id === rec.id); if (i >= 0) TEMPLATES[i] = tp; else TEMPLATES.unshift(tp); return tp; }
+aiStore().forEach(r => { try { r.spec = aiSanitize(r.spec); aiRegister(r); } catch (e) { } });
+async function aiFrames(spec) {
+  const [W, H] = ST.fmt === '9:16' ? [540, 960] : ST.fmt === '1:1' ? [720, 720] : [960, 540], c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'), times = [.2, .42, .65, .9].map(f => f * spec.duration), blobs = [];
+  for (const t of times) { g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.fillStyle = '#111114'; g.fillRect(0, 0, W, H); try { renderSpec(g, W, H, t, spec, Math.min(W, H) / 1080); } catch (e) { console.error(e); } blobs.push(await new Promise(r => c.toBlob(r, 'image/jpeg', .86))); }
+  return { times, blobs };
+}
+const AI_ERR = { offline: 'Brak połączenia z AI. Sprawdź internet i spróbuj ponownie.', online_error: 'Darmowe AI ma teraz problem. Spróbuj za chwilę albo wybierz tryb Na komputerze.', no_webgpu: 'Ta przeglądarka nie obsługuje WebGPU. Użyj Chrome lub Edge na komputerze albo trybu Online.', local_failed: 'Nie udało się uruchomić AI na tym komputerze (za mało pamięci karty graficznej?). Wybierz mniejszy model albo tryb Online.', not_granted: 'Nie zezwolono stronie na użycie Claude. Możesz to zmienić w uprawnieniach tej strony.', sampling_disabled: 'AI jest wyłączone dla tego konta.', rate_limited: 'Darmowe AI ma limit zapytań i teraz jest przekroczony. Odczekaj chwilę albo użyj trybu Na komputerze, który nie ma limitu.', refused: 'AI nie chce zrobić tego tematu. Zmień opis.', invalid_json: 'AI odpowiedziało w złym formacie. Kliknij Generuj jeszcze raz.', empty_spec: 'AI nie dało żadnych elementów. Opisz animację dokładniej.', session_expired: 'Zaloguj się ponownie do Claude.', image_rejected: 'Nie udało się wysłać klatek do sprawdzenia.' };
+function aiSetSteps(steps) { aiSteps = steps; renderAi(); }
+async function aiGenerate() {
+  const box = $('#aiPrompt'), req = (box?.value || '').trim(); if (!req) { toast('Opisz, jaką animację chcesz'); box?.focus(); return; }
+  if (!aiProv || aiBusy) return;
+  const rounds = +aiLevel, steps = [{ t: aiProv === 'local' && !wlEngine ? 'Uruchamiam AI i wymyślam scenariusz' : 'Wymyślam scenariusz i układ', s: 'run' }, ...Array.from({ length: rounds }, (_, r) => ({ t: aiProv === 'claude' && aiImages ? `Oglądam klatki i poprawiam (${r + 1}/${rounds})` : `Sprawdzam projekt i poprawiam (${r + 1}/${rounds})`, s: 'wait' })), { t: 'Zapisuję animację', s: 'wait' }];
+  aiBusy = true; aiMsg = ''; aiCtl = new AbortController(); aiT0 = performance.now(); clearInterval(aiTimer); aiTimer = setInterval(() => { const el = $('#aiTime'); if (el) el.textContent = Math.round((performance.now() - aiT0) / 1000) + ' s'; }, 1000); aiSetSteps(steps);
+  const id = 'ai' + Date.now().toString(36), rec = { id, prompt: req, spec: null };
+  try {
+    let spec = aiPolish(aiSanitize(await aiCall(aiPromptText(req), aiCtl.signal)));
+    if (!spec.layers.length) throw { code: 'empty_spec' };
+    rec.spec = spec; selectTpl(aiTemplate(rec)); steps[0].s = 'done';
+    for (let r = 0; r < rounds; r++) {
+      steps[r + 1].s = 'run'; aiSetSteps(steps);
+      const vision = aiProv === 'claude' && aiImages, fr = await aiFrames(spec); if (aiProv === 'online') await aiWait(2500, aiCtl.signal);
+      let better = aiPolish(aiSanitize(await aiCall(aiCritiqueText(req, spec, fr.times, vision), aiCtl.signal, vision ? fr.blobs : null)));
+      if (better.layers.length) { spec = better; rec.spec = spec; selectTpl(aiTemplate(rec)); }
+      steps[r + 1].s = 'done'; aiSetSteps(steps);
+    }
+    steps[steps.length - 1].s = 'run'; aiSetSteps(steps);
+    const list = aiStore().filter(x => x.id !== id); list.unshift(rec); aiSave(list);
+    const tp = aiRegister(rec); makePosters(x => x.id === id); renderCats(); selectTpl(tp);
+    steps[steps.length - 1].s = 'done'; aiMsg = 'Gotowe. Animacja gra w podglądzie, a w ustawieniach zmienisz jej napisy i kolory.'; toast('Animacja AI gotowa');
+  } catch (e) {
+    const code = e && e.code; steps.forEach(s => { if (s.s === 'run') s.s = 'fail'; });
+    aiMsg = code === 'cancelled' ? 'Zatrzymano.' : (AI_ERR[code] || 'Coś poszło nie tak po stronie AI. Spróbuj jeszcze raz.');
+    if (rec.spec && code === 'cancelled') { const list = aiStore(); list.unshift(rec); aiSave(list); const tp = aiRegister(rec); makePosters(x => x.id === id); renderCats(); selectTpl(tp); aiMsg = 'Zatrzymano. Zapisałem wersję, którą AI zdążyło zrobić.'; }
+    if ((code === 'not_granted' || code === 'sampling_disabled') && aiProv === 'claude') { aiSample = null; aiProv = AI_PROVS()[0]?.[0] || null; }
+  } finally { aiBusy = false; clearInterval(aiTimer); renderAi(); }
+}
+function renderAi() {
+  const box = $('#aiView'); if (!box) return; const keep = $('#aiPrompt')?.value; box.replaceChildren();
+  box.append(h('div', { class: 'aihead' }, h('b', null, 'Stwórz animację z AI'), h('p', null, 'Opisz, co ma się dziać. AI samo zaprojektuje nową animację, a potem ją sprawdzi i poprawi. Każdy wynik jest inny.')));
+  if (AI_IN_VIEWER && aiSample === undefined) { box.append(h('div', { class: 'hint' }, 'Łączę z AI…')); return; }
+  const provs = AI_PROVS(); if (!aiProv || !provs.some(p => p[0] === aiProv)) aiProv = provs[0]?.[0] || null;
+  if (provs.length) { const cur = provs.find(p => p[0] === aiProv); box.append(h('div', { class: 'airow' }, h('span', { class: 'hint' }, 'Silnik AI'), h('div', { class: 'seg' }, ...provs.map(([k, l]) => h('button', { type: 'button', class: aiProv === k ? 'on' : '', disabled: aiBusy || null, onclick: () => { aiProv = k; renderAi(); } }, l)))), h('div', { class: 'hint' }, cur[2]));
+    if (aiProv === 'local' && AI_HAS_GPU) box.append(h('div', { class: 'airow' }, h('span', { class: 'hint' }, 'Model'), h('div', { class: 'seg' }, ...[['1.5', 'Lżejszy · 1 GB'], ['3', 'Mocniejszy · 2 GB']].map(([k, l]) => h('button', { type: 'button', class: aiLocalSize === k ? 'on' : '', disabled: aiBusy || null, onclick: () => { aiLocalSize = k; renderAi(); } }, l)))), h('div', { class: 'hint', id: 'aiLoad' }, aiLoadMsg)); }
+  if (!provs.length) { box.append(h('div', { class: 'aicard' }, h('b', null, 'Tu AI nie ma połączenia'), h('p', null, 'AI bez limitu działa w wersji FakeTok pod adresem maxioo21.github.io/kadr-studio. Otwórz ją i wróć do tej zakładki.'), h('a', { class: 'btn primary', href: 'https://maxioo21.github.io/kadr-studio/animacje/#ai', target: '_blank', rel: 'noopener' }, 'Otwórz wersję z AI bez limitu'))); }
+  else {
+    const ta = h('textarea', { id: 'aiPrompt', rows: 4, maxlength: 400, placeholder: 'Np. intro na kanał o Minecraft PvP z moim nickiem, fioletowo-zielone, z mieczem i iskrami', 'aria-label': 'Opis animacji' }); ta.value = keep || ''; ta.disabled = aiBusy;
+    box.append(ta, h('div', { class: 'aichips' }, ...AI_EXAMPLES.map(x => h('button', { type: 'button', class: 'chip', disabled: aiBusy || null, onclick: () => { ta.value = x; ta.focus(); } }, x))));
+    box.append(h('div', { class: 'airow' }, h('span', { class: 'hint' }, 'Dokładność'), h('div', { class: 'seg' }, ...AI_LEVELS.map(([k, l]) => h('button', { type: 'button', class: aiLevel === k ? 'on' : '', disabled: aiBusy || null, onclick: () => { aiLevel = k; renderAi(); } }, l)))));
+    box.append(aiBusy ? h('button', { class: 'btn block', onclick: () => aiCtl?.abort() }, 'Zatrzymaj') : h('button', { class: 'btn primary block', onclick: aiGenerate }, h('span', { html: ICON.spark, style: 'display:grid' }), 'Generuj animację'));
+    if (aiSteps.length) box.append(h('div', { class: 'aiprog' }, h('div', { class: 'aitime' }, aiBusy ? 'Pracuję… ' : 'Czas: ', h('span', { id: 'aiTime' }, Math.round((performance.now() - aiT0) / 1000) + ' s')), ...aiSteps.map(s => h('div', { class: 'aistep ' + s.s }, h('i'), s.t))));
+    if (aiMsg) box.append(h('div', { class: 'hint', style: 'color:var(--fg)' }, aiMsg));
+  }
+  const mine = TEMPLATES.filter(x => x.ai);
+  if (mine.length) {
+    box.append(h('div', { class: 'aisub' }, 'Twoje animacje z AI'));
+    box.append(h('div', { class: 'ailist' }, ...mine.map(tp => { const cv = h('canvas', { width: 320, height: 180 }), p = posters.get(tp.id); if (p) cv.getContext('2d').drawImage(p, 0, 0);
+      return h('div', { class: 'tcard' + (ST.tpl === tp ? ' on' : '') }, h('button', { type: 'button', class: 'pv', style: 'border:0;padding:0', onclick: () => selectTpl(tp), 'aria-label': tp.name }, cv), h('div', { class: 'aimeta' }, h('b', null, tp.name), h('button', { type: 'button', class: 'aidel', title: 'Usuń', 'aria-label': 'Usuń ' + tp.name, onclick: () => { aiSave(aiStore().filter(r => r.id !== tp.id)); const i = TEMPLATES.indexOf(tp); if (i >= 0) TEMPLATES.splice(i, 1); if (ST.tpl === tp) selectTpl(TEMPLATES.find(x => !x.hidden && !x.ai) || TEMPLATES[0]); renderCats(); renderAi(); } }, '×'))); })));
+  }
+}
+function setGalMode(m) { $('#gal').classList.toggle('ai-mode', m === 'ai'); $('#galMode').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.m === m)); if (m === 'ai') renderAi(); }
+$('#galMode').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setGalMode(b.dataset.m); });
+(async () => { try { aiSample = AI_IN_VIEWER ? await window.claude.use('sample') : null; } catch (e) { aiSample = null; } if (aiSample) { try { const lim = await aiSample.limits(); aiImages = !!(lim && lim.images); } catch (e) { aiImages = false; } } renderAi(); })();
+
 renderFmt(); renderCats(); renderGallery(); renderEditor(); updateTitle(); setPlayIcon(); sizeView();
 /* deep link: animacje/#neon opens that animation */
-function openFromHash() { const id = decodeURIComponent(location.hash.slice(1)), tp = TEMPLATES.find(x => x.id === id); if (tp && tp !== ST.tpl) selectTpl(tp); }
+function openFromHash() { const id = decodeURIComponent(location.hash.slice(1)); if (id === 'ai') { setGalMode('ai'); return; } const tp = TEMPLATES.find(x => x.id === id); if (tp && tp !== ST.tpl) selectTpl(tp); }
 openFromHash(); addEventListener('hashchange', openFromHash);
 if (/^(faketok\.surge\.sh|localhost|127\.0\.0\.1)$/.test(location.hostname)) $('#backHome').hidden = false;
 requestAnimationFrame(tick);
