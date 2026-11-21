@@ -2,7 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Bebas+Neue&family=Anton&family=Montserrat:wght@700;900&family=Press+Start+2P&family=Bungee&family=JetBrains+Mono:wght@500&family=Playfair+Display:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Bebas+Neue&family=Bangers&family=Anton&family=Montserrat:wght@700;900&family=Press+Start+2P&family=Bungee&family=JetBrains+Mono:wght@500&family=Playfair+Display:wght@700&display=swap">
 <style>
 /* Layout: template studio. Gallery (left) | live player (center) | edit panel (right); phone = player, panel, gallery.
    Dark-only like the FakeTok editor: neutral greys, one cyan accent. */
@@ -169,6 +169,7 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 <div id="toast" role="status" aria-live="polite"></div>
 <input type="file" id="skinIn" accept="image/png" hidden>
 <input type="file" id="bgIn" accept="image/*" hidden>
+<input type="file" id="vidIn" accept="video/*" hidden>
 
 <script src="vendor/three.min.js"></script>
 <script>
@@ -239,6 +240,8 @@ function sfx(name, when = 0, out = master) {
     case 'tick': osc('sine', 1046, 0, .15, .5); break;
     case 'glitch': for (let k = 0; k < 6; k++) { const s = actx.createBufferSource(); s.buffer = noiseBuf(.05); const f = actx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 400 + Math.random() * 3000; const g = actx.createGain(); const tk = t0 + k * .045; g.gain.setValueAtTime(.35, tk); g.gain.setValueAtTime(0, tk + .035); s.connect(f); f.connect(g); g.connect(out); s.start(tk); } break;
     case 'step': nz(.08, 'lowpass', 900, 0, .35); break;
+    case 'zap': nz(.5, 'highpass', 1200, 0, .9); osc('sawtooth', 120, 40, .6, .5); break;
+    case 'glass': nz(.4, 'highpass', 3000, 0, .8); for (let k = 0; k < 8; k++) { const o = actx.createOscillator(); o.frequency.value = 2500 + Math.random() * 3500; const g2 = actx.createGain(); const tk = t0 + .05 + Math.random() * .5; g2.gain.setValueAtTime(.0001, tk); g2.gain.exponentialRampToValueAtTime(.12, tk + .005); g2.gain.exponentialRampToValueAtTime(.0001, tk + .25); o.connect(g2); g2.connect(out); o.start(tk); o.stop(tk + .3); } break;
   }
 }
 
@@ -885,6 +888,228 @@ TEMPLATES.push(
   }
 );
 
+/* ---- batch 3: more montage overlays + character scenes ---- */
+function proj(W, H, p, lx, ly, lz = 0) {
+  if (!C3.ok) return [W / 2, H / 2];
+  const s = p.scale ?? 1, v = new THREE.Vector3((p.x || 0) + lx * s, (p.y || 0) + ly * s, lz * s).project(C3.cam);
+  return [(v.x + 1) / 2 * W, (1 - v.y) / 2 * H];
+}
+function boltPath(x0, y0, x1, y1, seed, depth = 7, disp = 160) {
+  let pts = [[x0, y0], [x1, y1]];
+  for (let d = 0; d < depth; d++) {
+    const np = [pts[0]];
+    for (let i = 0; i < pts.length - 1; i++) { const [ax, ay] = pts[i], [bx, by] = pts[i + 1]; const off = (rnd(seed * 31 + d * 7 + i, 3) - .5) * disp / Math.pow(1.8, d); np.push([(ax + bx) / 2 + off, (ay + by) / 2 + off * .3], pts[i + 1]); }
+    pts = np;
+  }
+  return pts;
+}
+function wrapLines(g, text, maxW) { const words = text.split(/\s+/); const lines = []; let cur = ''; for (const w of words) { const test = cur ? cur + ' ' + w : w; if (g.measureText(test).width > maxW && cur) { lines.push(cur); cur = w; } else cur = test; } if (cur) lines.push(cur); return lines; }
+TEMPLATES.push(
+  {
+    id: 'lightning', cat: 'Montaż', name: 'Błyskawica', d: 'Piorun uderza z błyskiem. Daj na mocne wejście albo drop.', dur: 2.5, defBg: 'black', blendHint: true,
+    fields: [['color', 'color', 'Kolor', '#9fd8ff']], sfx: [[.15, 'zap'], [1.35, 'zap']],
+    render(g, W, H, t, v, u) {
+      for (const [t0, seed, xs, xe] of [[.15, 1, .55, .45], [1.35, 2, .3, .62]]) {
+        const lt = t - t0; if (lt < 0 || lt > .5) continue;
+        const flick = lt < .06 || (lt > .1 && lt < .16) ? 1 : lt < .3 ? .35 : (.5 - lt) / .2 * .3;
+        g.fillStyle = rgba(v.color, .45 * flick); g.fillRect(0, 0, W, H);
+        const pts = boltPath(W * xs, -20, W * xe, H * .95, seed, 7, 220 * u);
+        g.save(); g.globalCompositeOperation = 'lighter'; g.lineJoin = 'round'; g.lineCap = 'round';
+        for (const [lw, a, blur] of [[26, .25, 40], [10, .6, 20], [4, 1, 0]]) { g.strokeStyle = lw === 4 ? `rgba(255,255,255,${flick})` : rgba(v.color, a * flick); g.lineWidth = lw * u; g.shadowColor = v.color; g.shadowBlur = blur * u; g.beginPath(); pts.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.stroke(); }
+        const bi = Math.floor(pts.length * .45), br = boltPath(pts[bi][0], pts[bi][1], pts[bi][0] + (rnd(seed, 9) - .5) * W * .4, pts[bi][1] + H * .3, seed + 5, 5, 120 * u);
+        g.lineWidth = 3 * u; g.strokeStyle = `rgba(255,255,255,${flick * .8})`; g.beginPath(); br.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.stroke();
+        g.restore();
+      }
+    }
+  },
+  {
+    id: 'fire', cat: 'Montaż', name: 'Ogień', d: 'Płomienie od dołu ekranu. W trybie Ekran palą się na Twoim filmie.', dur: 4, defBg: 'black', blendHint: true,
+    fields: [['color', 'color', 'Kolor płomieni', '#ff6a1a']], sfx: [],
+    render(g, W, H, t, v, u) {
+      g.save(); g.globalCompositeOperation = 'lighter';
+      const env = Math.min(seg(t, 0, .5), 1 - seg(t, 3.4, 4));
+      for (let i = 0; i < 150; i++) {
+        const life = .9 + rnd(i, 1) * .8, lt = ((t + rnd(i, 2) * life) % life) / life;
+        const x = W * rnd(i, 3) + Math.sin(t * 3 + i) * 20 * u * lt, y = H + 40 * u - lt * H * (.35 + rnd(i, 4) * .25), r = (90 - 70 * lt) * u * (.6 + rnd(i, 5) * .8);
+        const a = (1 - lt) * env * .55, gr = g.createRadialGradient(x, y, 0, x, y, r);
+        gr.addColorStop(0, `rgba(255,${Math.round(230 - lt * 150)},${Math.round(150 - lt * 150)},${a})`); gr.addColorStop(.5, rgba(v.color, a * .6)); gr.addColorStop(1, 'rgba(120,10,0,0)');
+        g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2);
+      }
+      for (let i = 0; i < 30; i++) { const lt = ((t * .6 + rnd(i, 7)) % 1); g.fillStyle = `rgba(255,200,120,${(1 - lt) * env})`; g.fillRect(W * rnd(i, 8) + Math.sin(t * 4 + i) * 30 * u, H - lt * H * .8, 3 * u, 3 * u); }
+      g.restore();
+    }
+  },
+  {
+    id: 'flare', cat: 'Montaż', name: 'Flara obiektywu', d: 'Kinowa flara przelatuje przez kadr.', dur: 3, defBg: 'black', blendHint: true,
+    fields: [['color', 'color', 'Kolor', '#6fb8ff']], sfx: [[0, 'whoosh']],
+    render(g, W, H, t, v, u) {
+      const k = E.inOut(seg(t, 0, 3)), x = lerp(-W * .2, W * 1.2, k), y = H * .35, env = Math.sin(Math.PI * seg(t, 0, 3));
+      g.save(); g.globalCompositeOperation = 'lighter';
+      let gr = g.createRadialGradient(x, y, 0, x, y, 260 * u); gr.addColorStop(0, `rgba(255,255,255,${env})`); gr.addColorStop(.2, rgba(v.color, .7 * env)); gr.addColorStop(1, rgba(v.color, 0)); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+      g.save(); g.translate(x, y); g.scale(1, .025); gr = g.createRadialGradient(0, 0, 0, 0, 0, W * .9); gr.addColorStop(0, rgba(v.color, .9 * env)); gr.addColorStop(1, rgba(v.color, 0)); g.fillStyle = gr; g.beginPath(); g.arc(0, 0, W * .9, 0, Math.PI * 2); g.fill(); g.restore();
+      for (let i = 1; i <= 5; i++) { const f = -.35 * i, gx = W / 2 + (x - W / 2) * f, gy = H / 2 + (y - H / 2) * f, r = (30 + i * 22) * u; g.strokeStyle = rgba(i % 2 ? v.color : '#ffd18a', .35 * env); g.lineWidth = 6 * u; g.beginPath(); g.arc(gx, gy, r, 0, Math.PI * 2); g.stroke(); g.fillStyle = rgba(i % 2 ? '#ffd18a' : v.color, .12 * env); g.fill(); }
+      g.restore();
+    }
+  },
+  {
+    id: 'pulse', cat: 'Montaż', name: 'Puls na bit', d: 'Kręgi rozchodzą się w rytmie 120 BPM. Pasuje do muzyki w editach.', dur: 4, defBg: 'black', blendHint: true,
+    fields: [['color', 'color', 'Kolor', '#ff3fa4']], sfx: [],
+    render(g, W, H, t, v, u) {
+      const D = Math.hypot(W, H) / 2;
+      g.save(); g.globalCompositeOperation = 'lighter';
+      for (let b = 0; b < 8; b++) { const lt = t - b * .5; if (lt < 0 || lt > 1.2) continue; const r = E.out(lt / 1.2) * D; g.strokeStyle = rgba(v.color, (1 - lt / 1.2) * .9); g.lineWidth = (30 - lt * 20) * u; g.beginPath(); g.arc(W / 2, H / 2, r, 0, Math.PI * 2); g.stroke(); }
+      const beat = Math.exp(-(t % .5) * 8), gr = g.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, D * .6); gr.addColorStop(0, rgba(v.color, .35 * beat)); gr.addColorStop(1, rgba(v.color, 0)); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+      g.restore();
+    }
+  },
+  {
+    id: 'crack', cat: 'Montaż', name: 'Pęknięty ekran', d: 'Uderzenie, błysk i pęknięcia jak na rozbitej szybie.', dur: 3, defBg: 'black', blendHint: true,
+    fields: [], sfx: [[.2, 'glass'], [.2, 'boom']],
+    render(g, W, H, t, v, u) {
+      const cx = W * .58, cy = H * .44, lt = t - .2; if (lt < 0) return;
+      g.fillStyle = `rgba(255,255,255,${Math.max(0, .8 - lt * 4)})`; g.fillRect(0, 0, W, H);
+      const grow = E.out(seg(lt, 0, .25)), D = Math.hypot(W, H);
+      g.strokeStyle = 'rgba(235,245,255,.9)'; g.lineCap = 'round'; g.lineJoin = 'round';
+      const rays = [];
+      for (let i = 0; i < 14; i++) {
+        const a0 = i / 14 * Math.PI * 2 + rnd(i, 1) * .3; let x = cx, y = cy, a = a0; const pts = [[x, y]];
+        const len = D * (.25 + rnd(i, 2) * .45) * grow;
+        for (let s = 0; s < 12; s++) { a += (rnd(i, s + 3) - .5) * .5; const st = len / 12; x += Math.cos(a) * st; y += Math.sin(a) * st; pts.push([x, y]); }
+        rays.push(pts); g.lineWidth = (4 - rnd(i, 4) * 2) * u; g.beginPath(); pts.forEach(([px, py], k) => k ? g.lineTo(px, py) : g.moveTo(px, py)); g.stroke();
+      }
+      g.lineWidth = 2 * u; g.strokeStyle = 'rgba(235,245,255,.6)';
+      for (const ring of [3, 6, 9]) { g.beginPath(); rays.forEach((r, i) => { const p = r[Math.min(ring, r.length - 1)]; i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]); }); g.closePath(); g.stroke(); }
+      g.fillStyle = 'rgba(255,255,255,.85)'; g.beginPath(); g.arc(cx, cy, 14 * u, 0, Math.PI * 2); g.fill();
+    }
+  },
+  {
+    id: 'confov', cat: 'Montaż', name: 'Deszcz konfetti', d: 'Kolorowe konfetti spada przez cały ekran.', dur: 4, defBg: 'green', keyHint: true,
+    fields: [['c1', 'color', 'Kolor 1', '#ffd23f'], ['c2', 'color', 'Kolor 2', '#ff4f6d']], sfx: [[0, 'pop']],
+    render(g, W, H, t, v, u) {
+      const cols = [v.c1, v.c2, '#22d3e6', '#7c5cff', '#ffffff', '#5ad19a'];
+      for (let i = 0; i < 160; i++) {
+        const sp = (300 + rnd(i, 1) * 400) * u, y = -40 * u + ((t - rnd(i, 2) * 1.5) * sp), x = rnd(i, 3) * W + Math.sin(t * 2 + i) * 40 * u; if (y < -40 * u || y > H + 40 * u) continue;
+        g.save(); g.translate(x, y); g.rotate(t * (3 + rnd(i, 4) * 5) + i); g.scale(1, Math.abs(Math.cos(t * 4 + i)) + .15); g.fillStyle = cols[i % cols.length];
+        if (i % 4 === 0) { g.beginPath(); g.arc(0, 0, 8 * u, 0, Math.PI * 2); g.fill(); } else g.fillRect(-10 * u, -6 * u, 20 * u, 12 * u); g.restore();
+      }
+    }
+  },
+  {
+    id: 'comic', cat: 'Montaż', name: 'Komiksowy wybuch', d: 'Gwiazda z napisem jak w komiksie, np. POW! albo BOOM!', dur: 2, defBg: 'green', keyHint: true,
+    fields: [['text', 'text', 'Napis', 'POW!'], ['color', 'color', 'Kolor gwiazdy', '#ffd23f']], sfx: [[0, 'boom'], [0, 'pop']],
+    render(g, W, H, t, v, u) {
+      const k = E.back(seg(t, 0, .3)), out = seg(t, 1.6, 2), wob = Math.sin(t * 18) * .04 * (1 - seg(t, 0, 1));
+      g.save(); g.translate(W / 2, H / 2); g.rotate(-.12 + wob); g.scale(k * (1 - out), k * (1 - out));
+      const star = (R, r, n) => { g.beginPath(); for (let i = 0; i < n * 2; i++) { const a = i / (n * 2) * Math.PI * 2, rr2 = (i % 2 ? r : R) * (1 + (rnd(i, 7) - .5) * .25); i ? g.lineTo(Math.cos(a) * rr2, Math.sin(a) * rr2) : g.moveTo(Math.cos(a) * rr2, Math.sin(a) * rr2); } g.closePath(); };
+      star(420 * u, 260 * u, 12); g.fillStyle = v.color; g.fill(); g.lineWidth = 14 * u; g.strokeStyle = '#111'; g.stroke();
+      star(300 * u, 200 * u, 10); g.fillStyle = '#ff4f3d'; g.fill();
+      T(g, v.text, 0, 10 * u, { size: 170 * u, font: 'Bangers', weight: 400, color: '#fff', stroke: { w: 16 * u, color: '#111' }, maxW: 520 * u, shadow: { color: '#111', x: 10 * u, y: 10 * u }, shadowOnFill: true });
+      g.restore();
+    }
+  },
+  {
+    id: 'notif', cat: 'Kanał', name: 'Powiadomienie', d: 'Dymek powiadomienia wjeżdża z góry, z Twoim tytułem i treścią.', dur: 4, defBg: 'green', keyHint: true,
+    fields: [['title', 'text', 'Tytuł', 'TwójNick dodał nowy film'], ['msg', 'text', 'Treść', 'Kliknij, żeby obejrzeć 🎬'], ['icon', 'text', 'Ikona (emoji)', '▶️']], sfx: [[.25, 'ding'], [3.4, 'whoosh']],
+    render(g, W, H, t, v, u) {
+      const por = isPortrait(W, H), w = Math.min(W * .9, 980 * u), hh = 190 * u, x = W / 2 - w / 2;
+      const k = E.back(seg(t, .2, .7)), out = E.in(seg(t, 3.3, 3.8)), y = lerp(-hh - 20 * u, por ? 80 * u : 50 * u, k) - out * (hh + 120 * u);
+      g.save(); g.shadowColor = 'rgba(0,0,0,.35)'; g.shadowBlur = 40 * u; g.shadowOffsetY = 14 * u; rr(g, x, y, w, hh, 40 * u); g.fillStyle = 'rgba(245,245,248,.97)'; g.fill(); g.restore();
+      rr(g, x + 30 * u, y + 35 * u, 120 * u, 120 * u, 28 * u); const ig = g.createLinearGradient(x, y, x + 150 * u, y + 150 * u); ig.addColorStop(0, '#ff4f6d'); ig.addColorStop(1, '#7c5cff'); g.fillStyle = ig; g.fill();
+      g.save(); g.font = `${66 * u}px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#fff'; g.fillText(v.icon, x + 90 * u, y + 97 * u); g.restore();
+      T(g, v.title, x + 180 * u, y + 72 * u, { size: 46 * u, weight: 800, color: '#111', align: 'left', maxW: w - 300 * u });
+      T(g, v.msg, x + 180 * u, y + 128 * u, { size: 40 * u, weight: 500, color: '#555', align: 'left', maxW: w - 220 * u });
+      T(g, 'teraz', x + w - 40 * u, y + 72 * u, { size: 32 * u, weight: 500, color: '#888', align: 'right' });
+    }
+  },
+  {
+    id: 'counter', cat: 'Kanał', name: 'Licznik subskrypcji', d: 'Liczba rośnie do celu, a na końcu wybucha konfetti.', dur: 4.5,
+    fields: [['from', 'text', 'Od', '990'], ['to', 'text', 'Do', '1000'], ['label', 'text', 'Podpis', 'SUBSKRYBENTÓW'], ['accent', 'color', 'Kolor', '#22d3e6']], sfx: [[2.6, 'boom'], [2.65, 'pop']],
+    render(g, W, H, t, v, u) {
+      const a = parseInt(String(v.from).replace(/\D/g, '')) || 0, b = parseInt(String(v.to).replace(/\D/g, '')) || 0;
+      const k = E.out(seg(t, .3, 2.6)), n = Math.round(lerp(a, b, k)), done = t >= 2.6, pop = done ? E.elastic(seg(t, 2.6, 3.3)) : 1;
+      T(g, n.toLocaleString('pl-PL'), W / 2, H * .46, { size: 260 * u, font: 'Anton', weight: 400, color: done ? v.accent : '#fff', scale: done ? lerp(1.3, 1, pop) : 1, maxW: W * .9, shadow: { color: 'rgba(0,0,0,.4)', y: 12 * u } });
+      T(g, v.label, W / 2, H * .46 + 190 * u, { size: 60 * u, weight: 800, ls: .2, alpha: seg(t, .2, .6), maxW: W * .9 });
+      if (done) confetti(g, W, H, 2.6, t, 120, [{ x: W * .2, y: H, a: -Math.PI / 2.4, spread: .7 }, { x: W * .8, y: H, a: -Math.PI / 1.7, spread: .7 }], u, [v.accent, '#ffd23f', '#ff4f6d', '#fff']);
+    }
+  },
+  {
+    id: 'karaoke', cat: 'Napisy', name: 'Napisy karaoke', d: 'Słowa podświetlają się po kolei, jak w napisach do piosenki.', dur: 0, defBg: 'green', keyHint: true,
+    fields: [['text', 'textarea', 'Tekst napisów', 'Każde słowo świeci się po kolei, jak w karaoke'], ['accent', 'color', 'Kolor podświetlenia', '#ffd23f']],
+    durFn: v => Math.max(2, v.text.trim().split(/\s+/).length * .38 + 1),
+    render(g, W, H, t, v, u) {
+      const words = v.text.trim().split(/\s+/).filter(Boolean); if (!words.length) return;
+      const fs = 88 * u; g.font = `900 ${fs}px Inter`; const maxW = W * .88, spW = g.measureText(' ').width;
+      const lines = [[]]; let lw = 0;
+      words.forEach((w, i) => { const ww = g.measureText(w).width; if (lw + ww > maxW && lines[lines.length - 1].length) { lines.push([]); lw = 0; } lines[lines.length - 1].push([w, i, ww]); lw += ww + spW; });
+      const cur = t / .38, y0 = H * .82 - (lines.length - 1) * fs * 1.25;
+      lines.forEach((ln, li) => {
+        const tw = ln.reduce((s, [, , ww]) => s + ww, 0) + spW * (ln.length - 1); let x = W / 2 - tw / 2;
+        for (const [w, i, ww] of ln) {
+          const on = cur >= i, act = cur >= i && cur < i + 1, sc = act ? 1 + .12 * Math.sin(Math.PI * (cur - i)) : 1;
+          T(g, w, x + ww / 2, y0 + li * fs * 1.25, { size: fs, weight: 900, color: on ? v.accent : '#ffffff', scale: sc, stroke: { w: 10 * u, color: '#111' } });
+          x += ww + spW;
+        }
+      });
+    }
+  },
+  {
+    id: 'runwipe', cat: 'Postać', name: 'Przejście z postacią', d: 'Postać przebiega przez ekran i ciągnie za sobą kolorową zasłonę. Wstaw między klipy.', dur: 2.2, skin: true, defBg: 'green', keyHint: true,
+    fields: [['accent', 'color', 'Kolor zasłony', '#22d3e6']], sfx: [[0, 'whoosh'], [1.3, 'whoosh']],
+    render(g, W, H, t, v, u) {
+      const cam = frameCam(W, H, isPortrait(W, H) ? .4 : .62, .5, .55);
+      const k = seg(t, 0, 1.15), cxw = lerp(-cam.visW * .65, cam.visW * .65, k);
+      const sx = (cxw / cam.visW + .5) * W, out = E.inOut(seg(t, 1.35, 2.1));
+      g.fillStyle = v.accent; g.fillRect(W * out, 0, Math.max(0, Math.min(W, sx) - W * out), H);
+      g.fillStyle = mix(v.accent, '#000000', .25); g.fillRect(Math.max(W * out, sx - 60 * u), 0, Math.min(60 * u, sx), H);
+      if (t < 1.25) drawChar(g, W, H, { x: cxw, rotY: Math.PI / 2, ...walkPose(t * 16, 1.1) }, cam, { shadow: false, rim: v.accent });
+    }
+  },
+  {
+    id: 'sign', cat: 'Postać', name: 'Postać z tabliczką', d: 'Postać trzyma tabliczkę z Twoim napisem.', dur: 5, skin: true,
+    fields: [['text', 'textarea', 'Napis na tabliczce', 'SUBSKRYBUJ!'], ['board', 'color', 'Kolor tabliczki', '#fff4d6'], ['ink', 'color', 'Kolor napisu', '#1d1d24']], sfx: [[.3, 'pop']],
+    render(g, W, H, t, v, u) {
+      const por = isPortrait(W, H), cam = por ? frameCam(W, H, .48, .5, .5) : frameCam(W, H, .7, .5, .52);
+      const up = E.back(seg(t, 0, .5)), bob = Math.sin(t * 2.4) * .4;
+      const p = { y: lerp(-34, 0, up) + bob, armR: [-1.25, -.25], armL: [-1.25, .25], head: [Math.sin(t * 1.3) * .06 - .05, Math.sin(t * .9) * .15] };
+      drawChar(g, W, H, p, cam, {});
+      const [x1, y1] = proj(W, H, p, -8, 22, 8), [x2, y2] = proj(W, H, p, 8, 6, 8);
+      const bw = Math.abs(x2 - x1) * 1.6, bh = Math.abs(y2 - y1) * 1.15, bx = (x1 + x2) / 2, by = (y1 + y2) / 2;
+      const k = E.back(seg(t, .25, .65));
+      g.save(); g.translate(bx, by); g.rotate(Math.sin(t * 2.4) * .03); g.scale(k, k);
+      g.shadowColor = 'rgba(0,0,0,.35)'; g.shadowBlur = 20 * u; g.shadowOffsetY = 8 * u; rr(g, -bw / 2, -bh / 2, bw, bh, 14 * u); g.fillStyle = v.board; g.fill(); g.shadowColor = 'transparent';
+      g.lineWidth = 8 * u; g.strokeStyle = mix(v.board, '#6b4a2a', .55); g.stroke();
+      const lines = v.text.split('\n'); const fs = Math.min(bh / (lines.length * 1.25 + .3), 140 * u);
+      lines.forEach((ln, i) => T(g, ln, 0, (i - (lines.length - 1) / 2) * fs * 1.2, { size: fs, font: 'Bungee', weight: 400, color: v.ink, maxW: bw * .86 }));
+      g.restore();
+    }
+  },
+  {
+    id: 'speech', cat: 'Postać', name: 'Postać mówi', d: 'Postać gada, a nad nią pojawia się dymek z Twoim tekstem.', dur: 5, skin: true,
+    fields: [['text', 'textarea', 'Tekst w dymku', 'Siema! Dzisiaj pokażę Wam coś mega!'], ['accent', 'color', 'Kolor ramki', '#22d3e6']], sfx: [[.4, 'pop']],
+    render(g, W, H, t, v, u) {
+      const por = isPortrait(W, H), cam = por ? frameCam(W, H, .42, .5, .66) : frameCam(W, H, .62, .26, .56);
+      const talk = t > .5 && t < 4.2;
+      const p = { ...idlePose(t), rotY: por ? 0 : .3 };
+      if (talk) { p.head = [Math.abs(Math.sin(t * 9)) * .12 - .05, Math.sin(t * 1.5) * .2]; p.armR = [-.6 - .4 * Math.sin(t * 3), -.3]; p.armL = [-.2 + .3 * Math.sin(t * 2.3), .2]; }
+      drawChar(g, W, H, p, cam, { rim: v.accent });
+      const [hx, hy] = proj(W, H, p, 0, 33, 0);
+      const k = E.back(seg(t, .35, .7)), fs = 54 * u;
+      g.font = `800 ${fs}px Inter`; const maxW = por ? W * .8 : W * .5;
+      const full = v.text, shown = full.slice(0, Math.floor(seg(t, .6, .6 + full.length * .045) * full.length));
+      const lines = wrapLines(g, full, maxW - 80 * u), shownLines = wrapLines(g, shown, maxW - 80 * u);
+      const bw = Math.min(maxW, Math.max(...lines.map(l => g.measureText(l).width)) + 80 * u), bh = lines.length * fs * 1.3 + 60 * u;
+      const bx = por ? W / 2 - bw / 2 : Math.min(W - bw - 40 * u, hx + 80 * u), byy = por ? hy - bh - 70 * u : hy - bh - 30 * u;
+      g.save(); g.translate(bx + bw / 2, byy + bh); g.scale(k, k); g.translate(-(bx + bw / 2), -(byy + bh));
+      g.shadowColor = 'rgba(0,0,0,.3)'; g.shadowBlur = 24 * u; g.shadowOffsetY = 8 * u;
+      rr(g, bx, byy, bw, bh, 34 * u); g.fillStyle = '#fff'; g.fill();
+      g.beginPath(); const tx0 = por ? W / 2 - 30 * u : bx + 60 * u; g.moveTo(tx0, byy + bh - 2); g.lineTo(tx0 + 60 * u, byy + bh - 2); g.lineTo(por ? W / 2 : hx + 20 * u, byy + bh + 60 * u); g.closePath(); g.fill();
+      g.shadowColor = 'transparent'; rr(g, bx, byy, bw, bh, 34 * u); g.lineWidth = 6 * u; g.strokeStyle = v.accent; g.stroke();
+      shownLines.forEach((ln, i) => T(g, ln, bx + 40 * u, byy + 30 * u + fs * .65 + i * fs * 1.3, { size: fs, weight: 800, color: '#111', align: 'left' }));
+      g.restore();
+    }
+  }
+);
+
 const CATS = ['Wszystkie', 'Montaż', 'Postać', 'Napisy', 'Kanał', 'Przejścia'];
 const CAT_NAMES = { 'Montaż': 'Do montażu', 'Postać': 'Postać ze skinem', 'Napisy': 'Napisy i intro', 'Kanał': 'Kanał', 'Przejścia': 'Przejścia' };
 let cineCv = null; function cineCanvas(W, H) { if (!cineCv) cineCv = document.createElement('canvas'); if (cineCv.width !== W || cineCv.height !== H) { cineCv.width = W; cineCv.height = H; } return cineCv; }
@@ -898,7 +1123,7 @@ const valsFor = tpl => { const o = {}; for (const [k, , , def] of tpl.fields) o[
 const durOf = tpl => (tpl.durFn ? tpl.durFn(valsFor(tpl)) : tpl.dur);
 const sfxOf = tpl => (tpl.sfxFn ? tpl.sfxFn(valsFor(tpl)) : tpl.sfx || []);
 const isKeyBg = () => ST.bg === 'green' || ST.bg === 'none';
-const BGS = [['grad', 'Gradient'], ['green', 'Zielone'], ['black', 'Czarne'], ['color', 'Kolor'], ['image', 'Zdjęcie'], ['none', 'Przezroczyste']];
+const BGS = [['grad', 'Gradient'], ['green', 'Zielone'], ['black', 'Czarne'], ['video', 'Twój film'], ['image', 'Zdjęcie'], ['color', 'Kolor'], ['none', 'Przezroczyste']];
 
 function drawBackground(g, W, H, t, tpl, forExport) {
   const bg = (forExport && ST.bg === 'none') ? 'green' : ST.bg;
@@ -906,6 +1131,8 @@ function drawBackground(g, W, H, t, tpl, forExport) {
   if (bg === 'green') { g.fillStyle = '#00ff00'; g.fillRect(0, 0, W, H); return; }
   if (bg === 'black') { g.fillStyle = '#000'; g.fillRect(0, 0, W, H); return; }
   if (bg === 'color') { g.fillStyle = ST.bgColor; g.fillRect(0, 0, W, H); return; }
+  if (bg === 'video' && ST.bgVid && ST.bgVid.readyState >= 2) { const vd = ST.bgVid, k = Math.max(W / vd.videoWidth, H / vd.videoHeight); g.drawImage(vd, (W - vd.videoWidth * k) / 2, (H - vd.videoHeight * k) / 2, vd.videoWidth * k, vd.videoHeight * k); return; }
+  if (bg === 'video') { g.fillStyle = '#000'; g.fillRect(0, 0, W, H); return; }
   if (bg === 'image' && ST.bgImg) { const im = ST.bgImg, k = Math.max(W / im.width, H / im.height); g.drawImage(im, (W - im.width * k) / 2, (H - im.height * k) / 2, im.width * k, im.height * k); g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(0, 0, W, H); return; }
   const v = valsFor(tpl), acc = v.accent || v.c1 || v.color || '#22d3e6';
   const gr = g.createLinearGradient(0, 0, W * .3, H); gr.addColorStop(0, mix('#0b0b12', acc, .12)); gr.addColorStop(1, '#07070b'); g.fillStyle = gr; g.fillRect(0, 0, W, H);
@@ -915,8 +1142,21 @@ function renderTo(g, W, H, t, tpl = ST.tpl, forExport = false) {
   g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over'; g.filter = 'none'; g.shadowColor = 'transparent';
   drawBackground(g, W, H, t, tpl, forExport);
   const u = Math.min(W, H) / 1080;
-  try { tpl.render(g, W, H, t, valsFor(tpl), u); } catch (e) { console.error(e); }
+  const onMedia = (ST.bg === 'video' || ST.bg === 'image') && tpl.blendHint;
+  try {
+    if (onMedia) { // preview the Screen blend exactly like CapCut: render on black, then screen it over the footage
+      const off = blendCanvas(W, H), og = off.getContext('2d'); og.setTransform(1, 0, 0, 1, 0, 0); og.globalCompositeOperation = 'source-over'; og.globalAlpha = 1; og.fillStyle = '#000'; og.fillRect(0, 0, W, H);
+      tpl.render(og, W, H, t, valsFor(tpl), u); g.globalCompositeOperation = 'screen'; g.drawImage(off, 0, 0); g.globalCompositeOperation = 'source-over';
+    } else tpl.render(g, W, H, t, valsFor(tpl), u);
+  } catch (e) { console.error(e); }
   g.restore();
+}
+let blendCv = null; function blendCanvas(W, H) { if (!blendCv) blendCv = document.createElement('canvas'); if (blendCv.width !== W || blendCv.height !== H) { blendCv.width = W; blendCv.height = H; } return blendCv; }
+function syncBgVideo(t, playing) {
+  const vd = ST.bgVid; if (!vd || ST.bg !== 'video' || vd.readyState < 1) return;
+  const want = vd.duration ? t % vd.duration : t;
+  if (playing) { if (vd.paused) vd.play().catch(() => { }); if (Math.abs(vd.currentTime - want) > .3) vd.currentTime = want; vd.playbackRate = ST.speed; }
+  else { if (!vd.paused) vd.pause(); if (Math.abs(vd.currentTime - want) > .04 && !vd.seeking) vd.currentTime = want; }
 }
 
 /* ================= UI ================= */
@@ -953,7 +1193,7 @@ function makePosters(only) {
   for (const tpl of TEMPLATES) {
     if (only && !only(tpl)) continue;
     const c = posters.get(tpl.id) || document.createElement('canvas'); c.width = W; c.height = H;
-    const pt = { flashtr: .22, iris: .35, leak: 1.6, burn: 1.0, speed: .6, glitchov: .5, rec: .3, arrow: 2.0, emoji: 2.4, bars: 1.5, sparkle: 1.3, smoke: 2.5, dustov: 1.2, enter: 3.0, spin: 3.2, dance: 1.3, subchar: 3.6, win: 1.6, land: 1.8, cine: 3.4, glitch: 2.0, count: 0.5, kinetic: 1.0, lower: 2.5, subscribe: 2.6, outro: 2.5, wipe: .78 }[tpl.id] ?? 2;
+    const pt = { lightning: .2, fire: 2, flare: 1.4, pulse: .3, crack: .5, confov: 2, comic: .5, notif: 1.5, counter: 3.0, karaoke: 2.2, runwipe: .55, sign: 2.5, speech: 3.5, flashtr: .22, iris: .35, leak: 1.6, burn: 1.0, speed: .6, glitchov: .5, rec: .3, arrow: 2.0, emoji: 2.4, bars: 1.5, sparkle: 1.3, smoke: 2.5, dustov: 1.2, enter: 3.0, spin: 3.2, dance: 1.3, subchar: 3.6, win: 1.6, land: 1.8, cine: 3.4, glitch: 2.0, count: 0.5, kinetic: 1.0, lower: 2.5, subscribe: 2.6, outro: 2.5, wipe: .78 }[tpl.id] ?? 2;
     renderTo(c.getContext('2d'), W, H, pt, tpl);
     posters.set(tpl.id, c);
   }
@@ -1007,11 +1247,12 @@ function skinGroup() {
     h('div', { class: 'hint' }, 'Plik PNG 64×64 w układzie skinów z gry (działa też stary format 64×32). Warstwa zewnętrzna, np. czapka i kurtka, też się wyświetla.'), err);
 }
 function bgGroup() {
-  const pills = h('div', { class: 'seg', style: 'flex-wrap:wrap' }, ...BGS.map(([k, l]) => h('button', { class: ST.bg === k ? 'on' : '', onclick: () => { if (k === 'image' && !ST.bgImg) { $('#bgIn').click(); return; } ST.bg = k; ST.bgAuto = false; renderEditor(); updateTitle(); sizeView(); dirty = true; } }, l)));
+  const pills = h('div', { class: 'seg', style: 'flex-wrap:wrap' }, ...BGS.map(([k, l]) => h('button', { class: ST.bg === k ? 'on' : '', onclick: () => { if (k === 'image' && !ST.bgImg) { $('#bgIn').click(); return; } if (k === 'video' && !ST.bgVid) { $('#vidIn').click(); return; } ST.bg = k; ST.bgAuto = false; renderEditor(); updateTitle(); sizeView(); dirty = true; } }, l)));
   const extra = [];
   if (ST.bg === 'color') { const inp = h('input', { type: 'color', id: 'f-bgcolor', value: ST.bgColor }); inp.addEventListener('input', () => { ST.bgColor = inp.value; dirty = true; }); extra.push(h('div', { class: 'field' }, h('label', { for: 'f-bgcolor' }, 'Kolor tła'), h('div', { class: 'color' }, inp))); }
   if (ST.bg === 'image') extra.push(h('button', { class: 'btn', onclick: () => $('#bgIn').click() }, 'Zmień zdjęcie tła'));
-  const tip = { green: 'Zielone tło usuniesz w CapCut: Wycinanie → Kluczowanie koloru (Usuń kolor) → kliknij zielony.', none: 'Przezroczyste tło zapisuje się tylko w klatce PNG. Film dostaje zielone tło.', grad: 'Gradient pasuje do koloru akcentu szablonu.' }[ST.bg];
+  if (ST.bg === 'video') extra.push(h('button', { class: 'btn', onclick: () => $('#vidIn').click() }, 'Zmień film'));
+  const tip = { green: 'Zielone tło usuniesz w CapCut: Wycinanie → Kluczowanie koloru (Usuń kolor) → kliknij zielony.', none: 'Przezroczyste tło zapisuje się tylko w klatce PNG. Film dostaje zielone tło.', video: 'Widzisz animację na swoim nagraniu. Pobrany film będzie już gotowy, z animacją i dźwiękiem z nagrania, bez CapCuta.', grad: 'Gradient pasuje do koloru akcentu szablonu.' }[ST.bg];
   return h('div', { class: 'group' }, h('div', { class: 'gh' }, 'Tło'), pills, ...extra, tip ? h('div', { class: 'hint' }, tip) : null,
     h('div', { class: 'field' }, h('label', { for: 'f-speed' }, `Tempo animacji: ${ST.speed.toFixed(2)}×`), speedSlider()));
 }
@@ -1033,7 +1274,8 @@ function tick(now) {
     if (ST.t >= D) { if (ST.loop) { ST.t = 0; if (ST.sound && actx) for (const [at, name] of sfxOf(ST.tpl)) if (at === 0) sfx(name); } else { ST.t = D; ST.playing = false; setPlayIcon(); } }
     dirty = true;
   }
-  if (dirty && !exporting) { dirty = false; sizeView(); renderTo(vg, view.width, view.height, ST.t); const s = $('#scrub'); s.value = Math.round(ST.t / D * 1000); s.style.setProperty('--p', (ST.t / D * 100) + '%'); $('#tNow').textContent = ST.t.toFixed(1); }
+  if (!exporting) syncBgVideo(ST.t, ST.playing);
+  if ((dirty || (ST.bg === 'video' && ST.bgVid)) && !exporting) { dirty = false; sizeView(); renderTo(vg, view.width, view.height, ST.t); const s = $('#scrub'); s.value = Math.round(ST.t / D * 1000); s.style.setProperty('--p', (ST.t / D * 100) + '%'); $('#tNow').textContent = ST.t.toFixed(1); }
   requestAnimationFrame(tick);
 }
 function setPlayIcon() { $('#playBtn').innerHTML = ST.playing ? ICON.pause : ICON.play; }
@@ -1047,6 +1289,12 @@ $('#skinIn').addEventListener('change', async e => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
   try { await loadSkinFile(f); c3Skin(); renderEditor(); makePosters(t => t.skin); toast(skinSlim ? 'Skin wgrany (smukłe ramiona)' : 'Skin wgrany'); if (!ST.tpl.skin) selectTpl(TEMPLATES[0]); }
   catch (err) { toast(err.message, 5000); const el = document.querySelector('#ebody .err'); if (el) el.textContent = err.message; }
+});
+$('#vidIn').addEventListener('change', e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  const vd = document.createElement('video'); vd.src = URL.createObjectURL(f); vd.muted = true; vd.loop = true; vd.playsInline = true; vd.preload = 'auto';
+  vd.onloadeddata = () => { if (ST.bgVid) ST.bgVid.pause(); ST.bgVid = vd; ST.bg = 'video'; ST.bgAuto = false; renderEditor(); updateTitle(); dirty = true; toast('Film wczytany jako tło'); };
+  vd.onerror = () => toast('Nie udało się otworzyć tego filmu', 4000);
 });
 $('#bgIn').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (!f) return; const im = new Image(); im.onload = () => { ST.bgImg = im; ST.bg = 'image'; renderEditor(); dirty = true; }; im.src = URL.createObjectURL(f); });
 
@@ -1090,6 +1338,8 @@ function runExport(W, H, fps, mime, ext, body, bg) {
   renderTo(g, W, H, 0, tpl, true);
   const stream = cv.captureStream(fps);
   if (ST.sound) { audio(); for (const tr of recDest.stream.getAudioTracks()) stream.addTrack(tr); }
+  const vd = ST.bg === 'video' ? ST.bgVid : null;
+  if (vd) { vd.pause(); vd.currentTime = 0; if (ST.sound) { if (!vd._src) { try { vd._src = actx.createMediaElementSource(vd); vd._src.connect(master); } catch (e) { } } vd.muted = false; } }
   let rec; try { rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: Math.round(W * H * fps * .18), audioBitsPerSecond: 192000 }); } catch (e) { toast('Nie udało się uruchomić nagrywania'); return; }
   const chunks = []; rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
   const bar = h('i'), lbl = h('div', { class: 'hint' }, 'Nagrywam…');
@@ -1097,6 +1347,7 @@ function runExport(W, H, fps, mime, ext, body, bg) {
   exporting = { cancel: false };
   rec.start(250);
   const start = performance.now() + 120;
+  if (vd) setTimeout(() => { vd.playbackRate = ST.speed; vd.play().catch(() => { }); }, 120);
   if (ST.sound) for (const [at, name] of sfxOf(tpl)) sfx(name, .12 + at / ST.speed);
   const step = () => {
     if (exporting.cancel) { rec.stop(); return; }
@@ -1108,6 +1359,7 @@ function runExport(W, H, fps, mime, ext, body, bg) {
   requestAnimationFrame(step);
   rec.onstop = () => {
     const cancelled = exporting.cancel; exporting = null; dirty = true;
+    if (vd) { vd.muted = true; vd.pause(); }
     if (cancelled) { bg.remove(); toast('Nagrywanie przerwane'); return; }
     const blob = new Blob(chunks, { type: mime.split(';')[0] }), url = URL.createObjectURL(blob), name = fileBase() + '.' + ext;
     body.replaceChildren(h('video', { class: 'result', src: url, controls: true, playsinline: true, loop: true }), h('div', { class: 'hint' }, `Gotowe: ${name} · ${(blob.size / 1048576).toFixed(1)} MB`),

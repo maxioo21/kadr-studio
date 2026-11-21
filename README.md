@@ -9,7 +9,7 @@ Darmowy edytor wideo po polsku: oś czasu, efekty, przejścia, filtry, animowane
 | 🪟 **Windows 10/11** | [**FakeTok-Setup.exe**](https://github.com/maxioo21/kadr-studio/raw/main/pobierz/FakeTok-Setup.exe) (26 MB) | instalator: ikona na pulpicie i w menu Start |
 | 🤖 **Android** | [**FakeTok.apk**](https://github.com/maxioo21/kadr-studio/raw/main/pobierz/FakeTok.apk) (5,4 MB) | gotowe filmy trafiają do galerii |
 | 🌐 **Przeglądarka** (telefon i komputer) | **https://maxioo21.github.io/kadr-studio/** | przycisk „Zainstaluj” dodaje aplikację na ekran główny |
-| 🎬 **FakeTok Animacje** | **https://maxioo21.github.io/kadr-studio/animacje/** | 27 gotowych animacji do montażu: nakładki (światło, wypalenie kliszy, glitch, REC, strzałki, iskry, dym), przejścia, postać 3D z Twoim skinem, intro i napisy |
+| 🎬 **FakeTok Animacje** | **https://maxioo21.github.io/kadr-studio/animacje/** | 40 gotowych animacji do montażu: nakładki (błyskawica, ogień, flara, światło, glitch, pęknięty ekran, REC, strzałki), przejścia, postać 3D z Twoim skinem, intro, napisy karaoke; podgląd na własnym filmie |
 
 **Windows:** uruchom pobrany plik. Jeśli pojawi się „System Windows ochronił ten komputer”, kliknij *Więcej informacji*, a potem *Uruchom mimo to*. Program otwiera się we własnym oknie (używa Microsoft Edge, który jest w każdym Windowsie). Gotowe filmy zapisują się w folderze *Pobrane*.
 
