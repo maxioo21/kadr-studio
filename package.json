@@ -1,0 +1,20 @@
+{
+  "name": "kadr-studio",
+  "version": "1.0.0",
+  "description": "Kadr Studio – darmowy edytor wideo w przeglądarce, na Windows i Androida",
+  "private": true,
+  "scripts": {
+    "fonts": "node scripts/fonts.js",
+    "build:web": "node scripts/build-web.js",
+    "build:desktop": "node desktop/build.js",
+    "build:installer": "node desktop/build.js && makensis -V2 desktop/installer.nsi",
+    "build:android": "bash android/build.sh",
+    "build": "npm run build:web && npm run build:installer && npm run build:android",
+    "start": "node desktop/main.js"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "resedit": "^2.0.3"
+  }
+}
