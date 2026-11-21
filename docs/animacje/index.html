@@ -728,8 +728,165 @@ const TEMPLATES = [
     }
   }
 ];
-const CATS = ['Wszystkie', 'Postać', 'Napisy', 'Kanał', 'Przejścia'];
-const CAT_NAMES = { 'Postać': 'Postać ze skinem', 'Napisy': 'Napisy i intro', 'Kanał': 'Kanał', 'Przejścia': 'Przejścia' };
+/* ---- montage overlays: designed for CapCut overlay with Screen blend (black bg) or colour key (green bg) ---- */
+TEMPLATES.push(
+  {
+    id: 'flashtr', cat: 'Przejścia', name: 'Błysk przejście', d: 'Mocny błysk do wstawienia na cięcie między klipami.', dur: .8, defBg: 'black', blendHint: true,
+    fields: [['color', 'color', 'Kolor błysku', '#ffffff']], sfx: [[0, 'whoosh']],
+    render(g, W, H, t, v, u) {
+      const a = t < .22 ? E.in(t / .22) : 1 - E.out(seg(t, .22, .8));
+      const rg = g.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * .75);
+      rg.addColorStop(0, rgba(v.color, a)); rg.addColorStop(.6, rgba(v.color, a * .85)); rg.addColorStop(1, rgba(v.color, a * .55));
+      g.fillStyle = rg; g.fillRect(0, 0, W, H);
+    }
+  },
+  {
+    id: 'iris', cat: 'Przejścia', name: 'Przejście kołem', d: 'Koło zamyka obraz i otwiera następny klip.', dur: 1.3, defBg: 'green', keyHint: true,
+    fields: [['color', 'color', 'Kolor', '#000000']], sfx: [[0, 'whoosh'], [.65, 'whoosh']],
+    render(g, W, H, t, v, u) {
+      const R = Math.hypot(W, H) / 2 + 10, r = t < .55 ? lerp(R, 0, E.inOut(t / .55)) : t < .7 ? 0 : lerp(0, R, E.inOut(seg(t, .7, 1.3)));
+      g.save(); g.fillStyle = v.color; g.beginPath(); g.rect(0, 0, W, H); g.arc(W / 2, H / 2, Math.max(0, r), 0, Math.PI * 2, true); g.fill('evenodd'); g.restore();
+    }
+  },
+  {
+    id: 'leak', cat: 'Montaż', name: 'Przeciek światła', d: 'Ciepłe smugi światła, jak ze starego aparatu.', dur: 4, defBg: 'black', blendHint: true,
+    fields: [['c1', 'color', 'Kolor 1', '#ff8a3d'], ['c2', 'color', 'Kolor 2', '#ff3d6e']], sfx: [],
+    render(g, W, H, t, v, u) {
+      const env = Math.min(seg(t, 0, .7), 1 - seg(t, 3.2, 4));
+      g.save(); g.globalCompositeOperation = 'lighter';
+      for (let i = 0; i < 5; i++) {
+        const x = W * (.15 + .7 * rnd(i, 1)) + Math.sin(t * .6 + i * 2) * W * .18, y = H * (.2 + .6 * rnd(i, 2)) + Math.cos(t * .45 + i) * H * .15, r = Math.max(W, H) * (.25 + .25 * rnd(i, 3));
+        const col = [v.c1, v.c2, '#ffd27a'][i % 3]; const gr = g.createRadialGradient(x, y, 0, x, y, r);
+        gr.addColorStop(0, rgba(col, .75 * env)); gr.addColorStop(.5, rgba(col, .3 * env)); gr.addColorStop(1, rgba(col, 0)); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+      }
+      g.restore();
+    }
+  },
+  {
+    id: 'burn', cat: 'Montaż', name: 'Wypalenie kliszy', d: 'Pomarańczowy ogień kliszy rozlewa się i znika. Świetne na przejście.', dur: 2.5, defBg: 'black', blendHint: true,
+    fields: [['color', 'color', 'Kolor', '#ff7a1a']], sfx: [[0, 'riser']],
+    render(g, W, H, t, v, u) {
+      const k = seg(t, 0, 1.2), out = seg(t, 1.4, 2.5), D = Math.hypot(W, H);
+      g.save(); g.globalCompositeOperation = 'lighter';
+      for (let i = 0; i < 7; i++) {
+        const fl = .85 + .15 * Math.sin(t * 30 + i * 3), x = W * (.85 - .2 * rnd(i, 1)) + Math.sin(t * 2 + i) * 40 * u, y = H * (.2 + .2 * rnd(i, 2)), r = D * (.15 + .9 * E.out(k)) * (.5 + .5 * rnd(i, 3));
+        const gr = g.createRadialGradient(x, y, 0, x, y, r);
+        gr.addColorStop(0, `rgba(255,250,235,${.9 * fl * (1 - out)})`); gr.addColorStop(.25, rgba(v.color, .8 * fl * (1 - out))); gr.addColorStop(.6, rgba(mix(v.color, '#a3150a', .6), .45 * (1 - out))); gr.addColorStop(1, 'rgba(0,0,0,0)');
+        g.fillStyle = gr; g.fillRect(0, 0, W, H);
+      }
+      g.restore();
+    }
+  },
+  {
+    id: 'speed', cat: 'Montaż', name: 'Linie prędkości', d: 'Linie jak w anime, kierują wzrok na środek. Daj na mocny moment.', dur: 2, defBg: 'black', blendHint: true,
+    fields: [['color', 'color', 'Kolor linii', '#ffffff']], sfx: [[0, 'whoosh']],
+    render(g, W, H, t, v, u) {
+      const fr = Math.floor(t * 20), cx = W / 2, cy = H / 2, D = Math.hypot(W, H) / 2, env = Math.min(seg(t, 0, .15), 1 - seg(t, 1.7, 2));
+      g.fillStyle = rgba(v.color, .9 * env);
+      for (let i = 0; i < 140; i++) {
+        if (rnd(i, fr) < .45) continue;
+        const a = rnd(i, 1) * Math.PI * 2, r0 = D * (.38 + rnd(i, fr + 7) * .3), w = (4 + rnd(i, 3) * 14) * u;
+        g.beginPath(); g.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0); g.lineTo(cx + Math.cos(a + w / D) * D * 1.2, cy + Math.sin(a + w / D) * D * 1.2); g.lineTo(cx + Math.cos(a - w / D) * D * 1.2, cy + Math.sin(a - w / D) * D * 1.2); g.fill();
+      }
+    }
+  },
+  {
+    id: 'glitchov', cat: 'Montaż', name: 'Glitch nakładka', d: 'Kolorowe zakłócenia i paski na film.', dur: 2, defBg: 'black', blendHint: true,
+    fields: [], sfx: [[0, 'glitch'], [1, 'glitch']],
+    render(g, W, H, t, v, u) {
+      const fr = Math.floor(t * 24), on = rnd(fr, 3) > .25;
+      if (on) for (let i = 0; i < 26; i++) { if (rnd(i, fr) < .5) continue; const y = rnd(i, fr + 1) * H, hh = (4 + rnd(i, fr + 2) * 50) * u, x = rnd(i, fr + 3) * W * .6, w = W * (.1 + rnd(i, fr + 4) * .6); g.fillStyle = ['rgba(255,42,85,.85)', 'rgba(42,240,255,.85)', 'rgba(255,255,255,.8)'][i % 3]; g.fillRect(x, y, w, hh); }
+      g.fillStyle = 'rgba(255,255,255,.07)'; for (let y = (t * 200 * u) % (6 * u); y < H; y += 6 * u) g.fillRect(0, y, W, 1.5 * u);
+      for (let i = 0; i < 400; i++) { if (rnd(i, fr + 9) < .7) continue; g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(rnd(i, fr + 5) * W, rnd(i, fr + 6) * H, 2 * u, 2 * u); }
+    }
+  },
+  {
+    id: 'rec', cat: 'Montaż', name: 'Kamera REC', d: 'Ramka kamery z mrugającym REC i licznikiem czasu.', dur: 6, defBg: 'green', keyHint: true,
+    fields: [['label', 'text', 'Napis', 'REC'], ['info', 'text', 'Info w rogu', '4K · 60 FPS']], sfx: [],
+    render(g, W, H, t, v, u) {
+      const m = 50 * u, L = 90 * u, lw = 8 * u;
+      g.strokeStyle = '#fff'; g.lineWidth = lw; g.lineCap = 'square';
+      [[m, m, 1, 1], [W - m, m, -1, 1], [m, H - m, 1, -1], [W - m, H - m, -1, -1]].forEach(([x, y, sx, sy]) => { g.beginPath(); g.moveTo(x, y + sy * L); g.lineTo(x, y); g.lineTo(x + sx * L, y); g.stroke(); });
+      if (t % 1 < .6) { g.fillStyle = '#ff2b2b'; g.beginPath(); g.arc(m + 50 * u, m + 60 * u, 16 * u, 0, Math.PI * 2); g.fill(); }
+      T(g, v.label, m + 80 * u, m + 61 * u, { size: 46 * u, weight: 800, align: 'left' });
+      const s = Math.floor(t), tc = `00:00:${String(s).padStart(2, '0')}:${String(Math.floor((t % 1) * 30)).padStart(2, '0')}`;
+      T(g, tc, W - m - 40 * u, m + 61 * u, { size: 40 * u, font: 'JetBrains Mono', weight: 500, align: 'right' });
+      T(g, v.info, m + 40 * u, H - m - 50 * u, { size: 34 * u, weight: 700, align: 'left' });
+      const bx = W - m - 150 * u, by = H - m - 72 * u; g.lineWidth = 5 * u; g.strokeRect(bx, by, 100 * u, 44 * u); g.fillStyle = '#fff'; g.fillRect(bx + 100 * u, by + 12 * u, 8 * u, 20 * u); g.fillRect(bx + 8 * u, by + 8 * u, 70 * u, 28 * u);
+      g.lineWidth = 4 * u; const c = 26 * u; g.beginPath(); g.moveTo(W / 2 - c, H / 2); g.lineTo(W / 2 + c, H / 2); g.moveTo(W / 2, H / 2 - c); g.lineTo(W / 2, H / 2 + c); g.stroke();
+    }
+  },
+  {
+    id: 'arrow', cat: 'Montaż', name: 'Strzałka i kółko', d: 'Rysowana strzałka wskazuje coś na filmie i obrysowuje to kółkiem.', dur: 3.5, defBg: 'green', keyHint: true,
+    fields: [['label', 'text', 'Podpis przy strzałce', 'TUTAJ!'], ['color', 'color', 'Kolor', '#ff2b2b']], sfx: [[.2, 'whoosh'], [1.1, 'pop']],
+    render(g, W, H, t, v, u) {
+      const tx = W * .6, ty = H * .45, sx = W * .2, sy = H * .82, k = E.out(seg(t, .15, 1.0)), ck = E.inOut(seg(t, 1.0, 1.7));
+      g.strokeStyle = v.color; g.fillStyle = v.color; g.lineWidth = 16 * u; g.lineCap = 'round'; g.lineJoin = 'round';
+      const pt = q => { const cx1 = sx + (tx - sx) * .1, cy1 = ty - H * .05; const a = 1 - q; return [a * a * sx + 2 * a * q * cx1 + q * q * (tx - 150 * u), a * a * sy + 2 * a * q * cy1 + q * q * (ty + 40 * u)]; };
+      g.beginPath(); for (let i = 0; i <= 40 * k; i++) { const [x, y] = pt(i / 40); i ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke();
+      if (k > .98) { const [x1, y1] = pt(1), [x0, y0] = pt(.95), a = Math.atan2(y1 - y0, x1 - x0); g.beginPath(); g.moveTo(x1 + Math.cos(a) * 20 * u, y1 + Math.sin(a) * 20 * u); g.lineTo(x1 + Math.cos(a + 2.5) * 60 * u, y1 + Math.sin(a + 2.5) * 60 * u); g.lineTo(x1 + Math.cos(a - 2.5) * 60 * u, y1 + Math.sin(a - 2.5) * 60 * u); g.closePath(); g.fill(); }
+      if (ck > 0) { g.beginPath(); g.ellipse(tx, ty, 150 * u, 110 * u, -.1, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2.1 * ck); g.stroke(); }
+      T(g, v.label, sx, sy + 80 * u, { size: 70 * u, font: 'Bungee', weight: 400, color: v.color, scale: E.back(seg(t, .5, .9)), alpha: seg(t, .5, .7), stroke: { w: 10 * u, color: '#fff' } });
+    }
+  },
+  {
+    id: 'emoji', cat: 'Montaż', name: 'Latające reakcje', d: 'Emoji unoszą się w górę jak reakcje na transmisji.', dur: 4, defBg: 'green', keyHint: true,
+    fields: [['emojis', 'text', 'Emoji (wpisz kilka)', '❤️😂🔥😍👍']], sfx: [],
+    render(g, W, H, t, v, u) {
+      const list = [...new Intl.Segmenter ? [...new Intl.Segmenter('pl', { granularity: 'grapheme' }).segment(v.emojis)].map(s => s.segment) : [...v.emojis]].filter(s => s.trim());
+      if (!list.length) return;
+      for (let i = 0; i < 26; i++) {
+        const st = rnd(i, 1) * 3, lt = t - st; if (lt < 0 || lt > 2.2) continue;
+        const x = W * (.65 + .3 * rnd(i, 2)) + Math.sin(lt * 3 + i) * 40 * u, y = H * 1.05 - lt / 2.2 * H * .9, sc = E.back(seg(lt, 0, .3)) * (1 - seg(lt, 1.7, 2.2) * .4);
+        g.save(); g.globalAlpha = 1 - seg(lt, 1.6, 2.2); g.translate(x, y); g.scale(sc, sc); g.font = `${90 * u}px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(list[i % list.length], 0, 0); g.restore();
+      }
+    }
+  },
+  {
+    id: 'bars', cat: 'Montaż', name: 'Kinowe pasy', d: 'Czarne pasy wjeżdżają z góry i z dołu, film wygląda jak w kinie.', dur: 3, defBg: 'green', keyHint: true,
+    fields: [], sfx: [[0, 'whoosh']],
+    render(g, W, H, t, v, u) { const bh = H * .12 * E.out(seg(t, 0, .7)); g.fillStyle = '#000'; g.fillRect(0, 0, W, bh); g.fillRect(0, H - bh, W, bh); }
+  },
+  {
+    id: 'sparkle', cat: 'Montaż', name: 'Iskry i brokat', d: 'Migoczące gwiazdki na cały ekran.', dur: 4, defBg: 'black', blendHint: true,
+    fields: [['color', 'color', 'Kolor', '#ffd98a']], sfx: [],
+    render(g, W, H, t, v, u) {
+      g.save(); g.globalCompositeOperation = 'lighter';
+      for (let i = 0; i < 90; i++) {
+        const x = rnd(i, 1) * W, y = rnd(i, 2) * H, tw = Math.pow(Math.max(0, Math.sin(t * (2 + rnd(i, 3) * 3) + i * 7)), 5), s = (8 + rnd(i, 4) * 26) * u * tw; if (s < .5) continue;
+        g.fillStyle = rgba(i % 4 ? v.color : '#ffffff', .95);
+        g.beginPath(); g.moveTo(x, y - s * 2); g.quadraticCurveTo(x, y, x + s * 2, y); g.quadraticCurveTo(x, y, x, y + s * 2); g.quadraticCurveTo(x, y, x - s * 2, y); g.quadraticCurveTo(x, y, x, y - s * 2); g.fill();
+        const rg = g.createRadialGradient(x, y, 0, x, y, s * 2.5); rg.addColorStop(0, rgba(v.color, .5)); rg.addColorStop(1, rgba(v.color, 0)); g.fillStyle = rg; g.fillRect(x - s * 3, y - s * 3, s * 6, s * 6);
+      }
+      g.restore();
+    }
+  },
+  {
+    id: 'smoke', cat: 'Montaż', name: 'Dym', d: 'Miękki dym unosi się od dołu ekranu.', dur: 5, defBg: 'black', blendHint: true,
+    fields: [['color', 'color', 'Kolor dymu', '#d9dde6']], sfx: [],
+    render(g, W, H, t, v, u) {
+      for (let i = 0; i < 26; i++) {
+        const st = rnd(i, 1) * 3.5, lt = (t - st + 5) % 5, x = W * rnd(i, 2) + Math.sin(lt * .8 + i) * 80 * u, y = H * 1.1 - lt * H * .22, r = (140 + lt * 120 + rnd(i, 3) * 80) * u;
+        const a = .22 * Math.min(1, lt / .8) * (1 - seg(lt, 3, 5));
+        const rg = g.createRadialGradient(x, y, 0, x, y, r); rg.addColorStop(0, rgba(v.color, a)); rg.addColorStop(1, rgba(v.color, 0)); g.fillStyle = rg; g.fillRect(x - r, y - r, r * 2, r * 2);
+      }
+    }
+  },
+  {
+    id: 'dustov', cat: 'Montaż', name: 'Stara klisza', d: 'Kurz, rysy i migotanie jak na starym filmie.', dur: 4, defBg: 'black', blendHint: true,
+    fields: [], sfx: [],
+    render(g, W, H, t, v, u) {
+      const fr = Math.floor(t * 18);
+      g.fillStyle = `rgba(255,250,235,${.04 + .05 * rnd(fr, 1)})`; g.fillRect(0, 0, W, H);
+      for (let i = 0; i < 40; i++) { if (rnd(i, fr) < .6) continue; g.fillStyle = 'rgba(255,250,235,.7)'; const r = (1 + rnd(i, fr + 1) * 4) * u; g.beginPath(); g.ellipse(rnd(i, fr + 2) * W, rnd(i, fr + 3) * H, r, r * (1 + rnd(i, 4) * 2), rnd(i, 5) * 3, 0, Math.PI * 2); g.fill(); }
+      for (let i = 0; i < 3; i++) { if (rnd(i, fr + 8) < .5) continue; const x = rnd(i, fr + 9) * W; g.fillStyle = 'rgba(255,250,235,.45)'; g.fillRect(x, 0, (1 + rnd(i, 6) * 2) * u, H); }
+      const hair = rnd(Math.floor(t * 2), 11); if (hair > .6) { g.strokeStyle = 'rgba(255,250,235,.5)'; g.lineWidth = 2 * u; g.beginPath(); const hx = hair * W, hy = rnd(Math.floor(t * 2), 12) * H; g.moveTo(hx, hy); g.bezierCurveTo(hx + 60 * u, hy + 20 * u, hx + 20 * u, hy + 90 * u, hx + 90 * u, hy + 120 * u); g.stroke(); }
+    }
+  }
+);
+
+const CATS = ['Wszystkie', 'Montaż', 'Postać', 'Napisy', 'Kanał', 'Przejścia'];
+const CAT_NAMES = { 'Montaż': 'Do montażu', 'Postać': 'Postać ze skinem', 'Napisy': 'Napisy i intro', 'Kanał': 'Kanał', 'Przejścia': 'Przejścia' };
 let cineCv = null; function cineCanvas(W, H) { if (!cineCv) cineCv = document.createElement('canvas'); if (cineCv.width !== W || cineCv.height !== H) { cineCv.width = W; cineCv.height = H; } return cineCv; }
 const tintCvs = {}; function tintCanvas(src, col, W, H) { let c = tintCvs[col]; if (!c) c = tintCvs[col] = document.createElement('canvas'); if (c.width !== W || c.height !== H) { c.width = W; c.height = H; } const g = c.getContext('2d'); g.clearRect(0, 0, W, H); g.drawImage(src, 0, 0); g.globalCompositeOperation = 'source-in'; g.fillStyle = col; g.fillRect(0, 0, W, H); g.globalCompositeOperation = 'source-over'; return c; }
 
@@ -796,7 +953,7 @@ function makePosters(only) {
   for (const tpl of TEMPLATES) {
     if (only && !only(tpl)) continue;
     const c = posters.get(tpl.id) || document.createElement('canvas'); c.width = W; c.height = H;
-    const pt = { enter: 3.0, spin: 3.2, dance: 1.3, subchar: 3.6, win: 1.6, land: 1.8, cine: 3.4, glitch: 2.0, count: 0.5, kinetic: 1.0, lower: 2.5, subscribe: 2.6, outro: 2.5, wipe: .78 }[tpl.id] ?? 2;
+    const pt = { flashtr: .22, iris: .35, leak: 1.6, burn: 1.0, speed: .6, glitchov: .5, rec: .3, arrow: 2.0, emoji: 2.4, bars: 1.5, sparkle: 1.3, smoke: 2.5, dustov: 1.2, enter: 3.0, spin: 3.2, dance: 1.3, subchar: 3.6, win: 1.6, land: 1.8, cine: 3.4, glitch: 2.0, count: 0.5, kinetic: 1.0, lower: 2.5, subscribe: 2.6, outro: 2.5, wipe: .78 }[tpl.id] ?? 2;
     renderTo(c.getContext('2d'), W, H, pt, tpl);
     posters.set(tpl.id, c);
   }
@@ -806,6 +963,7 @@ function makePosters(only) {
 }
 function selectTpl(tpl) {
   ST.tpl = tpl; ST.t = 0; ST.playing = true; firedUpTo = -1;
+  if (tpl.defBg) { ST.bg = tpl.defBg; ST.bgAuto = true; } else if (ST.bgAuto) { ST.bg = 'grad'; ST.bgAuto = false; }
   renderGallery(); renderEditor(); updateTitle(); dirty = true;
   if (window.matchMedia('(max-width:900px)').matches) $('#stage').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
@@ -827,7 +985,9 @@ function field(key, type, label, def) {
 }
 function renderEditor() {
   const tpl = ST.tpl, b = $('#ebody'); b.replaceChildren();
-  b.append(h('div', { class: 'group' }, h('div', { class: 'gh' }, tpl.name), h('div', { class: 'hint' }, tpl.d)));
+  b.append(h('div', { class: 'group' }, h('div', { class: 'gh' }, tpl.name), h('div', { class: 'hint' }, tpl.d),
+    tpl.blendHint ? h('div', { class: 'hint', style: 'color:var(--fg)' }, 'Jak użyć w CapCut: dodaj pobrany film jako Nakładkę na swój klip, potem Tryb mieszania → Ekran. Czarne tło zniknie, zostanie samo światło.') : null,
+    tpl.keyHint ? h('div', { class: 'hint', style: 'color:var(--fg)' }, 'Jak użyć w CapCut: dodaj pobrany film jako Nakładkę, potem Wycinanie → Kluczowanie koloru i kliknij zielony. Zostanie sama animacja.') : null));
   const texts = tpl.fields.filter(f => f[1] !== 'color'), colors = tpl.fields.filter(f => f[1] === 'color');
   if (texts.length) b.append(h('div', { class: 'group' }, h('div', { class: 'gh' }, 'Napisy'), ...texts.map(f => field(...f))));
   if (tpl.skin) b.append(skinGroup());
@@ -847,7 +1007,7 @@ function skinGroup() {
     h('div', { class: 'hint' }, 'Plik PNG 64×64 w układzie skinów z gry (działa też stary format 64×32). Warstwa zewnętrzna, np. czapka i kurtka, też się wyświetla.'), err);
 }
 function bgGroup() {
-  const pills = h('div', { class: 'seg', style: 'flex-wrap:wrap' }, ...BGS.map(([k, l]) => h('button', { class: ST.bg === k ? 'on' : '', onclick: () => { if (k === 'image' && !ST.bgImg) { $('#bgIn').click(); return; } ST.bg = k; renderEditor(); updateTitle(); sizeView(); dirty = true; } }, l)));
+  const pills = h('div', { class: 'seg', style: 'flex-wrap:wrap' }, ...BGS.map(([k, l]) => h('button', { class: ST.bg === k ? 'on' : '', onclick: () => { if (k === 'image' && !ST.bgImg) { $('#bgIn').click(); return; } ST.bg = k; ST.bgAuto = false; renderEditor(); updateTitle(); sizeView(); dirty = true; } }, l)));
   const extra = [];
   if (ST.bg === 'color') { const inp = h('input', { type: 'color', id: 'f-bgcolor', value: ST.bgColor }); inp.addEventListener('input', () => { ST.bgColor = inp.value; dirty = true; }); extra.push(h('div', { class: 'field' }, h('label', { for: 'f-bgcolor' }, 'Kolor tła'), h('div', { class: 'color' }, inp))); }
   if (ST.bg === 'image') extra.push(h('button', { class: 'btn', onclick: () => $('#bgIn').click() }, 'Zmień zdjęcie tła'));
