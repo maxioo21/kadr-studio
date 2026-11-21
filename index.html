@@ -3,292 +3,200 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>FakeTok</title>
-<meta name="description" content="FakeTok – darmowy edytor wideo i animacje do montażu: efekty, przejścia, postać 3D z Twoim skinem, eksport MP4. Działa w przeglądarce, na Windows i Androidzie.">
-<meta name="theme-color" content="#060607">
-<link rel="icon" href="edytor/icon.svg" type="image/svg+xml">
+<title>FakeTok Animacje</title>
+<meta name="description" content="Darmowe animacje do montażu: napisy, alerty, ekrany końcowe, postać z Twoim skinem. Najedź, żeby obejrzeć, kliknij, żeby edytować.">
+<meta name="theme-color" content="#060608">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
 <style>
-/* Layout: black edit-room page. Glitch hero → ticker → three big "rooms" (editor, animations, download) → quick start.
-   One look on purpose (dark): ink black, paper white, cyan + hot pink used as an RGB split, never as a gradient. */
+/* Layout: creator app gallery. Sticky bar (logo, search, links), pill category tabs, then a wall of rounded clip cards that play on hover.
+   Near-black with a faint violet glow at the top, white pill for the active tab, violet for actions, lime for one highlighted word. */
 :root{
-  --ink:#060607; --ink2:#0f0f11; --ink3:#18181b; --line:#26262b; --paper:#f1f0ea; --dim:#8e8d88;
-  --cyan:#22d3e6; --pink:#ff3d7f; --yellow:#ffd23f;
-  --f-disp:"Anton","Impact","Arial Narrow",sans-serif; --f-body:"Archivo",system-ui,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --app:#060608; --card:#0f0f13; --field:#16161b; --hover:#22222a; --line:#1c1c22; --line2:#2b2b33;
+  --fg:#f3f3f6; --dim:#a3a3ad; --faint:#64646f; --acc:#6d5efc; --acc-hi:#8a7dff; --lime:#a6ff3c; --rec:#ff3b4e;
+  --l-napisy:#7c8cff; --l-kanal:#ff5f8f; --l-montaz:#ffb02e; --l-postac:#2fd6c3; --l-gry:#8ee04d;
+  --f-ui:"Inter",system-ui,sans-serif; --f-disp:"Syne","Inter",sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;background:var(--ink);color:var(--paper);font:400 17px/1.55 var(--f-body);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body{margin:0;background:var(--app) radial-gradient(ellipse 90% 520px at 50% -120px,rgba(109,94,252,.22),transparent 70%) no-repeat;color:var(--fg);font:400 15px/1.5 var(--f-ui);-webkit-font-smoothing:antialiased}
 a{color:inherit}
-:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
-.wrap{max-width:1240px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
-.mono{font-family:var(--f-mono);letter-spacing:.02em}
-/* top bar */
-.top{position:fixed;inset:0 0 auto;z-index:20;padding-top:env(safe-area-inset-top,0px);background:linear-gradient(to bottom,rgba(6,6,7,.92),rgba(6,6,7,0))}
-.top .wrap{display:flex;align-items:center;gap:22px;height:64px}
-.brand{display:flex;align-items:center;gap:10px;font:400 24px/1 var(--f-disp);letter-spacing:.04em;text-decoration:none}
-.brand i{width:26px;height:26px;border:3px solid var(--paper);border-radius:4px;display:grid;place-items:center;font-style:normal}
-.brand i::after{content:"";border-left:9px solid var(--cyan);border-top:6px solid transparent;border-bottom:6px solid transparent;margin-left:2px}
-.top nav{margin-left:auto;display:flex;gap:6px}
-.top nav a{font:700 13px/1 var(--f-mono);text-transform:uppercase;letter-spacing:.06em;text-decoration:none;padding:10px 12px;border-radius:3px;color:var(--dim)}
-.top nav a:hover{color:var(--paper);background:var(--ink3)}
-/* hero */
-.hero{position:relative;min-height:min(92vh,860px);display:flex;align-items:flex-end;padding-block:120px 70px;overflow:hidden;isolation:isolate}
-#fx{position:absolute;inset:0;width:100%;height:100%;z-index:-1}
-.hero .wrap{width:100%}
-.kicker{font:700 13px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--cyan);display:flex;align-items:center;gap:10px}
-.kicker::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--pink);box-shadow:0 0 12px var(--pink);animation:rec 1.2s steps(2) infinite}
-@keyframes rec{50%{opacity:.15}}
-.glitch{position:relative;margin:18px 0 0;font:400 clamp(86px,19vw,260px)/.84 var(--f-disp);letter-spacing:-.005em;text-transform:uppercase}
-.glitch::before,.glitch::after{content:attr(data-text);position:absolute;inset:0;mix-blend-mode:screen;pointer-events:none}
-.glitch::before{color:var(--cyan);transform:translate(-.035em,0);animation:split 5s infinite}
-.glitch::after{color:var(--pink);transform:translate(.035em,0);animation:split 5s infinite reverse}
-@keyframes split{0%,86%,100%{clip-path:inset(0 0 0 0)}88%{clip-path:inset(12% 0 60% 0);transform:translate(-.08em,0)}90%{clip-path:inset(55% 0 20% 0);transform:translate(.07em,0)}92%{clip-path:inset(30% 0 45% 0);transform:translate(-.05em,0)}}
-.lede{max-width:34ch;margin:26px 0 0;font:500 clamp(19px,2.2vw,25px)/1.35 var(--f-body);color:#d9d8d2}
-.lede b{color:var(--paper);font-weight:800}
-.cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:34px}
-.btn{display:inline-flex;align-items:center;gap:12px;text-decoration:none;font:800 16px/1 var(--f-body);text-transform:uppercase;letter-spacing:.04em;padding:18px 22px;border-radius:3px;border:2px solid var(--paper);transition:transform .15s,background .15s,color .15s}
-.btn svg{width:18px;height:18px}
-.btn.solid{background:var(--paper);color:var(--ink)}
-.btn.solid:hover{background:var(--cyan);border-color:var(--cyan)}
-.btn.ghost:hover{background:var(--paper);color:var(--ink)}
-.btn:active{transform:translateY(2px)}
-.platforms{margin-top:26px;font:500 13px/1.6 var(--f-mono);color:var(--dim)}
-.platforms span{color:var(--paper)}
-/* ticker */
-.ticker{background:var(--cyan);color:var(--ink);overflow:hidden;white-space:nowrap;border-block:2px solid var(--ink);transform:rotate(-1.2deg) scale(1.02);margin-block:-6px}
-.ticker div{display:inline-block;padding:16px 0;font:400 30px/1 var(--f-disp);letter-spacing:.03em;animation:tick 28s linear infinite}
-.ticker em{font-style:normal;color:var(--pink);margin:0 18px}
-@keyframes tick{to{transform:translateX(-50%)}}
-/* rooms */
-section{padding-block:96px}
-.label{font:700 13px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim);display:flex;gap:14px;align-items:center}
-.label b{color:var(--yellow);font-weight:700}
-.room{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:56px;align-items:center;padding-block:56px;border-top:1px solid var(--line)}
-.room:first-of-type{border-top:0}
-.room.flip{grid-template-columns:minmax(0,7fr) minmax(0,5fr)}
-.room.flip .copy{order:2}
-.room h2{font:400 clamp(48px,7vw,96px)/.9 var(--f-disp);text-transform:uppercase;margin:16px 0 18px;text-wrap:balance}
-.room h2 span{color:var(--cyan)}
-.room p{color:#cfcec8;max-width:46ch;margin:0 0 22px}
-.facts{list-style:none;padding:0;margin:0 0 28px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 22px;font:500 14px/1.4 var(--f-mono);color:var(--dim)}
-.facts b{display:block;font:400 30px/1 var(--f-disp);color:var(--paper);letter-spacing:.02em;margin-bottom:2px}
-.shot{position:relative;border:2px solid var(--paper);border-radius:4px;overflow:hidden;background:#000;box-shadow:12px 12px 0 var(--pink);transform:rotate(.6deg);transition:transform .25s}
-.room.flip .shot{box-shadow:-12px 12px 0 var(--cyan);transform:rotate(-.6deg)}
-.shot:hover{transform:rotate(0) translateY(-4px)}
-.shot img{display:block;width:100%;height:auto}
-.shot .tape{position:absolute;top:10px;left:10px;font:700 11px/1 var(--f-mono);letter-spacing:.1em;background:var(--yellow);color:var(--ink);padding:6px 8px;border-radius:2px}
-.strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
-.strip img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:3px;border:1px solid var(--line);display:block}
-/* download */
-.dl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:34px}
-.dlc{display:flex;flex-direction:column;gap:12px;padding:24px;border:2px solid var(--line);border-radius:4px;text-decoration:none;background:var(--ink2);transition:border-color .15s,transform .15s}
-.dlc:hover{border-color:var(--paper);transform:translateY(-3px)}
-.dlc .os{font:400 34px/1 var(--f-disp);text-transform:uppercase;letter-spacing:.02em}
-.dlc .file{font:500 13px/1.4 var(--f-mono);color:var(--dim)}
-.dlc .go{margin-top:auto;font:800 14px/1 var(--f-body);text-transform:uppercase;letter-spacing:.05em;color:var(--cyan);display:flex;align-items:center;gap:8px}
-.dlc svg{width:16px;height:16px}
-.note{margin-top:22px;font-size:15px;color:var(--dim);max-width:70ch}
-.note b{color:var(--paper)}
-/* steps */
-.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:34px;counter-reset:s}
-.step{padding:24px;border-left:3px solid var(--cyan);background:var(--ink2)}
-.step::before{counter-increment:s;content:"0" counter(s);font:400 54px/1 var(--f-disp);color:var(--pink);display:block;margin-bottom:12px}
-.step h3{margin:0 0 6px;font:800 19px/1.25 var(--f-body)}
-.step p{margin:0;color:#cfcec8;font-size:15.5px}
-footer{border-top:1px solid var(--line);padding-block:34px calc(34px + env(safe-area-inset-bottom,0px));font:500 13px/1.6 var(--f-mono);color:var(--dim)}
-footer .wrap{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between}
-footer a{color:var(--paper)}
-
-/* hero showreel monitor */
-.hero-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:48px;align-items:end}
-.monitor{position:relative;border:2px solid var(--paper);border-radius:4px;background:#000;box-shadow:14px 14px 0 var(--cyan);transform:rotate(1deg);margin-bottom:8px}
-.monitor video{display:block;width:100%;aspect-ratio:16/9;object-fit:cover}
-.monitor .rec{position:absolute;top:12px;left:12px;display:flex;align-items:center;gap:8px;font:700 12px/1 var(--f-mono);letter-spacing:.1em;background:rgba(0,0,0,.6);padding:7px 9px;border-radius:2px}
-.monitor .rec::before{content:"";width:8px;height:8px;border-radius:50%;background:#ff2b2b;animation:rec 1s steps(2) infinite}
-.monitor .tc{position:absolute;right:12px;bottom:12px;font:700 12px/1 var(--f-mono);background:rgba(0,0,0,.6);padding:7px 9px;border-radius:2px;font-variant-numeric:tabular-nums}
-.hero .glitch{font-size:clamp(86px,13.5vw,220px)}
-/* clip grid: plays on hover (or when visible on phones) */
-.clips{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:34px}
-.clip{position:relative;margin:0;border-radius:4px;overflow:hidden;background:#000;border:1px solid var(--line);cursor:pointer;transition:transform .18s,border-color .18s}
-.clip video{display:block;width:100%;aspect-ratio:16/9;object-fit:cover}
-.clip figcaption{position:absolute;left:0;right:0;bottom:0;padding:22px 12px 10px;background:linear-gradient(to top,rgba(0,0,0,.85),transparent);font:800 14px/1.2 var(--f-body);display:flex;justify-content:space-between;align-items:end;gap:8px}
-.clip figcaption span{font:500 11px/1 var(--f-mono);color:var(--dim)}
-.clip .hint{position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.6);display:grid;place-items:center;transition:opacity .15s}
-.clip .hint::after{content:"";border-left:10px solid var(--paper);border-top:6px solid transparent;border-bottom:6px solid transparent;margin-left:3px}
-.clip.playing .hint{opacity:0}
-.clip:hover{transform:translateY(-3px);border-color:var(--paper)}
-.clip.playing{border-color:var(--cyan)}
-.more{margin-top:26px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;color:var(--dim);font-size:15px}
-@media (max-width:1000px){.clips{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:860px){.hero-grid{grid-template-columns:1fr;gap:34px}.monitor{box-shadow:8px 8px 0 var(--cyan);transform:none}}
-@media (max-width:480px){.clips{grid-template-columns:1fr}}
-@media (max-width:860px){
-  .top nav a:not(.keep){display:none}
-  .room,.room.flip{grid-template-columns:1fr;gap:28px}
-  .room.flip .copy{order:0}
-  .dl,.steps{grid-template-columns:1fr}
-  .shot{box-shadow:8px 8px 0 var(--pink)}
-  .room.flip .shot{box-shadow:-8px 8px 0 var(--cyan)}
-  section{padding-block:64px}
-  .ticker div{font-size:24px}
+:focus-visible{outline:2px solid var(--acc-hi);outline-offset:2px}
+.wrap{max-width:1600px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.bar{position:sticky;top:0;z-index:30;background:rgba(6,6,8,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.row1{display:flex;align-items:center;gap:18px;height:66px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;white-space:nowrap}
+.brand .mk{width:30px;height:30px;border-radius:10px;background:var(--acc);display:grid;place-items:center;box-shadow:inset 0 -2px 0 rgba(0,0,0,.25)}
+.brand .mk::after{content:"";border-left:9px solid #fff;border-top:6px solid transparent;border-bottom:6px solid transparent;margin-left:2px}
+.brand b{font:700 19px/1 var(--f-disp);letter-spacing:-.01em}
+.brand span{font:500 13px/1 var(--f-ui);color:var(--faint)}
+.search{flex:1;max-width:520px;margin-left:auto;position:relative}
+.search svg{position:absolute;left:15px;top:50%;width:17px;height:17px;transform:translateY(-50%);color:var(--faint);pointer-events:none}
+.search input{width:100%;height:44px;padding:0 42px;border:1px solid transparent;border-radius:14px;background:var(--field);color:var(--fg);font:500 15px var(--f-ui)}
+.search input::placeholder{color:var(--faint)}
+.search input:focus{border-color:var(--line2);outline:none;background:#1b1b21}
+.search kbd{position:absolute;right:10px;top:50%;transform:translateY(-50%);font:500 11px var(--f-mono);color:var(--faint);border:1px solid var(--line2);border-radius:6px;padding:2px 7px}
+.search.has kbd{display:none}
+.search button{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:32px;height:32px;border:0;background:transparent;color:var(--dim);font-size:20px;cursor:pointer;display:none}
+.search.has button{display:block}
+.links{display:flex;align-items:center;gap:8px}
+.links a{font:600 14px var(--f-ui);text-decoration:none;padding:11px 16px;border-radius:12px;white-space:nowrap;color:var(--dim)}
+.links a:hover{color:var(--fg)}
+.links a.solid{background:var(--acc);color:#fff;box-shadow:inset 0 -3px 0 rgba(0,0,0,.22),0 8px 24px rgba(109,94,252,.3)}
+.links a.solid:hover{background:var(--acc-hi)}
+.tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:14px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;display:flex;align-items:center;gap:8px;height:40px;padding:0 15px;border:0;border-radius:999px;background:var(--field);color:var(--dim);font:600 14px var(--f-ui);cursor:pointer;white-space:nowrap}
+.tab .sw{width:8px;height:8px;border-radius:50%;background:var(--c,#999)}
+.tab small{font:500 11px var(--f-mono);opacity:.6}
+.tab:hover{color:var(--fg)}
+.tab.on{background:#fff;color:#0b0b0e}
+.lead{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px 28px;padding-block:34px 6px}
+.lead h1{margin:0;font:700 clamp(32px,4.2vw,58px)/1.02 var(--f-disp);letter-spacing:-.02em;text-wrap:balance}
+.lead h1 em{font-style:normal;color:var(--lime)}
+.lead p{margin:0;color:var(--dim);max-width:52ch}
+.count{margin-left:auto;font:500 12px var(--f-mono);color:var(--faint);white-space:nowrap}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:26px 18px;padding-block:22px 64px}
+.tile{display:block;text-decoration:none;color:inherit;min-width:0}
+.thumb{position:relative;aspect-ratio:16/9;background:var(--card);border-radius:14px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);transition:transform .15s,box-shadow .15s}
+.thumb video,.thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.thumb video{opacity:0}
+.tile:hover .thumb,.tile:focus-visible .thumb{transform:translateY(-3px);box-shadow:0 0 0 2px var(--app),0 0 0 4px #fff,0 18px 40px rgba(0,0,0,.5)}
+.tc{position:absolute;right:8px;bottom:8px;font:500 11px/1 var(--f-mono);color:#fff;background:rgba(6,6,8,.72);padding:5px 8px;border-radius:999px;font-variant-numeric:tabular-nums}
+.tag{position:absolute;left:8px;top:8px;font:700 10px/1 var(--f-ui);letter-spacing:.05em;color:#fff;background:var(--acc);padding:5px 9px;border-radius:999px}
+.lbl{display:none}
+.ph{position:absolute;left:0;bottom:0;height:3px;width:0;background:var(--lime);opacity:0}
+.tile.playing .ph{opacity:1}
+.meta{display:flex;justify-content:space-between;align-items:baseline;gap:4px 10px;flex-wrap:wrap;padding:11px 2px 0}
+.meta b{font:600 15px/1.25 var(--f-ui);min-width:0}
+.meta span{display:flex;align-items:center;gap:6px;font:500 12px var(--f-ui);color:var(--faint);white-space:nowrap}
+.meta span i{width:7px;height:7px;border-radius:50%;background:var(--c)}
+.d{margin:3px 2px 0;color:var(--dim);font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.empty{grid-column:1/-1;padding:64px 0;color:var(--dim);font-size:16px}
+.empty b{display:block;font:700 28px var(--f-disp);color:var(--fg);margin-bottom:6px}
+.dl{border-top:1px solid var(--line);background:#0b0b0e}
+.dl .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding-block:26px calc(26px + env(safe-area-inset-bottom,0px))}
+.dl p{margin:0;flex:1 1 360px;color:var(--dim)}
+.dl p b{color:var(--fg)}
+.dl a{font:600 14px var(--f-ui);text-decoration:none;padding:12px 18px;border-radius:12px;background:var(--field)}
+.dl a:hover{background:var(--hover)}
+.dl a.solid{background:var(--acc);color:#fff;box-shadow:inset 0 -3px 0 rgba(0,0,0,.22)}
+.dl a.solid:hover{background:var(--acc-hi)}
+@media (max-width:1180px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:860px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:760px){
+  .row1{flex-wrap:wrap;height:auto;padding-block:12px;gap:10px 12px}
+  .brand span{display:none}
+  .links{margin-left:auto}.links a:not(.solid){display:none}
+  .search{order:3;flex:1 1 100%;max-width:none;margin-left:0}
+  .search kbd{display:none}
+  .lead p{display:none}
 }
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+@media (max-width:560px){.grid{grid-template-columns:1fr;gap:22px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
-<header class="top"><div class="wrap">
-  <a class="brand" href="#"><i></i>FAKETOK</a>
-  <nav><a href="#edytor">Edytor</a><a href="#animacje">Animacje</a><a href="#w-ruchu">W ruchu</a><a href="#pobierz" class="keep">Pobierz</a></nav>
-</div></header>
-
-<main>
-<section class="hero">
-  <canvas id="fx" aria-hidden="true"></canvas>
-  <div class="wrap hero-grid">
-   <div>
-    <div class="kicker">REC · darmowe · bez znaku wodnego</div>
-    <h1 class="glitch" data-text="FakeTok">FakeTok</h1>
-    <p class="lede"><b>Montuj edity jak pro.</b> Edytor wideo i ponad 70 gotowych animacji: postać 3D z Twoim skinem, glitche, przejścia i napisy. Wszystko w przeglądarce.</p>
-    <div class="cta">
-      <a class="btn solid" href="edytor/"><svg viewBox="0 0 24 24"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg>Otwórz edytor</a>
-      <a class="btn ghost" href="animacje/"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" fill="currentColor"/></svg>Animacje do montażu</a>
-    </div>
-    <p class="platforms mono">działa na: <span>przeglądarce</span> · <span>Windows 10/11</span> · <span>Androidzie</span> · <span>iPhonie</span> (przez Safari)</p>
-   </div>
-   <div class="monitor"><video src="clips/reel.mp4" poster="clips/reel.jpg" autoplay muted loop playsinline aria-label="Showreel animacji FakeTok"></video><span class="rec">SHOWREEL</span><span class="tc" id="reelTc">00:00:00</span></div>
-  </div>
-</section>
-
-<div class="ticker" aria-hidden="true"><div>62 EFEKTY<em>✦</em>45 PRZEJŚĆ<em>✦</em>74 ANIMACJE<em>✦</em>TWÓJ SKIN W 3D<em>✦</em>USUWANIE TŁA AI<em>✦</em>EKSPORT MP4<em>✦</em>PRESETY NA BIT<em>✦</em>62 EFEKTY<em>✦</em>45 PRZEJŚĆ<em>✦</em>74 ANIMACJE<em>✦</em>TWÓJ SKIN W 3D<em>✦</em>USUWANIE TŁA AI<em>✦</em>EKSPORT MP4<em>✦</em>PRESETY NA BIT<em>✦</em></div></div>
-
-<section>
+<header class="bar">
   <div class="wrap">
-    <div class="room" id="edytor">
-      <div class="copy">
-        <div class="label"><b>01</b> Edytor wideo</div>
-        <h2>Tniesz, kleisz, <span>wymiatasz</span></h2>
-        <p>Oś czasu jak w dużych programach. Wrzucasz klipy, dodajesz przejścia, efekty i napisy, a presety z zakładki Gotowe same robią phonk, velocity i zoomy na bit.</p>
-        <ul class="facts"><li><b>62</b>efekty z podglądem</li><li><b>45</b>przejść</li><li><b>14</b>presetów do editów</li><li><b>AI</b>usuwanie tła</li></ul>
-        <a class="btn solid" href="edytor/">Otwórz edytor</a>
+    <div class="row1">
+      <a class="brand" href="./"><span class="mk"></span><b>FakeTok</b><span>Animacje</span></a>
+      <div class="search" id="sbox">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+        <input id="q" type="search" placeholder="Szukaj animacji…" autocomplete="off" enterkeyhint="search" aria-label="Szukaj animacji">
+        <kbd>/</kbd>
+        <button id="clr" type="button" aria-label="Wyczyść">×</button>
       </div>
-      <a class="shot" href="edytor/" aria-label="Otwórz edytor"><span class="tape">EDYTOR</span><img src="img/edytor.jpg" width="1440" height="860" alt="Edytor FakeTok: biblioteka efektów, podgląd filmu i oś czasu z klipami" loading="lazy"></a>
+      <nav class="links"><a href="edytor/">Edytor wideo</a><a class="solid" href="#pobierz">Pobierz</a></nav>
     </div>
-
-    <div class="room flip" id="animacje">
-      <div class="copy">
-        <div class="label"><b>02</b> Animacje do montażu</div>
-        <h2>Bez After <span>Effectsa</span></h2>
-        <p>Wybierasz animację, wpisujesz swój nick, wgrywasz skin i pobierasz gotowy film. Zielone tło wycinasz w CapCut jednym kliknięciem. Możesz też od razu nałożyć animację na swoje nagranie.</p>
-        <ul class="facts"><li><b>74</b>gotowe animacje</li><li><b>3D</b>postać z Twoim skinem</li><li><b>MP4</b>do 1080p, 60 kl/s</li><li><b>9:16</b>i 16:9 jednym klikiem</li></ul>
-        <a class="btn solid" href="animacje/">Zobacz animacje</a>
-      </div>
-      <div>
-        <a class="shot" href="animacje/" aria-label="Otwórz animacje"><span class="tape">ANIMACJE</span><img src="img/animacje.jpg" width="1440" height="860" alt="Strona animacji: lista szablonów, podgląd postaci 3D i panel edycji" loading="lazy"></a>
-
-      </div>
-    </div>
+    <div class="tabs" id="cats" role="tablist" aria-label="Kategorie"></div>
   </div>
-</section>
+</header>
 
-<section id="w-ruchu" style="padding-top:20px">
-  <div class="wrap">
-    <div class="label"><b>▶</b> Zobacz w ruchu</div>
-    <h2 style="font:400 clamp(44px,6vw,84px)/.9 var(--f-disp);text-transform:uppercase;margin:16px 0 0">Najedź i <span style="color:var(--pink)">patrz</span></h2>
-    <div class="clips">
-      <figure class="clip" tabindex="0"><video src="clips/enter.mp4" poster="clips/enter.jpg" muted loop playsinline preload="metadata"></video><span class="hint"></span><figcaption>Wejście postaci<span>skin 3D</span></figcaption></figure>
-      <figure class="clip" tabindex="0"><video src="clips/voxtext.mp4" poster="clips/voxtext.jpg" muted loop playsinline preload="metadata"></video><span class="hint"></span><figcaption>Nick z bloków<span>bloki</span></figcaption></figure>
-      <figure class="clip" tabindex="0"><video src="clips/versus.mp4" poster="clips/versus.jpg" muted loop playsinline preload="metadata"></video><span class="hint"></span><figcaption>VS – pojedynek<span>napisy</span></figcaption></figure>
-      <figure class="clip" tabindex="0"><video src="clips/neon.mp4" poster="clips/neon.jpg" muted loop playsinline preload="metadata"></video><span class="hint"></span><figcaption>Neon<span>napisy</span></figcaption></figure>
-      <figure class="clip" tabindex="0"><video src="clips/win.mp4" poster="clips/win.jpg" muted loop playsinline preload="metadata"></video><span class="hint"></span><figcaption>Zwycięstwo<span>skin 3D</span></figcaption></figure>
-      <figure class="clip" tabindex="0"><video src="clips/chest.mp4" poster="clips/chest.jpg" muted loop playsinline preload="metadata"></video><span class="hint"></span><figcaption>Skrzynia z nagrodą<span>bloki</span></figcaption></figure>
-      <figure class="clip" tabindex="0"><video src="clips/kinetic.mp4" poster="clips/kinetic.jpg" muted loop playsinline preload="metadata"></video><span class="hint"></span><figcaption>Kinetyczny tekst<span>napisy</span></figcaption></figure>
-      <figure class="clip" tabindex="0"><video src="clips/mine.mp4" poster="clips/mine.jpg" muted loop playsinline preload="metadata"></video><span class="hint"></span><figcaption>Kopanie bloku<span>skin 3D</span></figcaption></figure>
-      <figure class="clip" tabindex="0"><video src="clips/logoReveal.mp4" poster="clips/logoReveal.jpg" muted loop playsinline preload="metadata"></video><span class="hint"></span><figcaption>Logo kanału<span>kanał</span></figcaption></figure>
-      <figure class="clip" tabindex="0"><video src="clips/glitch.mp4" poster="clips/glitch.jpg" muted loop playsinline preload="metadata"></video><span class="hint"></span><figcaption>Glitch intro<span>napisy</span></figcaption></figure>
-      <figure class="clip" tabindex="0"><video src="clips/maskTitle.mp4" poster="clips/maskTitle.jpg" muted loop playsinline preload="metadata"></video><span class="hint"></span><figcaption>Tytuł z maski<span>napisy</span></figcaption></figure>
-      <figure class="clip" tabindex="0"><video src="clips/voxboom.mp4" poster="clips/voxboom.jpg" muted loop playsinline preload="metadata"></video><span class="hint"></span><figcaption>Blokowa eksplozja<span>bloki</span></figcaption></figure>
-    </div>
-    <div class="more">To tylko kilka z 74 animacji. Każdą możesz edytować: nick, napisy, kolory i skin.<a class="btn ghost" href="animacje/" style="padding:14px 18px;font-size:14px">Wszystkie animacje →</a></div>
+<main class="wrap">
+  <div class="lead">
+    <h1 id="ttl">Animacje do <em>montażu</em></h1>
+    <p>Najedź na klip, żeby go obejrzeć. Kliknij, żeby wpisać swój nick, napisy i wgrać skin.</p>
+    <span class="count" id="cnt"></span>
   </div>
-</section>
-
-<section id="pobierz" style="background:var(--ink2);border-block:1px solid var(--line)">
-  <div class="wrap">
-    <div class="label"><b>03</b> Pobierz</div>
-    <h2 style="font:400 clamp(48px,7vw,96px)/.9 var(--f-disp);text-transform:uppercase;margin:16px 0 0">Na każdy sprzęt</h2>
-    <div class="dl">
-      <a class="dlc" href="pobierz/FakeTok-Setup.exe" download><span class="os">Windows</span><span class="file">FakeTok-Setup.exe · 26 MB<br>Windows 10 i 11</span><span class="go">Pobierz instalator <svg viewBox="0 0 24 24"><path d="M12 4v12M7 11l5 5 5-5M5 20h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a>
-      <a class="dlc" href="pobierz/FakeTok.apk" download><span class="os">Android</span><span class="file">FakeTok.apk · 5,4 MB<br>Android 7 lub nowszy</span><span class="go">Pobierz aplikację <svg viewBox="0 0 24 24"><path d="M12 4v12M7 11l5 5 5-5M5 20h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a>
-      <a class="dlc" href="edytor/"><span class="os">Przeglądarka</span><span class="file">Bez instalowania<br>komputer, telefon, iPhone</span><span class="go">Otwórz teraz <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a>
-    </div>
-    <p class="note"><b>Windows:</b> jeśli wyskoczy „System Windows ochronił ten komputer”, kliknij <b>Więcej informacji</b> → <b>Uruchom mimo to</b>. <b>Android:</b> zezwól na instalację z tego źródła, a przy Play Protect wybierz <b>Zainstaluj mimo to</b>.</p>
-  </div>
-</section>
-
-<section>
-  <div class="wrap">
-    <div class="label">Szybki start</div>
-    <div class="steps">
-      <div class="step"><h3>Wrzuć klipy</h3><p>Otwórz edytor i przeciągnij swoje filmy, zdjęcia i muzykę.</p></div>
-      <div class="step"><h3>Dodaj efekt albo preset</h3><p>Kliknij efekt, przejście lub preset z zakładki Gotowe. Uderzenia same trafią w rytm muzyki.</p></div>
-      <div class="step"><h3>Eksportuj</h3><p>Kliknij Eksportuj i pobierz MP4 do 1080p. Bez znaku wodnego.</p></div>
-    </div>
-  </div>
-</section>
+  <div class="grid" id="grid"></div>
 </main>
 
-<footer><div class="wrap"><span>FAKETOK · zrobione dla montażystów</span><span>Kod: <a href="https://github.com/maxioo21/kadr-studio">github.com/maxioo21/kadr-studio</a></span></div></footer>
+<section class="dl" id="pobierz">
+  <div class="wrap">
+    <p><b>FakeTok na komputer i telefon.</b> Pełny edytor wideo z efektami, przejściami i usuwaniem tła, bez znaku wodnego.</p>
+    <a class="solid" href="pobierz/FakeTok-Setup.exe">Windows · 26 MB</a>
+    <a href="pobierz/FakeTok.apk">Android · 5 MB</a>
+    <a href="edytor/">Otwórz w przeglądarce</a>
+  </div>
+</section>
 
 <script>
-/* hero: film grain, scanlines and drifting light leaks on a canvas */
-(function () {
-  const cv = document.getElementById('fx'), g = cv.getContext('2d');
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const grain = document.createElement('canvas'); grain.width = grain.height = 192;
-  const gg = grain.getContext('2d'), id = gg.createImageData(192, 192);
-  for (let i = 0; i < id.data.length; i += 4) { const v = Math.random() * 255; id.data[i] = id.data[i + 1] = id.data[i + 2] = v; id.data[i + 3] = 255; }
-  gg.putImageData(id, 0, 0);
-  function size() { const r = cv.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1) * .6; cv.width = Math.max(1, r.width * d); cv.height = Math.max(1, r.height * d); }
-  size(); addEventListener('resize', size);
-  function frame(now) {
-    const t = now / 1000, W = cv.width, H = cv.height;
-    g.globalCompositeOperation = 'source-over'; g.fillStyle = '#060607'; g.fillRect(0, 0, W, H);
-    g.globalCompositeOperation = 'lighter';
-    [['34,211,230', .55, .35, 0], ['255,61,127', .78, .62, 2.1], ['255,210,63', .2, .8, 4.2]].forEach(([c, x, y, o]) => {
-      const px = W * (x + .12 * Math.sin(t * .23 + o)), py = H * (y + .1 * Math.cos(t * .19 + o)), r = Math.max(W, H) * .42;
-      const gr = g.createRadialGradient(px, py, 0, px, py, r); gr.addColorStop(0, `rgba(${c},.20)`); gr.addColorStop(1, `rgba(${c},0)`); g.fillStyle = gr; g.fillRect(0, 0, W, H);
-    });
-    g.globalCompositeOperation = 'source-over';
-    g.fillStyle = 'rgba(0,0,0,.18)'; for (let y = 0; y < H; y += 4) g.fillRect(0, y, W, 1.4);
-    g.globalAlpha = .07; g.translate(-Math.random() * 192, -Math.random() * 192); g.fillStyle = g.createPattern(grain, 'repeat'); g.fillRect(0, 0, W + 192, H + 192); g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1;
-    const vg = g.createLinearGradient(0, H * .45, 0, H); vg.addColorStop(0, 'rgba(6,6,7,0)'); vg.addColorStop(1, 'rgba(6,6,7,1)'); g.fillStyle = vg; g.fillRect(0, 0, W, H);
-    if (!reduce) requestAnimationFrame(frame);
-  }
-  requestAnimationFrame(frame);
-})();
+const ANIMS = [{"id":"proPlayer","n":"Karta gracza","c":"Pro","d":"Postać ze skinem wskakuje na kolorową plamę, a obok wjeżdża nick z gradientem i opis gracza.","s":6,"k":1},{"id":"proSubscribe","n":"Błyszczący subskrybuj","c":"Pro","d":"Błyszczący przycisk wskakuje, kursor klika, dzwonek dzwoni i wylatują gwiazdki z serduszkami.","s":4.5,"k":0},{"id":"proVersus","n":"Pojedynek PvP","c":"Pro","d":"Dwie połówki w kolorach graczy zderzają się, na środku wybucha błyszcząca odznaka VS.","s":4.5,"k":0},{"id":"proKill","n":"Eliminacja","c":"Pro","d":"Błyszcząca odznaka z mieczami wybucha falą, nad nią napis z gradientem i licznik serii.","s":3.8,"k":0},{"id":"proRank","n":"Nowa ranga","c":"Pro","d":"Błyszczący kryształ obraca się w snopie światła, a pod nim pojawia się nazwa nowej rangi.","s":5,"k":0},{"id":"proStats","n":"Statystyki gracza","c":"Pro","d":"Błyszcząca karta z nickiem i trzema statystykami, które liczą się w górę z paskami.","s":5.5,"k":0},{"id":"proSticker","n":"Naklejka WOW","c":"Pro","d":"Wielki błyszczący napis jak naklejka wskakuje, kiwa się i sypie gwiazdkami. Na mocne momenty.","s":3,"k":0},{"id":"proNext","n":"Następny odcinek","c":"Pro","d":"Błyszcząca karta z miniaturą, tytułem i kółkiem odliczającym do kolejnego filmu.","s":6,"k":0},{"id":"cine","n":"Tytuł kinowy","c":"Napisy","d":"Elegancki tytuł z przelatującym światłem i linią.","s":6,"k":0},{"id":"glitch","n":"Glitch intro","c":"Napisy","d":"Napis rozpada się w zakłóceniach i składa w całość.","s":4,"k":0},{"id":"count","n":"Odliczanie 3-2-1","c":"Napisy","d":"Liczby z obracającym się pierścieniem i mocnym startem.","s":4.5,"k":0},{"id":"kinetic","n":"Kinetyczny tekst","c":"Napisy","d":"Słowa wskakują po kolei z mocnym najazdem, jak w editach.","s":3.45,"k":0},{"id":"karaoke","n":"Napisy karaoke","c":"Napisy","d":"Słowa podświetlają się po kolei, jak w napisach do piosenki.","s":4.42,"k":0},{"id":"maskTitle","n":"Tytuł z maski","c":"Napisy","d":"Czysty, nowoczesny tytuł: linie wysuwają się spod niewidzialnej maski.","s":4,"k":0},{"id":"neon","n":"Neon","c":"Napisy","d":"Świecący neonowy napis, który mruga przy włączaniu.","s":4,"k":0},{"id":"typewriter","n":"Maszyna do pisania","c":"Napisy","d":"Tekst pisze się literka po literce z migającym kursorem.","s":3.82,"k":0},{"id":"splitText","n":"Rozsunięcie napisu","c":"Napisy","d":"Pierwsze słowo rozsuwa się na pół i odsłania drugie.","s":4,"k":0},{"id":"quote","n":"Cytat","c":"Napisy","d":"Elegancki cytat z dużym cudzysłowem i podpisem.","s":6,"k":0},{"id":"gradTitle","n":"Płynny gradient","c":"Napisy","d":"Tytuł z płynącym kolorowym gradientem i miękką poświatą.","s":5,"k":0},{"id":"versus","n":"VS – pojedynek","c":"Napisy","d":"Dwie strony wjeżdżają z boków, a na środku uderza VS. Idealne do pojedynków.","s":4,"k":0},{"id":"bounceTitle","n":"Skaczące litery","c":"Napisy","d":"Litery spadają po kolei i odbijają się jak piłki.","s":4,"k":0},{"id":"boxReveal","n":"Napis spod paska","c":"Napisy","d":"Kolorowy pasek przejeżdża i odsłania tytuł, jak w After Effects.","s":4,"k":0},{"id":"outlineFill","n":"Napis z konturu","c":"Napisy","d":"Kontur liter rysuje się sam, a potem napis wypełnia się kolorem.","s":4,"k":0},{"id":"scramble","n":"Hakerski napis","c":"Napisy","d":"Losowe znaki migają i po kolei układają się w Twój napis.","s":4,"k":0},{"id":"stackWords","n":"Trzy mocne słowa","c":"Napisy","d":"Trzy słowa uderzają jedno pod drugim, z błyskiem i trzęsieniem.","s":3.8,"k":0},{"id":"zoomThrough","n":"Słowa z głębi","c":"Napisy","d":"Słowa po kolei lecą z daleka prosto na widza.","s":3.6,"k":0},{"id":"signature","n":"Odręczny podpis","c":"Napisy","d":"Twój podpis pisze się odręcznie, a pod nim pojawia się linia.","s":4,"k":0},{"id":"dayCounter","n":"Licznik dni","c":"Napisy","d":"Numer dnia przewija się o jeden i uderza, jak w seriach „przetrwałem 100 dni”.","s":4.5,"k":0},{"id":"topList","n":"Ranking TOP 5","c":"Napisy","d":"Pięć miejsc wjeżdża po kolei od piątego do pierwszego, a zwycięzca dostaje złotą naklejkę.","s":7.5,"k":0},{"id":"lower","n":"Pasek z nazwą","c":"Kanał","d":"Profesjonalny pasek z imieniem i opisem do nałożenia na film.","s":6,"k":0},{"id":"subscribe","n":"Subskrybuj + dzwonek","c":"Kanał","d":"Przycisk, kursor, kliknięcie i dzwonek, do nałożenia na film.","s":5,"k":0},{"id":"outro","n":"Koniec filmu","c":"Kanał","d":"Ekran końcowy z miejscem na dwa polecane filmy i subskrypcję.","s":10,"k":0},{"id":"notif","n":"Powiadomienie","c":"Kanał","d":"Dymek powiadomienia wjeżdża z góry, z Twoim tytułem i treścią.","s":4,"k":0},{"id":"counter","n":"Licznik subskrypcji","c":"Kanał","d":"Liczba rośnie do celu, a na końcu wybucha konfetti.","s":4.5,"k":0},{"id":"logoReveal","n":"Logo kanału","c":"Kanał","d":"Kręgi rozchodzą się i odsłaniają okrągłe logo z inicjałami i nazwą.","s":4,"k":0},{"id":"socials","n":"Moje media społecznościowe","c":"Kanał","d":"Trzy paski z Twoimi nickami wjeżdżają po kolei.","s":6,"k":0},{"id":"likeShare","n":"Polub, skomentuj, udostępnij","c":"Kanał","d":"Trzy ikonki wyskakują po kolei, serduszko wypełnia się na czerwono.","s":4.5,"k":0},{"id":"chapter","n":"Rozdział","c":"Kanał","d":"Napis z numerem rozdziału i tytułem, z paskiem postępu.","s":5,"k":0},{"id":"stats","n":"Statystyki","c":"Kanał","d":"Trzy liczby odliczają w górę, np. filmy, subskrypcje i wyświetlenia.","s":5,"k":0},{"id":"liveBadge","n":"Na żywo","c":"Kanał","d":"Plakietka NA ŻYWO z pulsującą kropką, licznikiem widzów i czatem.","s":4.5,"k":0},{"id":"pollBox","n":"Ankieta","c":"Kanał","d":"Pytanie z dwiema odpowiedziami. Kursor głosuje, a paski pokazują wynik.","s":4.6,"k":0},{"id":"commentPop","n":"Komentarz widza","c":"Kanał","d":"Karta z komentarzem wjeżdża na ekran, a serduszko dostaje polubienie.","s":4.2,"k":0},{"id":"milestone","n":"Kamień milowy","c":"Kanał","d":"Licznik w kółku dobija do Twojej liczby, wybucha konfetti i pojawia się podziękowanie.","s":5,"k":0},{"id":"endscreen","n":"Ekran końcowy","c":"Kanał","d":"Dwa miejsca na kolejne filmy i czerwony przycisk subskrypcji, jak na końcu filmów na YouTube.","s":8,"k":0},{"id":"donate","n":"Donejt na streamie","c":"Kanał","d":"Moneta spada, a pod nią wielki napis z nickiem, kwotą i wiadomością od widza.","s":5.5,"k":0},{"id":"newsub","n":"Nowy obserwujący","c":"Kanał","d":"Kolorowa naklejka z imieniem nowego widza wskakuje z boku z serduszkiem.","s":4.2,"k":0},{"id":"giveaway","n":"Konkurs","c":"Kanał","d":"Prezent się otwiera, lecą konfetti i pojawiają się trzy kroki, jak wziąć udział.","s":6.5,"k":0},{"id":"leak","n":"Przeciek światła","c":"Montaż","d":"Ciepłe smugi światła, jak ze starego aparatu.","s":4,"k":0},{"id":"burn","n":"Wypalenie kliszy","c":"Montaż","d":"Pomarańczowy ogień kliszy rozlewa się i znika. Świetne na przejście.","s":2.5,"k":0},{"id":"speed","n":"Linie prędkości","c":"Montaż","d":"Linie jak w anime, kierują wzrok na środek. Daj na mocny moment.","s":2,"k":0},{"id":"glitchov","n":"Glitch nakładka","c":"Montaż","d":"Kolorowe zakłócenia i paski na film.","s":2,"k":0},{"id":"rec","n":"Kamera REC","c":"Montaż","d":"Ramka kamery z mrugającym REC i licznikiem czasu.","s":6,"k":0},{"id":"arrow","n":"Strzałka i kółko","c":"Montaż","d":"Rysowana strzałka wskazuje coś na filmie i obrysowuje to kółkiem.","s":3.5,"k":0},{"id":"emoji","n":"Latające reakcje","c":"Montaż","d":"Emoji unoszą się w górę jak reakcje na transmisji.","s":4,"k":0},{"id":"bars","n":"Kinowe pasy","c":"Montaż","d":"Czarne pasy wjeżdżają z góry i z dołu, film wygląda jak w kinie.","s":3,"k":0},{"id":"sparkle","n":"Iskry i brokat","c":"Montaż","d":"Migoczące gwiazdki na cały ekran.","s":4,"k":0},{"id":"smoke","n":"Dym","c":"Montaż","d":"Miękki dym unosi się od dołu ekranu.","s":5,"k":0},{"id":"dustov","n":"Stara klisza","c":"Montaż","d":"Kurz, rysy i migotanie jak na starym filmie.","s":4,"k":0},{"id":"lightning","n":"Błyskawica","c":"Montaż","d":"Piorun uderza z błyskiem. Daj na mocne wejście albo drop.","s":2.5,"k":0},{"id":"fire","n":"Ogień","c":"Montaż","d":"Płomienie od dołu ekranu. W trybie Ekran palą się na Twoim filmie.","s":4,"k":0},{"id":"flare","n":"Flara obiektywu","c":"Montaż","d":"Kinowa flara przelatuje przez kadr.","s":3,"k":0},{"id":"pulse","n":"Puls na bit","c":"Montaż","d":"Kręgi rozchodzą się w rytmie 120 BPM. Pasuje do muzyki w editach.","s":4,"k":0},{"id":"crack","n":"Pęknięty ekran","c":"Montaż","d":"Uderzenie, błysk i pęknięcia jak na rozbitej szybie.","s":3,"k":0},{"id":"confov","n":"Deszcz konfetti","c":"Montaż","d":"Kolorowe konfetti spada przez cały ekran.","s":4,"k":0},{"id":"comic","n":"Komiksowy wybuch","c":"Montaż","d":"Gwiazda z napisem jak w komiksie, np. POW! albo BOOM!","s":2,"k":0},{"id":"stamp","n":"Pieczątka","c":"Montaż","d":"Pieczątka z Twoim napisem uderza w ekran.","s":2.5,"k":0},{"id":"callout","n":"Etykieta ze wskaźnikiem","c":"Montaż","d":"Kropka, linia i okienko z opisem wskazują coś na filmie.","s":4,"k":0},{"id":"bgLoop","n":"Animowane tło","c":"Montaż","d":"Miękkie, płynące kolory jako tło pod napisy albo zdjęcia. Zapętla się.","s":8,"k":0},{"id":"frameBorder","n":"Animowana ramka","c":"Montaż","d":"Linie rysują ramkę dookoła filmu, z napisem w rogu.","s":4,"k":0},{"id":"shockwave","n":"Fala uderzeniowa","c":"Montaż","d":"Błysk i fala rozchodząca się od środka. Na mocne uderzenie w muzyce.","s":2.6,"k":0},{"id":"lockOn","n":"Namierzanie celu","c":"Montaż","d":"Celownik zjeżdża się na środek, kręci i namierza cel. Jak w grach i filmach akcji.","s":4,"k":0},{"id":"vhs","n":"Kaseta VHS","c":"Montaż","d":"Napis PLAY, data i licznik czasu jak na starej kasecie, z pasem zakłóceń.","s":5,"k":0},{"id":"spotlight","n":"Reflektor na scenie","c":"Montaż","d":"Snop światła szuka po scenie, zatrzymuje się na środku i pokazuje napis.","s":4.5,"k":0},{"id":"facecam","n":"Ramka na kamerkę","c":"Montaż","d":"Gruba ramka z nazwą i plakietką NA ŻYWO. Środek jest pusty, wstawiasz tam obraz z kamerki.","s":6,"k":0},{"id":"visualizer","n":"Wizualizacja muzyki","c":"Montaż","d":"Słupki albo okrąg tańczą w rytm muzyki. Nakładka na film w trybie Ekran.","s":6,"k":0},{"id":"censor","n":"Cenzura","c":"Montaż","d":"Czarny pasek z piszczeniem i znaczkami, na wulgaryzmy i śmieszne momenty.","s":2.6,"k":0},{"id":"enter","n":"Wejście postaci","c":"Postać","d":"Postać wchodzi, macha i pokazuje Twój nick.","s":5.5,"k":1},{"id":"spin","n":"Prezentacja skina 360°","c":"Postać","d":"Postać obraca się na podeście, a pod nią pojawia się nick.","s":6,"k":1},{"id":"dance","n":"Taniec na scenie","c":"Postać","d":"Postać tańczy w rytmie 120 BPM pod kolorowymi światłami.","s":6,"k":1},{"id":"subchar","n":"Subskrybuj z postacią","c":"Postać","d":"Postać wskazuje przycisk, kursor go klika, dzwonek dzwoni.","s":6.5,"k":1},{"id":"win","n":"Zwycięstwo","c":"Postać","d":"Postać skacze z radości, wybucha konfetti i pojawia się napis.","s":5,"k":1},{"id":"land","n":"Intro z lądowaniem","c":"Postać","d":"Postać spada z nieba, ląduje z hukiem, a za nią wybija się nazwa kanału.","s":5,"k":1},{"id":"runwipe","n":"Przejście z postacią","c":"Postać","d":"Postać przebiega przez ekran i ciągnie za sobą kolorową zasłonę. Wstaw między klipy.","s":2.2,"k":1},{"id":"sign","n":"Postać z tabliczką","c":"Postać","d":"Postać trzyma tabliczkę z Twoim napisem.","s":5,"k":1},{"id":"speech","n":"Postać mówi","c":"Postać","d":"Postać gada, a nad nią pojawia się dymek z Twoim tekstem.","s":5,"k":1},{"id":"emotes","n":"Emotki postaci","c":"Postać","d":"Wybierz emotkę: macha, klaszcze, kłania się, myśli, tańczy i inne.","s":4,"k":1},{"id":"peek","n":"Postać zagląda","c":"Postać","d":"Postać wychyla się zza krawędzi ekranu, macha i coś szepcze.","s":5,"k":1},{"id":"point","n":"Postać pokazuje","c":"Postać","d":"Postać wchodzi, staje i pokazuje ręką na Twój napis.","s":5,"k":1},{"id":"think","n":"Postać myśli","c":"Postać","d":"Postać drapie się po głowie, nad nią dymek z myślą, a potem zapala się żarówka.","s":5,"k":1},{"id":"voxtext","n":"Nick z bloków","c":"Gry","d":"Bloki zlatują z nieba i układają się w Twój nick.","s":5,"k":0},{"id":"voxboom","n":"Blokowa eksplozja","c":"Gry","d":"Blok mruga, a potem wybucha na setki kostek z hukiem.","s":4,"k":0},{"id":"mine","n":"Kopanie bloku","c":"Gry","d":"Postać uderza w blok, ten pęka i rozpada się na kawałki.","s":4.5,"k":1},{"id":"chest","n":"Skrzynia z nagrodą","c":"Gry","d":"Skrzynia spada, trzęsie się i otwiera, a ze środka lecą klejnoty.","s":5,"k":0},{"id":"portal","n":"Wejście do portalu","c":"Gry","d":"Postać macha, odwraca się i wchodzi w portal, a ekran zalewa błysk. Świetne na przejście.","s":4,"k":1},{"id":"achievement","n":"Osiągnięcie zdobyte","c":"Gry","d":"Okienko osiągnięcia wjeżdża z boku z ikoną pucharu.","s":4,"k":0},{"id":"hearts","n":"Pasek życia","c":"Gry","d":"Serduszka znikają po uderzeniu, ekran błyska na czerwono.","s":3.5,"k":0},{"id":"levelup","n":"Level up","c":"Gry","d":"Pasek doświadczenia się zapełnia i wskakuje nowy poziom.","s":3.5,"k":0},{"id":"death","n":"Ekran porażki","c":"Gry","d":"Czerwony ekran z napisem ZGINĄŁEŚ i przyciskami. Najlepiej na tle „Twój film”.","s":4,"k":0},{"id":"loading","n":"Ładowanie świata","c":"Gry","d":"Ekran ładowania z paskiem postępu i procentami.","s":5,"k":0},{"id":"pixtext","n":"Napis 8-bit","c":"Gry","d":"Litery w stylu starych gier wskakują po kolei i świecą.","s":4,"k":0},{"id":"xpOrbs","n":"Kulki doświadczenia","c":"Gry","d":"Zielone kulki lecą do paska, pasek się zapełnia i wyskakuje liczba punktów.","s":4,"k":0},{"id":"killfeed","n":"Lista eliminacji","c":"Gry","d":"Wpisy eliminacji wjeżdżają w rogu ekranu, a na środku pojawia się licznik serii.","s":4.5,"k":0},{"id":"bossBar","n":"Pasek bossa","c":"Gry","d":"Nazwa bossa i wielki pasek życia, który spada po każdym uderzeniu.","s":5,"k":0},{"id":"gameChat","n":"Czat gry","c":"Gry","d":"Wiadomości graczy pojawiają się jedna pod drugą w rogu ekranu, jak na serwerze.","s":6.5,"k":0}];
+const CATS = ['Wszystkie', 'Pro', 'Napisy', 'Kanał', 'Montaż', 'Postać', 'Gry'];
+const CAT_NAMES = { Wszystkie: 'Wszystkie', Pro: 'Styl PRO', Napisy: 'Napisy i intro', Kanał: 'Kanał i stream', Montaż: 'Do montażu', Postać: 'Postać ze skinem', Gry: 'Gry' };
+const CAT_COL = { Wszystkie: '#ffffff', Pro: '#8a7dff', Napisy: 'var(--l-napisy)', Kanał: 'var(--l-kanal)', Montaż: 'var(--l-montaz)', Postać: 'var(--l-postac)', Gry: 'var(--l-gry)' };
+const $ = s => document.querySelector(s);
+const touch = matchMedia('(hover: none)').matches;
+const norm = x => x.toLocaleLowerCase('pl').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ł/g, 'l');
+const tcode = s => { const f = Math.round((s % 1) * 30), r = Math.floor(s); return '00:00:' + String(r).padStart(2, '0') + ':' + String(f).padStart(2, '0'); };
+let cat = 'Wszystkie', q = '';
+try { const h = decodeURIComponent(location.hash.slice(1)); if (CATS.includes(h)) cat = h; } catch (e) { }
 
-/* clips play on hover; on touch screens they play while visible */
-(function () {
-  const clips = [...document.querySelectorAll('.clip')];
-  const play = c => { const v = c.querySelector('video'); v.play().then(() => c.classList.add('playing')).catch(() => { }); };
-  const stop = (c, reset) => { const v = c.querySelector('video'); v.pause(); if (reset) v.currentTime = 0; c.classList.remove('playing'); };
-  const touch = matchMedia('(hover: none)').matches;
-  clips.forEach(c => {
-    c.addEventListener('mouseenter', () => play(c)); c.addEventListener('mouseleave', () => stop(c, true));
-    c.addEventListener('focus', () => play(c)); c.addEventListener('blur', () => stop(c, true));
-    c.addEventListener('click', () => { const v = c.querySelector('video'); v.paused ? play(c) : stop(c, false); });
-  });
-  if (touch && 'IntersectionObserver' in window) {
-    const io = new IntersectionObserver(es => es.forEach(e => e.intersectionRatio > .6 ? play(e.target) : stop(e.target, false)), { threshold: [0, .6, 1] });
-    clips.forEach(c => io.observe(c));
-  }
-  const reel = document.querySelector('.monitor video'), tc = document.getElementById('reelTc');
-  if (reel && tc) setInterval(() => { const t = reel.currentTime || 0; tc.textContent = `00:${String(Math.floor(t)).padStart(2, '0')}:${String(Math.floor((t % 1) * 30)).padStart(2, '0')}`; }, 100);
-})();
+function renderCats() {
+  $('#cats').replaceChildren(...CATS.map(c => {
+    const n = c === 'Wszystkie' ? ANIMS.length : ANIMS.filter(a => a.c === c).length;
+    const b = document.createElement('button'); b.className = 'tab' + (c === cat ? ' on' : ''); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', c === cat);
+    b.style.setProperty('--c', CAT_COL[c]);
+    b.innerHTML = '<span class="sw"></span>' + CAT_NAMES[c] + '<small>' + n + '</small>';
+    b.onclick = () => { cat = c; renderCats(); renderGrid(); window.scrollTo({ top: 0 }); };
+    return b;
+  }));
+}
+
+function renderGrid() {
+  const nq = norm(q).trim();
+  const list = ANIMS.filter(a => (cat === 'Wszystkie' || a.c === cat) && (!nq || norm(a.n + ' ' + a.d + ' ' + CAT_NAMES[a.c] + (a.k ? ' skin postac minecraft' : '')).includes(nq)));
+  $('#cnt').textContent = list.length + (list.length === 1 ? ' klip' : list.length % 10 >= 2 && list.length % 10 <= 4 && (list.length % 100 < 10 || list.length % 100 >= 20) ? ' klipy' : ' klipów');
+  $('#ttl').innerHTML = cat === 'Wszystkie' ? 'Animacje do <em>montażu</em>' : CAT_NAMES[cat];
+  const g = $('#grid'); if (io) io.disconnect(); visible.clear();
+  if (!list.length) { g.innerHTML = '<div class="empty"><b>Nic nie pasuje</b>Spróbuj innego słowa, na przykład „napis”, „skin”, „alert” albo „neon”.</div>'; return; }
+  g.replaceChildren(...list.map(a => {
+    const el = document.createElement('a'); el.className = 'tile'; el.href = 'animacje/#' + a.id; el.dataset.id = a.id; el.style.setProperty('--c', CAT_COL[a.c]);
+    el.setAttribute('aria-label', a.n + ', otwórz i edytuj');
+    el.innerHTML = '<div class="thumb"><img src="clips/' + a.id + '.jpg" alt="" loading="lazy" decoding="async"><video muted loop playsinline preload="none" tabindex="-1"></video>' +
+      (a.k ? '<span class="tag">TWÓJ SKIN</span>' : '') + '<span class="tc">' + tcode(a.s) + '</span><span class="lbl"></span><span class="ph"></span></div>' +
+      '<div class="meta"><b>' + a.n + '</b><span><i></i>' + CAT_NAMES[a.c] + '</span></div><p class="d">' + a.d + '</p>';
+    el.addEventListener('mouseenter', () => play(el)); el.addEventListener('mouseleave', () => stop(el, true));
+    el.addEventListener('focus', () => play(el)); el.addEventListener('blur', () => stop(el, true));
+    if (io) io.observe(el);
+    return el;
+  }));
+}
+
+function play(el) {
+  const v = el.querySelector('video'), ph = el.querySelector('.ph');
+  if (!v.src) { v.src = 'clips/' + el.dataset.id + '.mp4'; v.addEventListener('timeupdate', () => { if (v.duration) ph.style.width = (v.currentTime / v.duration * 100) + '%'; }); }
+  const p = v.play(); if (p) p.then(() => { el.classList.add('playing'); v.style.opacity = 1; }).catch(() => { });
+}
+function stop(el, reset) { const v = el.querySelector('video'); v.pause(); v.style.opacity = 0; if (reset) { try { v.currentTime = 0; } catch (e) { } el.querySelector('.ph').style.width = 0; } el.classList.remove('playing'); }
+
+/* phones have no hover: the two clips nearest the middle of the screen play by themselves */
+const visible = new Set();
+const io = touch && 'IntersectionObserver' in window ? new IntersectionObserver(es => { es.forEach(e => e.isIntersecting ? visible.add(e.target) : (visible.delete(e.target), stop(e.target, false))); pick(); }, { threshold: [0, .5] }) : null;
+function pick() {
+  const mid = innerHeight / 2, rows = [...visible].map(el => { const r = el.querySelector('.thumb').getBoundingClientRect(); return { el, d: Math.abs((r.top + r.bottom) / 2 - mid), full: r.top > -4 && r.bottom < innerHeight + 4 }; }).filter(x => x.full).sort((a, b) => a.d - b.d);
+  const keep = new Set(rows.slice(0, 2).map(x => x.el));
+  visible.forEach(el => { if (!keep.has(el)) stop(el, false); }); keep.forEach(el => { if (!el.classList.contains('playing')) play(el); });
+}
+if (io) { let tk; addEventListener('scroll', () => { clearTimeout(tk); tk = setTimeout(pick, 120); }, { passive: true }); }
+
+$('#q').addEventListener('input', e => { q = e.target.value; $('#sbox').classList.toggle('has', !!q); renderGrid(); });
+$('#clr').onclick = () => { $('#q').value = ''; q = ''; $('#sbox').classList.remove('has'); renderGrid(); $('#q').focus(); };
+addEventListener('keydown', e => { if (e.key === '/' && document.activeElement !== $('#q')) { e.preventDefault(); $('#q').focus(); } });
+renderCats(); renderGrid();
 </script>
 </body>
 </html>
