@@ -102,6 +102,30 @@ section{padding-block:96px}
 footer{border-top:1px solid var(--line);padding-block:34px calc(34px + env(safe-area-inset-bottom,0px));font:500 13px/1.6 var(--f-mono);color:var(--dim)}
 footer .wrap{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between}
 footer a{color:var(--paper)}
+
+/* hero showreel monitor */
+.hero-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:48px;align-items:end}
+.monitor{position:relative;border:2px solid var(--paper);border-radius:4px;background:#000;box-shadow:14px 14px 0 var(--cyan);transform:rotate(1deg);margin-bottom:8px}
+.monitor video{display:block;width:100%;aspect-ratio:16/9;object-fit:cover}
+.monitor .rec{position:absolute;top:12px;left:12px;display:flex;align-items:center;gap:8px;font:700 12px/1 var(--f-mono);letter-spacing:.1em;background:rgba(0,0,0,.6);padding:7px 9px;border-radius:2px}
+.monitor .rec::before{content:"";width:8px;height:8px;border-radius:50%;background:#ff2b2b;animation:rec 1s steps(2) infinite}
+.monitor .tc{position:absolute;right:12px;bottom:12px;font:700 12px/1 var(--f-mono);background:rgba(0,0,0,.6);padding:7px 9px;border-radius:2px;font-variant-numeric:tabular-nums}
+.hero .glitch{font-size:clamp(86px,13.5vw,220px)}
+/* clip grid: plays on hover (or when visible on phones) */
+.clips{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:34px}
+.clip{position:relative;margin:0;border-radius:4px;overflow:hidden;background:#000;border:1px solid var(--line);cursor:pointer;transition:transform .18s,border-color .18s}
+.clip video{display:block;width:100%;aspect-ratio:16/9;object-fit:cover}
+.clip figcaption{position:absolute;left:0;right:0;bottom:0;padding:22px 12px 10px;background:linear-gradient(to top,rgba(0,0,0,.85),transparent);font:800 14px/1.2 var(--f-body);display:flex;justify-content:space-between;align-items:end;gap:8px}
+.clip figcaption span{font:500 11px/1 var(--f-mono);color:var(--dim)}
+.clip .hint{position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.6);display:grid;place-items:center;transition:opacity .15s}
+.clip .hint::after{content:"";border-left:10px solid var(--paper);border-top:6px solid transparent;border-bottom:6px solid transparent;margin-left:3px}
+.clip.playing .hint{opacity:0}
+.clip:hover{transform:translateY(-3px);border-color:var(--paper)}
+.clip.playing{border-color:var(--cyan)}
+.more{margin-top:26px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;color:var(--dim);font-size:15px}
+@media (max-width:1000px){.clips{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:860px){.hero-grid{grid-template-columns:1fr;gap:34px}.monitor{box-shadow:8px 8px 0 var(--cyan);transform:none}}
+@media (max-width:480px){.clips{grid-template-columns:1fr}}
 @media (max-width:860px){
   .top nav a:not(.keep){display:none}
   .room,.room.flip{grid-template-columns:1fr;gap:28px}
@@ -118,13 +142,14 @@ footer a{color:var(--paper)}
 <body>
 <header class="top"><div class="wrap">
   <a class="brand" href="#"><i></i>FAKETOK</a>
-  <nav><a href="#edytor">Edytor</a><a href="#animacje">Animacje</a><a href="#pobierz" class="keep">Pobierz</a></nav>
+  <nav><a href="#edytor">Edytor</a><a href="#animacje">Animacje</a><a href="#w-ruchu">W ruchu</a><a href="#pobierz" class="keep">Pobierz</a></nav>
 </div></header>
 
 <main>
 <section class="hero">
   <canvas id="fx" aria-hidden="true"></canvas>
-  <div class="wrap">
+  <div class="wrap hero-grid">
+   <div>
     <div class="kicker">REC · darmowe · bez znaku wodnego</div>
     <h1 class="glitch" data-text="FakeTok">FakeTok</h1>
     <p class="lede"><b>Montuj edity jak pro.</b> Edytor wideo i ponad 70 gotowych animacji: postać 3D z Twoim skinem, glitche, przejścia i napisy. Wszystko w przeglądarce.</p>
@@ -133,6 +158,8 @@ footer a{color:var(--paper)}
       <a class="btn ghost" href="animacje/"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" fill="currentColor"/></svg>Animacje do montażu</a>
     </div>
     <p class="platforms mono">działa na: <span>przeglądarce</span> · <span>Windows 10/11</span> · <span>Androidzie</span> · <span>iPhonie</span> (przez Safari)</p>
+   </div>
+   <div class="monitor"><video src="clips/reel.mp4" poster="clips/reel.jpg" autoplay muted loop playsinline aria-label="Showreel animacji FakeTok"></video><span class="rec">SHOWREEL</span><span class="tc" id="reelTc">00:00:00</span></div>
   </div>
 </section>
 
@@ -161,9 +188,31 @@ footer a{color:var(--paper)}
       </div>
       <div>
         <a class="shot" href="animacje/" aria-label="Otwórz animacje"><span class="tape">ANIMACJE</span><img src="img/animacje.jpg" width="1440" height="860" alt="Strona animacji: lista szablonów, podgląd postaci 3D i panel edycji" loading="lazy"></a>
-        <div class="strip"><img src="img/a_voxtext.jpg" alt="Nick ułożony z bloków" loading="lazy"><img src="img/a_versus.jpg" alt="Animacja VS" loading="lazy"><img src="img/a_win.jpg" alt="Postać świętuje zwycięstwo" loading="lazy"><img src="img/a_neon.jpg" alt="Neonowy napis" loading="lazy"><img src="img/a_chest.jpg" alt="Skrzynia z nagrodą" loading="lazy"><img src="img/edytor.jpg" alt="Edytor" loading="lazy" style="object-position:50% 40%"></div>
+
       </div>
     </div>
+  </div>
+</section>
+
+<section id="w-ruchu" style="padding-top:20px">
+  <div class="wrap">
+    <div class="label"><b>▶</b> Zobacz w ruchu</div>
+    <h2 style="font:400 clamp(44px,6vw,84px)/.9 var(--f-disp);text-transform:uppercase;margin:16px 0 0">Najedź i <span style="color:var(--pink)">patrz</span></h2>
+    <div class="clips">
+      <figure class="clip" tabindex="0"><video src="clips/enter.mp4" poster="clips/enter.jpg" muted loop playsinline preload="metadata"></video><span class="hint"></span><figcaption>Wejście postaci<span>skin 3D</span></figcaption></figure>
+      <figure class="clip" tabindex="0"><video src="clips/voxtext.mp4" poster="clips/voxtext.jpg" muted loop playsinline preload="metadata"></video><span class="hint"></span><figcaption>Nick z bloków<span>bloki</span></figcaption></figure>
+      <figure class="clip" tabindex="0"><video src="clips/versus.mp4" poster="clips/versus.jpg" muted loop playsinline preload="metadata"></video><span class="hint"></span><figcaption>VS – pojedynek<span>napisy</span></figcaption></figure>
+      <figure class="clip" tabindex="0"><video src="clips/neon.mp4" poster="clips/neon.jpg" muted loop playsinline preload="metadata"></video><span class="hint"></span><figcaption>Neon<span>napisy</span></figcaption></figure>
+      <figure class="clip" tabindex="0"><video src="clips/win.mp4" poster="clips/win.jpg" muted loop playsinline preload="metadata"></video><span class="hint"></span><figcaption>Zwycięstwo<span>skin 3D</span></figcaption></figure>
+      <figure class="clip" tabindex="0"><video src="clips/chest.mp4" poster="clips/chest.jpg" muted loop playsinline preload="metadata"></video><span class="hint"></span><figcaption>Skrzynia z nagrodą<span>bloki</span></figcaption></figure>
+      <figure class="clip" tabindex="0"><video src="clips/kinetic.mp4" poster="clips/kinetic.jpg" muted loop playsinline preload="metadata"></video><span class="hint"></span><figcaption>Kinetyczny tekst<span>napisy</span></figcaption></figure>
+      <figure class="clip" tabindex="0"><video src="clips/mine.mp4" poster="clips/mine.jpg" muted loop playsinline preload="metadata"></video><span class="hint"></span><figcaption>Kopanie bloku<span>skin 3D</span></figcaption></figure>
+      <figure class="clip" tabindex="0"><video src="clips/logoReveal.mp4" poster="clips/logoReveal.jpg" muted loop playsinline preload="metadata"></video><span class="hint"></span><figcaption>Logo kanału<span>kanał</span></figcaption></figure>
+      <figure class="clip" tabindex="0"><video src="clips/glitch.mp4" poster="clips/glitch.jpg" muted loop playsinline preload="metadata"></video><span class="hint"></span><figcaption>Glitch intro<span>napisy</span></figcaption></figure>
+      <figure class="clip" tabindex="0"><video src="clips/maskTitle.mp4" poster="clips/maskTitle.jpg" muted loop playsinline preload="metadata"></video><span class="hint"></span><figcaption>Tytuł z maski<span>napisy</span></figcaption></figure>
+      <figure class="clip" tabindex="0"><video src="clips/voxboom.mp4" poster="clips/voxboom.jpg" muted loop playsinline preload="metadata"></video><span class="hint"></span><figcaption>Blokowa eksplozja<span>bloki</span></figcaption></figure>
+    </div>
+    <div class="more">To tylko kilka z 74 animacji. Każdą możesz edytować: nick, napisy, kolory i skin.<a class="btn ghost" href="animacje/" style="padding:14px 18px;font-size:14px">Wszystkie animacje →</a></div>
   </div>
 </section>
 
@@ -220,6 +269,25 @@ footer a{color:var(--paper)}
     if (!reduce) requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
+})();
+
+/* clips play on hover; on touch screens they play while visible */
+(function () {
+  const clips = [...document.querySelectorAll('.clip')];
+  const play = c => { const v = c.querySelector('video'); v.play().then(() => c.classList.add('playing')).catch(() => { }); };
+  const stop = (c, reset) => { const v = c.querySelector('video'); v.pause(); if (reset) v.currentTime = 0; c.classList.remove('playing'); };
+  const touch = matchMedia('(hover: none)').matches;
+  clips.forEach(c => {
+    c.addEventListener('mouseenter', () => play(c)); c.addEventListener('mouseleave', () => stop(c, true));
+    c.addEventListener('focus', () => play(c)); c.addEventListener('blur', () => stop(c, true));
+    c.addEventListener('click', () => { const v = c.querySelector('video'); v.paused ? play(c) : stop(c, false); });
+  });
+  if (touch && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver(es => es.forEach(e => e.intersectionRatio > .6 ? play(e.target) : stop(e.target, false)), { threshold: [0, .6, 1] });
+    clips.forEach(c => io.observe(c));
+  }
+  const reel = document.querySelector('.monitor video'), tc = document.getElementById('reelTc');
+  if (reel && tc) setInterval(() => { const t = reel.currentTime || 0; tc.textContent = `00:${String(Math.floor(t)).padStart(2, '0')}:${String(Math.floor((t % 1) * 30)).padStart(2, '0')}`; }, 100);
 })();
 </script>
 </body>
