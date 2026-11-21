@@ -7,7 +7,7 @@ Darmowy edytor wideo po polsku: oś czasu, efekty, przejścia, filtry, animowane
 | | Plik | |
 |---|---|---|
 | 🪟 **Windows 10/11** | [**KadrStudio-Setup.exe**](https://github.com/maxioo21/kadr-studio/raw/main/pobierz/KadrStudio-Setup.exe) (26 MB) | instalator: ikona na pulpicie i w menu Start |
-| 🤖 **Android** | [**KadrStudio.apk**](https://github.com/maxioo21/kadr-studio/raw/main/pobierz/KadrStudio.apk) (4,4 MB) | gotowe filmy trafiają do galerii |
+| 🤖 **Android** | [**KadrStudio.apk**](https://github.com/maxioo21/kadr-studio/raw/main/pobierz/KadrStudio.apk) (5,4 MB) | gotowe filmy trafiają do galerii |
 | 🌐 **Przeglądarka** (telefon i komputer) | **https://maxioo21.github.io/kadr-studio/** | przycisk „Zainstaluj” dodaje aplikację na ekran główny |
 
 **Windows:** uruchom pobrany plik. Jeśli pojawi się „System Windows ochronił ten komputer”, kliknij *Więcej informacji*, a potem *Uruchom mimo to*. Program otwiera się we własnym oknie (używa Microsoft Edge, który jest w każdym Windowsie). Gotowe filmy zapisują się w folderze *Pobrane*.
@@ -16,16 +16,18 @@ Darmowy edytor wideo po polsku: oś czasu, efekty, przejścia, filtry, animowane
 
 **iPhone:** otwórz link do wersji w przeglądarce w Safari, dotknij *Udostępnij*, a potem *Do ekranu początkowego*.
 
-## Co potrafi
+## Co potrafi (wersja 1.1)
 
-- **Oś czasu:** ścieżka filmów, warstwy z tekstami i naklejkami, muzyka i dźwięki. Przeciąganie, przycinanie, dzielenie, duplikowanie, cofanie zmian.
-- **28 przejść, 30 efektów, 25 filtrów** z podglądami, do tego jasność, kontrast, nasycenie, temperatura, winieta i ziarno.
-- **Animacje klipów** na wejście, wyjście i w pętli oraz prędkość od 0,1× do 5×.
-- **Napisy:** 14 stylów, animacje (maszyna do pisania, litera po literze, fala…), obrys, cień, poświata, ponad 80 naklejek.
-- **Usuwanie tła AI** (osoba na kolorze, rozmyciu albo zdjęciu) oraz zielony ekran z pipetą.
-- **Obraz w obrazie** z kształtami i trybami mieszania.
-- **Magia:** auto-montaż, cięcie do rytmu muzyki, szybkie napisy z tekstu, intro 3-2-1, stop-klatka, zapis miniaturki.
-- **Format:** 9:16, 16:9, 1:1, 4:5 i inne, do 1080p i 60 klatek na sekundę.
+- **Gotowe presety do editów** (zakładka *Gotowe*): phonk wstrząs, zoom na bit, błysk na bit, RGB uderzenia, czarno-białe uderzenia, glitch montaż, stroboskop, velocity (szybko–wolno–szybko), kinowy dramat, wspomnienie, edit 3D i inne. Jedno kliknięcie nakłada je na cały film, a gdy jest muzyka, uderzenia trafiają w jej rytm.
+- **62 efekty** z podglądem na żywo po najechaniu: uderzenia (zoom, wstrząs, błyski), glitch, VHS, śnieg, deszcz, bokeh, konfetti, serduszka, poświata, hologram, kinowe pasy i inne. Efekty to osobne paski na osi czasu, jak w profesjonalnych edytorach.
+- **45 przejść** i **39 filtrów** w kategoriach, z animowanym podglądem.
+- **Animacje klipów i tekstu z podglądem na postaci:** najedź na kafelek, a postać pokaże ruch. Ponad 20 animacji wejścia, wyjścia i w pętli dla klipów i drugie tyle dla napisów (deszcz liter, rozsypanie, glitch, galaretka…).
+- **Napisy:** 26 stylów i 12 gotowych etykiet (SUBSKRYBUJ, LIKE, WOW!…), ponad 130 naklejek.
+- **Oś czasu:** miniatury klatek i fala dźwięku na klipach, przycinanie, dzielenie, cofanie zmian.
+- **Biblioteka ruchomych klipów** do testowania efektów i 3 własne podkłady muzyczne oraz 9 efektów dźwiękowych.
+- **Usuwanie tła AI**, zielony ekran, obraz w obrazie, prędkość 0,1×–5×, filtry i korekcja koloru.
+- **Płynny podgląd:** na słabszym komputerze edytor sam obniża jakość podglądu, a eksport zawsze jest w pełnej jakości.
+- **Magia:** auto-montaż, cięcie do rytmu, szybkie napisy, intro 3-2-1, stop-klatka, zapis miniaturki.
 
 ## Dla programistów
 

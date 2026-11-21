@@ -1,8 +1,8 @@
-/* Pobiera czcionki Google (tylko alfabet łaciński + polskie znaki) do web/fonts, żeby aplikacja działała offline. */
+/* Pobiera czcionki Google (tylko alfabet łaciński + polskie znaki) do docs/fonts, żeby aplikacja działała offline. */
 const fs = require('fs');
 const path = require('path');
-const OUT = path.join(__dirname, '..', 'web', 'fonts');
-const FAMILIES = 'family=Unbounded:wght@500;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&family=Montserrat:wght@500;800&family=Bebas+Neue&family=Anton&family=Pacifico&family=Lobster&family=Permanent+Marker&family=Bangers&family=Playfair+Display:ital,wght@1,700&family=Caveat:wght@700&family=Rubik+Mono+One&family=Poppins:wght@600;800&family=Oswald:wght@600&display=swap';
+const OUT = path.join(__dirname, '..', 'docs', 'fonts');
+const FAMILIES = 'family=Inter:wght@400;500;600;700;800&family=Unbounded:wght@500;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&family=Montserrat:wght@500;800;900&family=Bebas+Neue&family=Anton&family=Pacifico&family=Lobster&family=Permanent+Marker&family=Bangers&family=Playfair+Display:ital,wght@1,700&family=Caveat:wght@700&family=Rubik+Mono+One&family=Poppins:wght@600;800;900&family=Oswald:wght@600&family=Bungee&family=Righteous&family=Monoton&family=Press+Start+2P&family=Archivo+Black&family=Dancing+Script:wght@700&display=swap';
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36';
 (async () => {
   fs.rmSync(OUT, { recursive: true, force: true }); fs.mkdirSync(OUT, { recursive: true });

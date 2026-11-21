@@ -3,7 +3,7 @@ Target amd64-unicode
 !include "MUI2.nsh"
 
 !define APPNAME "Kadr Studio"
-!define APPVERSION "1.0.0"
+!define APPVERSION "1.1.0"
 !define UNINSTKEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\KadrStudio"
 
 Name "${APPNAME}"
@@ -14,7 +14,7 @@ RequestExecutionLevel user
 SetCompressor /SOLID lzma
 BrandingText "Kadr Studio ${APPVERSION}"
 
-VIProductVersion "1.0.0.0"
+VIProductVersion "1.1.0.0"
 VIAddVersionKey /LANG=1045 "ProductName" "Kadr Studio"
 VIAddVersionKey /LANG=1045 "FileDescription" "Instalator Kadr Studio"
 VIAddVersionKey /LANG=1045 "FileVersion" "${APPVERSION}"

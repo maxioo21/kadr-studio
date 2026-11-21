@@ -68,13 +68,13 @@ async function brandExe(src, dst, blob) {
   const glang = groups.length ? groups[0].lang : 1033;
   ResEdit.Resource.IconGroupEntry.replaceIconsForResource(res.entries, gid, glang, ico.icons.map(i => i.data));
   const vi = ResEdit.Resource.VersionInfo.fromEntries(res.entries)[0] || ResEdit.Resource.VersionInfo.createEmpty();
-  vi.setFileVersion(1, 0, 0, 0, 1033);
-  vi.setProductVersion(1, 0, 0, 0, 1033);
+  vi.setFileVersion(1, 1, 0, 0, 1033);
+  vi.setProductVersion(1, 1, 0, 0, 1033);
   const langs = vi.getAllLanguagesForStringValues();
   const lang = langs[0] || { lang: 1033, codepage: 1200 };
   vi.setStringValues(lang, {
     CompanyName: 'Kadr Studio', FileDescription: 'Kadr Studio – edytor wideo', ProductName: 'Kadr Studio',
-    InternalName: 'KadrStudio', OriginalFilename: 'KadrStudio.exe', FileVersion: '1.0.0', ProductVersion: '1.0.0', LegalCopyright: 'Kadr Studio'
+    InternalName: 'KadrStudio', OriginalFilename: 'KadrStudio.exe', FileVersion: '1.1.0', ProductVersion: '1.1.0', LegalCopyright: 'Kadr Studio'
   });
   vi.outputToResourceEntries(res.entries);
   res.entries = res.entries.filter(e => !(e.type === 10 && e.id === 'NODE_SEA_BLOB'));

@@ -1,6 +1,6 @@
 {
   "name": "kadr-studio",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Kadr Studio – darmowy edytor wideo w przeglądarce, na Windows i Androida",
   "private": true,
   "scripts": {
