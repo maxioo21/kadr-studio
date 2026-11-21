@@ -1892,10 +1892,23 @@ function renderGallery() {
       h('b', null, tpl.name), h('span', { class: 'meta' }, CAT_NAMES[tpl.cat] || tpl.cat));
     const p = posters.get(tpl.id); if (p) cv.getContext('2d').drawImage(p, 0, 0);
     card.addEventListener('pointerenter', () => { hoverCard = { tpl, cv, t0: performance.now() }; });
-    card.addEventListener('pointerleave', () => { if (hoverCard && hoverCard.cv === cv) { hoverCard = null; const pp = posters.get(tpl.id); if (pp) { const g2 = cv.getContext('2d'); g2.clearRect(0, 0, 320, 180); g2.drawImage(pp, 0, 0); } } });
+    card.addEventListener('pointerleave', () => { if (hoverCard && hoverCard.cv === cv) { hoverCard = null; restorePoster(tpl, cv); } });
+    card._pv = { tpl, cv }; if (autoIO) autoIO.observe(card);
     return card;
   }) : [h('div', { class: 'hint', style: 'grid-column:1/-1;padding:20px 4px' }, 'Nic nie pasuje. Spróbuj innego słowa, np. „napis”, „przejście”, „skin”.')]));
 }
+function restorePoster(tpl, cv) { const pp = posters.get(tpl.id); if (pp) { const g2 = cv.getContext('2d'); g2.clearRect(0, 0, 320, 180); g2.drawImage(pp, 0, 0); } }
+/* phones have no hover: visible cards preview themselves one after another */
+const TOUCH = matchMedia('(hover: none)').matches, autoSeen = new Set();
+const autoIO = TOUCH && 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => e.intersectionRatio > .6 ? autoSeen.add(e.target) : autoSeen.delete(e.target)), { threshold: [0, .6, 1] }) : null;
+if (autoIO) setInterval(() => {
+  if (exporting) return;
+  const vis = [...autoSeen].filter(c => c.isConnected).sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top || a.getBoundingClientRect().left - b.getBoundingClientRect().left);
+  const prev = hoverCard; let next = null;
+  if (vis.length) { const i = prev ? vis.findIndex(c => c._pv.cv === prev.cv) : -1; next = vis[(i + 1) % vis.length]._pv; }
+  if (prev && (!next || prev.cv !== next.cv)) restorePoster(prev.tpl, prev.cv);
+  hoverCard = next ? { tpl: next.tpl, cv: next.cv, t0: performance.now() } : null;
+}, 2600);
 function hoverTick(now) {
   if (!hoverCard || exporting || !hoverCard.cv.isConnected) return;
   const step = Math.floor(now / 70); if (step === hoverStep) return; hoverStep = step;

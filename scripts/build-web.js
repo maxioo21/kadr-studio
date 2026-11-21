@@ -38,7 +38,7 @@ fs.writeFileSync(path.join(DOCS, 'manifest.webmanifest'), JSON.stringify({
 }, null, 2));
 
 const files = [];
-(function walk(d, pre) { for (const f of fs.readdirSync(d, { withFileTypes: true })) { const rel = pre + f.name; if (f.isDirectory()) walk(path.join(d, f.name), rel + '/'); else if (f.name !== 'sw.js' && f.name !== '.nojekyll') files.push(rel); } })(DOCS, '');
+(function walk(d, pre) { for (const f of fs.readdirSync(d, { withFileTypes: true })) { const rel = pre + f.name; if (f.isDirectory()) { if (f.name !== 'animacje') walk(path.join(d, f.name), rel + '/'); } else if (f.name !== 'sw.js' && f.name !== '.nojekyll') files.push(rel); } })(DOCS, '');
 fs.writeFileSync(path.join(DOCS, 'sw.js'), `/* FakeTok – praca offline */
 const CACHE = 'faketok-${VERSION}-${Date.now().toString(36)}';
 const FILES = ${JSON.stringify(['./', ...files])};
