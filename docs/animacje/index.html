@@ -2,7 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Bebas+Neue&family=Bangers&family=Anton&family=Montserrat:wght@700;900&family=Press+Start+2P&family=Bungee&family=JetBrains+Mono:wght@500&family=Playfair+Display:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Bebas+Neue&family=Bangers&family=Pacifico&family=Anton&family=Montserrat:wght@700;900&family=Press+Start+2P&family=Bungee&family=JetBrains+Mono:wght@500&family=Playfair+Display:wght@700&display=swap">
 <style>
 /* Layout: template studio. Gallery (left) | live player (center) | edit panel (right); phone = player, panel, gallery.
    Dark-only like the FakeTok editor: neutral greys, one cyan accent. */
@@ -1518,7 +1518,260 @@ TEMPLATES.push(
   }
 );
 
-const CATS = ['Wszystkie', 'Gry', 'Montaż', 'Postać', 'Napisy', 'Kanał', 'Przejścia', 'Film'];
+/* ================= batch 5: clean, professional motion graphics ================= */
+function iconGlyph(g, kind, x, y, s, col) {
+  g.save(); g.translate(x, y); g.scale(s, s); g.fillStyle = col; g.strokeStyle = col; g.lineWidth = 6; g.lineJoin = 'round'; g.lineCap = 'round';
+  if (kind === 'play') { rr(g, -28, -20, 56, 40, 10); g.fill(); g.fillStyle = '#fff'; g.beginPath(); g.moveTo(-8, -11); g.lineTo(13, 0); g.lineTo(-8, 11); g.fill(); }
+  else if (kind === 'note') { g.beginPath(); g.arc(-10, 14, 9, 0, Math.PI * 2); g.fill(); g.fillRect(-3, -24, 6, 38); g.beginPath(); g.moveTo(-1, -24); g.quadraticCurveTo(16, -18, 18, -2); g.quadraticCurveTo(12, -12, -1, -12); g.fill(); }
+  else if (kind === 'camera') { rr(g, -26, -26, 52, 52, 14); g.stroke(); g.beginPath(); g.arc(0, 0, 12, 0, Math.PI * 2); g.stroke(); g.beginPath(); g.arc(16, -16, 3.5, 0, Math.PI * 2); g.fill(); }
+  else if (kind === 'heart') { g.beginPath(); g.moveTo(0, 22); g.bezierCurveTo(-34, 0, -26, -30, 0, -14); g.bezierCurveTo(26, -30, 34, 0, 0, 22); g.closePath(); g.fill(); }
+  else if (kind === 'heartO') { g.beginPath(); g.moveTo(0, 22); g.bezierCurveTo(-34, 0, -26, -30, 0, -14); g.bezierCurveTo(26, -30, 34, 0, 0, 22); g.closePath(); g.stroke(); }
+  else if (kind === 'bubble') { g.beginPath(); g.ellipse(0, -4, 28, 22, 0, 0, Math.PI * 2); g.stroke(); g.beginPath(); g.moveTo(-14, 14); g.lineTo(-20, 28); g.lineTo(-2, 17); g.stroke(); }
+  else if (kind === 'share') { g.beginPath(); g.moveTo(-24, 20); g.quadraticCurveTo(-20, -8, 10, -8); g.lineTo(10, -22); g.lineTo(30, 0); g.lineTo(10, 22); g.lineTo(10, 8); g.quadraticCurveTo(-10, 6, -24, 20); g.closePath(); g.stroke(); }
+  g.restore();
+}
+function blobPath(g, cx, cy, r, t, seed, wob = .12) { g.beginPath(); for (let i = 0; i <= 64; i++) { const a = i / 64 * Math.PI * 2, rr2 = r * (1 + wob * (Math.sin(a * 3 + seed + t * 2) * .6 + Math.sin(a * 5 - seed * 2 + t * 3) * .4)); const x = cx + Math.cos(a) * rr2, y = cy + Math.sin(a) * rr2; i ? g.lineTo(x, y) : g.moveTo(x, y); } g.closePath(); }
+TEMPLATES.push(
+  {
+    id: 'maskTitle', cat: 'Napisy', name: 'Tytuł z maski', d: 'Czysty, nowoczesny tytuł: linie wysuwają się spod niewidzialnej maski.', dur: 4,
+    fields: [['title', 'text', 'Tytuł', 'NOWY ROZDZIAŁ'], ['sub', 'text', 'Podtytuł', 'odcinek 12 · vlog'], ['accent', 'color', 'Kolor akcentu', '#22d3e6']], sfx: [[.1, 'whoosh'], [3.3, 'whoosh']],
+    render(g, W, H, t, v, u) {
+      const out = E.in(seg(t, 3.3, 3.9)), fs = 130 * u, y1 = H * .46, y2 = H * .46 + 110 * u;
+      const line = (txt, y, size, t0, col, font, w) => { const k = E.out(seg(t, t0, t0 + .6)); g.save(); g.beginPath(); g.rect(0, y - size * .62, W, size * 1.24); g.clip(); T(g, txt, W / 2, y + (1 - k) * size * 1.2 - out * size * 1.2, { size, font, weight: w, color: col, maxW: W * .88 }); g.restore(); };
+      line(v.title, y1, fs, .1, '#ffffff', 'Montserrat', 900);
+      line(v.sub, y2, 48 * u, .45, v.accent, 'Inter', 600);
+      const bw = Math.min(W * .4, 420 * u) * E.inOut(seg(t, .3, 1)) * (1 - out); g.fillStyle = v.accent; g.fillRect(W / 2 - bw / 2, y1 - fs * .78, bw, 8 * u);
+    }
+  },
+  {
+    id: 'neon', cat: 'Napisy', name: 'Neon', d: 'Świecący neonowy napis, który mruga przy włączaniu.', dur: 4,
+    fields: [['text', 'text', 'Napis', 'Otwarte'], ['color', 'color', 'Kolor neonu', '#ff3fd8']], sfx: [[.1, 'glitch'], [.7, 'click']],
+    render(g, W, H, t, v, u) {
+      const chars = [...v.text], fs = Math.min(200 * u, W * 1.5 / Math.max(3, chars.length)); g.font = `400 ${fs}px Pacifico`;
+      const ws = chars.map(c => g.measureText(c).width), tw = ws.reduce((a, b) => a + b, 0); let x = W / 2 - tw / 2;
+      chars.forEach((c, i) => {
+        const on = t > 1.2 ? (rnd(i, Math.floor(t * 9)) > .02 ? 1 : .35) : (rnd(i, Math.floor(t * 14)) > .55 - t * .4 ? 1 : .08);
+        g.save(); g.globalAlpha = .25 + .75 * on; T(g, c, x + ws[i] / 2, H / 2, { size: fs, font: 'Pacifico', weight: 400, color: '#fff', glow: { color: v.color, blur: 40 * u * on }, stroke: { w: 10 * u, color: rgba(v.color, .9 * on) }, shadowOnFill: true }); g.restore();
+        x += ws[i];
+      });
+      const gr = g.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, W * .6); gr.addColorStop(0, rgba(v.color, .12 * seg(t, .8, 1.3))); gr.addColorStop(1, rgba(v.color, 0)); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    }
+  },
+  {
+    id: 'typewriter', cat: 'Napisy', name: 'Maszyna do pisania', d: 'Tekst pisze się literka po literce z migającym kursorem.', dur: 0,
+    fields: [['text', 'textarea', 'Tekst', 'Pewnego dnia wszystko się zmieniło...'], ['color', 'color', 'Kolor tekstu', '#f4f4f6']],
+    durFn: v => Math.max(2, [...v.text].length * .06 + 1.6),
+    sfxFn: v => [...v.text].slice(0, 60).map((c, i) => c === ' ' ? null : [.3 + i * .06, 'click']).filter(Boolean),
+    render(g, W, H, t, v, u) {
+      const fs = 64 * u; g.font = `500 ${fs}px "JetBrains Mono"`;
+      const n = Math.floor(seg(t, .3, .3 + [...v.text].length * .06) * [...v.text].length + .001), shown = [...v.text].slice(0, n).join('');
+      const lines = wrapLines(g, v.text, W * .82), shownLines = wrapLines(g, shown, W * .82);
+      const y0 = H / 2 - (lines.length - 1) * fs * .7;
+      shownLines.forEach((ln, i) => T(g, ln, W * .09, y0 + i * fs * 1.4, { size: fs, font: 'JetBrains Mono', weight: 500, color: v.color, align: 'left' }));
+      const last = shownLines[shownLines.length - 1] || ''; g.font = `500 ${fs}px "JetBrains Mono"`;
+      if (t % .9 < .5) { g.fillStyle = v.color; g.fillRect(W * .09 + g.measureText(last).width + 8 * u, y0 + (Math.max(1, shownLines.length) - 1) * fs * 1.4 - fs * .55, 8 * u, fs * 1.1); }
+    }
+  },
+  {
+    id: 'splitText', cat: 'Napisy', name: 'Rozsunięcie napisu', d: 'Pierwsze słowo rozsuwa się na pół i odsłania drugie.', dur: 4,
+    fields: [['w1', 'text', 'Pierwsze słowo', 'PRZED'], ['w2', 'text', 'Drugie słowo', 'PO'], ['accent', 'color', 'Kolor drugiego', '#ffd23f']], sfx: [[1.0, 'whoosh'], [1.15, 'boom']],
+    render(g, W, H, t, v, u) {
+      const fs = 220 * u, k = E.inOut(seg(t, 1.0, 1.5)), gap = k * fs * .75, cy = H / 2;
+      const k2 = E.back(seg(t, 1.15, 1.6)); if (k2 > 0) T(g, v.w2, W / 2, cy, { size: fs * .8, font: 'Anton', weight: 400, color: v.accent, scale: k2, maxW: W * .85 });
+      const k0 = E.out(seg(t, 0, .5));
+      for (const half of [-1, 1]) { g.save(); g.translate(0, half * gap); g.beginPath(); g.rect(0, half < 0 ? cy - fs : cy, W, fs); g.clip(); T(g, v.w1, W / 2, cy + (1 - k0) * 60 * u, { size: fs, font: 'Anton', weight: 400, color: '#fff', alpha: k0, maxW: W * .9 }); g.restore(); }
+    }
+  },
+  {
+    id: 'quote', cat: 'Napisy', name: 'Cytat', d: 'Elegancki cytat z dużym cudzysłowem i podpisem.', dur: 6,
+    fields: [['text', 'textarea', 'Cytat', 'Nie liczy się, ile razy upadniesz, tylko ile razy wstaniesz.'], ['author', 'text', 'Autor', 'TwójNick'], ['accent', 'color', 'Kolor akcentu', '#ffd23f']], sfx: [],
+    render(g, W, H, t, v, u) {
+      const fs = 64 * u; g.font = `700 ${fs}px "Playfair Display"`; const lines = wrapLines(g, v.text, Math.min(W * .78, 1300 * u)), y0 = H / 2 - (lines.length - 1) * fs * .65;
+      T(g, '“', W / 2, y0 - 130 * u, { size: 300 * u, font: 'Playfair Display', weight: 700, color: v.accent, alpha: seg(t, 0, .5), scale: lerp(1.4, 1, E.out(seg(t, 0, .6))) });
+      lines.forEach((ln, i) => { const k = E.out(seg(t, .4 + i * .25, 1.1 + i * .25)); T(g, ln, W / 2, y0 + i * fs * 1.3 + (1 - k) * 20 * u, { size: fs, font: 'Playfair Display', weight: 700, alpha: k, color: '#fafafa' }); });
+      const ka = E.out(seg(t, .8 + lines.length * .25, 1.5 + lines.length * .25)), ay = y0 + lines.length * fs * 1.3 + 50 * u;
+      g.fillStyle = v.accent; g.fillRect(W / 2 - 140 * u * ka, ay - 2 * u, 70 * u * ka, 4 * u);
+      T(g, v.author, W / 2 - 50 * u, ay, { size: 40 * u, weight: 600, color: '#cfcfd6', align: 'left', alpha: ka });
+    }
+  },
+  {
+    id: 'logoReveal', cat: 'Kanał', name: 'Logo kanału', d: 'Kręgi rozchodzą się i odsłaniają okrągłe logo z inicjałami i nazwą.', dur: 4,
+    fields: [['initials', 'text', 'Inicjały (1–3 znaki)', 'TN'], ['name', 'text', 'Nazwa', 'TwójNick'], ['accent', 'color', 'Kolor', '#22d3e6']], sfx: [[0, 'riser'], [1.1, 'boom'], [1.3, 'ding']],
+    render(g, W, H, t, v, u) {
+      const por = isPortrait(W, H), R = 150 * u, k = E.elastic(seg(t, 1.0, 1.9)), slide = E.out(seg(t, 1.4, 2.0));
+      const cx = por ? W / 2 : W / 2 - slide * 260 * u, cy = por ? H / 2 - slide * 120 * u : H / 2;
+      for (let i = 0; i < 4; i++) { const ki = seg(t, .1 + i * .15, 1.1 + i * .15); if (ki <= 0 || ki >= 1) continue; g.strokeStyle = rgba(i % 2 ? '#ffffff' : v.accent, 1 - ki); g.lineWidth = (14 - i * 2) * u; g.beginPath(); g.arc(cx, cy, R * .3 + E.out(ki) * R * 2.2, 0, Math.PI * 2); g.stroke(); }
+      for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2, kk = seg(t, 1.0, 1.5); if (kk <= 0 || kk >= 1) continue; const r0 = R * (1.1 + kk * .9); g.strokeStyle = rgba(v.accent, 1 - kk); g.lineWidth = 8 * u; g.beginPath(); g.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0); g.lineTo(cx + Math.cos(a) * (r0 + 40 * u), cy + Math.sin(a) * (r0 + 40 * u)); g.stroke(); }
+      if (k > 0) { g.save(); g.translate(cx, cy); g.scale(k, k); const gr = g.createLinearGradient(-R, -R, R, R); gr.addColorStop(0, v.accent); gr.addColorStop(1, mix(v.accent, '#000000', .45)); g.fillStyle = gr; g.beginPath(); g.arc(0, 0, R, 0, Math.PI * 2); g.fill(); g.lineWidth = 8 * u; g.strokeStyle = '#fff'; g.stroke(); T(g, v.initials.slice(0, 3), 0, 6 * u, { size: R * .9, font: 'Montserrat', weight: 900, color: '#fff', maxW: R * 1.5 }); g.restore(); }
+      if (slide > 0) { g.save(); g.beginPath(); por ? g.rect(0, cy + R + 10 * u, W, 200 * u) : g.rect(cx + R + 20 * u, 0, W, H); g.clip(); T(g, v.name, por ? W / 2 : cx + R + 50 * u - (1 - slide) * 300 * u, por ? cy + R + 90 * u - (1 - slide) * 80 * u : cy, { size: 110 * u, font: 'Montserrat', weight: 900, align: por ? 'center' : 'left', maxW: por ? W * .9 : W * .5 }); g.restore(); }
+    }
+  },
+  {
+    id: 'stamp', cat: 'Montaż', name: 'Pieczątka', d: 'Pieczątka z Twoim napisem uderza w ekran.', dur: 2.5, defBg: 'green', keyHint: true,
+    fields: [['text', 'text', 'Napis', 'ZATWIERDZONE'], ['color', 'color', 'Kolor tuszu', '#e0262c']], sfx: [[.3, 'boom']],
+    render(g, W, H, t, v, u) {
+      const k = seg(t, 0, .3), sc = lerp(3, 1, E.in(k)), sh = t > .3 && t < .6 ? (1 - seg(t, .3, .6)) * 14 * u : 0;
+      g.save(); g.translate(W / 2 + Math.sin(t * 90) * sh, H / 2 + Math.cos(t * 80) * sh); g.rotate(-.18); g.scale(sc, sc); g.globalAlpha = clamp(k * 2, 0, 1) * (1 - seg(t, 2.1, 2.5));
+      g.font = `400 ${130 * u}px Anton`; const tw = Math.min(W * .7, g.measureText(v.text).width) + 90 * u, th = 210 * u;
+      const off = document.createElement('canvas'); off.width = Math.ceil(tw + 40 * u); off.height = Math.ceil(th + 40 * u); const og = off.getContext('2d');
+      og.translate(off.width / 2, off.height / 2); og.strokeStyle = v.color; og.lineWidth = 12 * u; og.strokeRect(-tw / 2, -th / 2, tw, th); og.lineWidth = 4 * u; og.strokeRect(-tw / 2 + 18 * u, -th / 2 + 18 * u, tw - 36 * u, th - 36 * u);
+      T(og, v.text, 0, 6 * u, { size: 130 * u, font: 'Anton', weight: 400, color: v.color, maxW: tw - 80 * u });
+      og.globalCompositeOperation = 'destination-out'; for (let i = 0; i < 260; i++) { og.fillStyle = `rgba(0,0,0,${.4 + rnd(i, 2) * .6})`; og.beginPath(); og.arc((rnd(i, 3) - .5) * off.width, (rnd(i, 4) - .5) * off.height, (1 + rnd(i, 5) * 4) * u, 0, Math.PI * 2); og.fill(); }
+      g.drawImage(off, -off.width / 2, -off.height / 2); g.restore();
+    }
+  },
+  {
+    id: 'gradTitle', cat: 'Napisy', name: 'Płynny gradient', d: 'Tytuł z płynącym kolorowym gradientem i miękką poświatą.', dur: 5,
+    fields: [['title', 'text', 'Tytuł', 'Letni vlog'], ['sub', 'text', 'Podtytuł', 'najlepsze momenty'], ['c1', 'color', 'Kolor 1', '#ff6a88'], ['c2', 'color', 'Kolor 2', '#7c5cff']], sfx: [[.1, 'riser']],
+    render(g, W, H, t, v, u) {
+      const k = E.out(seg(t, 0, .9)), fs = 170 * u, y = H * .47 + Math.sin(t * 1.4) * 8 * u;
+      g.save(); g.font = `900 ${fs}px Montserrat`; let w = g.measureText(v.title).width; const scale = Math.min(1, W * .88 / w); w *= scale;
+      const x0 = W / 2 - w / 2 - 200 * u + ((t * 250 * u) % (w + 400 * u)), gr = g.createLinearGradient(x0 - w, 0, x0 + w, 0); gr.addColorStop(0, v.c1); gr.addColorStop(.33, v.c2); gr.addColorStop(.66, v.c1); gr.addColorStop(1, v.c2);
+      g.globalAlpha = k; g.filter = `blur(${30 * u}px)`; g.fillStyle = gr; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = `900 ${fs * scale}px Montserrat`; g.fillText(v.title, W / 2, y); g.filter = 'none';
+      g.fillText(v.title, W / 2, y + (1 - k) * 40 * u); g.restore();
+      T(g, v.sub, W / 2, y + 125 * u, { size: 48 * u, weight: 600, ls: .25, color: '#eef', alpha: seg(t, .7, 1.3), maxW: W * .85 });
+    }
+  },
+  {
+    id: 'socials', cat: 'Kanał', name: 'Moje media społecznościowe', d: 'Trzy paski z Twoimi nickami wjeżdżają po kolei.', dur: 6, bgHint: true,
+    fields: [['s1', 'text', 'Kanał wideo', '@TwójNick'], ['s2', 'text', 'Krótkie filmy', '@twojnick'], ['s3', 'text', 'Zdjęcia', '@twoj.nick'], ['accent', 'color', 'Kolor', '#22d3e6']], sfx: [[.2, 'pop'], [.45, 'pop'], [.7, 'pop'], [5.2, 'whoosh']],
+    render(g, W, H, t, v, u) {
+      const items = [['play', v.s1, '#e62117'], ['note', v.s2, '#111111'], ['camera', v.s3, '#c13584']], bw = Math.min(W * .8, 760 * u), bh = 120 * u;
+      items.forEach(([ic, txt, col], i) => {
+        const k = E.out(seg(t, .2 + i * .25, .8 + i * .25)), out = E.in(seg(t, 5.1 + i * .1, 5.6 + i * .1)), x = W / 2 - bw / 2 + (1 - k) * -W * .6 + out * W, y = H / 2 + (i - 1) * (bh + 30 * u) - bh / 2;
+        g.save(); g.globalAlpha = k; g.shadowColor = 'rgba(0,0,0,.35)'; g.shadowBlur = 24 * u; rr(g, x, y, bw, bh, bh / 2); g.fillStyle = 'rgba(250,250,252,.96)'; g.fill(); g.shadowColor = 'transparent';
+        g.beginPath(); g.arc(x + bh / 2, y + bh / 2, bh * .38, 0, Math.PI * 2); g.fillStyle = col; g.fill(); iconGlyph(g, ic, x + bh / 2, y + bh / 2, .95 * u, '#fff');
+        T(g, txt, x + bh + 20 * u, y + bh / 2, { size: 54 * u, weight: 800, color: '#111', align: 'left', maxW: bw - bh - 50 * u });
+        g.fillStyle = v.accent; g.fillRect(x + bw - 20 * u, y + 30 * u, 6 * u, bh - 60 * u); g.restore();
+      });
+    }
+  },
+  {
+    id: 'likeShare', cat: 'Kanał', name: 'Polub, skomentuj, udostępnij', d: 'Trzy ikonki wyskakują po kolei, serduszko wypełnia się na czerwono.', dur: 4.5, bgHint: true,
+    fields: [['l1', 'text', 'Napis 1', 'Polub'], ['l2', 'text', 'Napis 2', 'Skomentuj'], ['l3', 'text', 'Napis 3', 'Udostępnij']], sfx: [[.2, 'pop'], [.5, 'pop'], [.8, 'pop'], [1.8, 'ding']],
+    render(g, W, H, t, v, u) {
+      const por = isPortrait(W, H), gap = por ? 0 : 300 * u, gapY = por ? 260 * u : 0;
+      [['heart', v.l1], ['bubble', v.l2], ['share', v.l3]].forEach(([ic, lbl], i) => {
+        const k = E.back(seg(t, .2 + i * .3, .6 + i * .3)), out = E.in(seg(t, 3.8, 4.3)), x = W / 2 + (i - 1) * gap, y = H / 2 + (i - 1) * gapY - 30 * u;
+        g.save(); g.translate(x, y); g.scale(k * (1 - out), k * (1 - out)); g.beginPath(); g.arc(0, 0, 95 * u, 0, Math.PI * 2); g.fillStyle = 'rgba(255,255,255,.95)'; g.shadowColor = 'rgba(0,0,0,.3)'; g.shadowBlur = 24 * u; g.fill(); g.shadowColor = 'transparent';
+        if (ic === 'heart') { const f = seg(t, 1.8, 2.0); iconGlyph(g, f > 0 ? 'heart' : 'heartO', 0, 4 * u, 1.8 * u * (f > 0 ? 1 + .25 * Math.sin(Math.PI * seg(t, 1.8, 2.2)) : 1), f > 0 ? '#ff2b55' : '#222'); }
+        else iconGlyph(g, ic, 0, 0, 1.6 * u, '#222');
+        T(g, lbl, 0, 150 * u, { size: 44 * u, weight: 800, color: '#fff', shadow: { color: 'rgba(0,0,0,.6)', blur: 10 * u } }); g.restore();
+      });
+      if (t > 1.8 && t < 3) for (let i = 0; i < 10; i++) { const lt = t - 1.8, a = i / 10 * Math.PI * 2, x = W / 2 - gap + Math.cos(a) * (100 + lt * 160) * u, y = H / 2 - gapY - 30 * u + Math.sin(a) * (100 + lt * 160) * u; g.globalAlpha = 1 - lt / 1.2; iconGlyph(g, 'heart', x, y, .5 * u, '#ff2b55'); g.globalAlpha = 1; }
+    }
+  },
+  {
+    id: 'chapter', cat: 'Kanał', name: 'Rozdział', d: 'Napis z numerem rozdziału i tytułem, z paskiem postępu.', dur: 5, bgHint: true,
+    fields: [['num', 'text', 'Numer', 'ROZDZIAŁ 1'], ['title', 'text', 'Tytuł', 'Początek przygody'], ['accent', 'color', 'Kolor', '#ffd23f']], sfx: [[.1, 'whoosh']],
+    render(g, W, H, t, v, u) {
+      const por = isPortrait(W, H), x = por ? W * .08 : W * .07, y = por ? H * .7 : H * .66, k = E.out(seg(t, .1, .7)), out = E.in(seg(t, 4.3, 4.9));
+      g.save(); g.globalAlpha = 1 - out;
+      T(g, v.num, x + (1 - k) * -60 * u, y, { size: 44 * u, weight: 800, ls: .3, color: v.accent, align: 'left', alpha: k });
+      g.save(); g.beginPath(); g.rect(x - 10 * u, y + 30 * u, W, 140 * u); g.clip(); T(g, v.title, x, y + 100 * u + (1 - E.out(seg(t, .3, .9))) * 130 * u, { size: 100 * u, font: 'Montserrat', weight: 900, align: 'left', maxW: W * .84 }); g.restore();
+      const lw = Math.min(W * .84, 900 * u); g.fillStyle = 'rgba(255,255,255,.25)'; g.fillRect(x, y + 180 * u, lw * k, 6 * u); g.fillStyle = v.accent; g.fillRect(x, y + 180 * u, lw * k * seg(t, .5, 4.3), 6 * u);
+      g.restore();
+    }
+  },
+  {
+    id: 'callout', cat: 'Montaż', name: 'Etykieta ze wskaźnikiem', d: 'Kropka, linia i okienko z opisem wskazują coś na filmie.', dur: 4, defBg: 'green', keyHint: true,
+    fields: [['text', 'text', 'Opis', 'Mój nowy setup!'], ['accent', 'color', 'Kolor', '#22d3e6']], sfx: [[.2, 'pop'], [.9, 'whoosh']],
+    render(g, W, H, t, v, u) {
+      const px = W * .42, py = H * .58, ex = W * .62, ey = H * .32, out = E.in(seg(t, 3.4, 3.9));
+      g.save(); g.globalAlpha = 1 - out;
+      const kd = E.back(seg(t, .1, .4)); g.fillStyle = v.accent; g.beginPath(); g.arc(px, py, 16 * u * kd, 0, Math.PI * 2); g.fill();
+      const pr = (t * 1.2) % 1; g.strokeStyle = rgba(v.accent, 1 - pr); g.lineWidth = 4 * u; g.beginPath(); g.arc(px, py, (16 + pr * 50) * u, 0, Math.PI * 2); g.stroke();
+      const kl = E.inOut(seg(t, .4, .9)), mx = ex - 80 * u; g.strokeStyle = '#fff'; g.lineWidth = 5 * u; g.beginPath(); g.moveTo(px, py);
+      const seg1 = Math.min(1, kl * 2), seg2 = Math.max(0, kl * 2 - 1); g.lineTo(lerp(px, mx, seg1), lerp(py, ey, seg1)); if (seg2 > 0) g.lineTo(lerp(mx, ex, seg2), ey); g.stroke();
+      const kb = E.out(seg(t, .9, 1.4)); g.font = `800 ${52 * u}px Inter`; const bw = Math.min(W * .4, g.measureText(v.text).width + 60 * u) * kb;
+      if (kb > 0) { rr(g, ex, ey - 50 * u, bw, 100 * u, 14 * u); g.fillStyle = 'rgba(15,15,18,.9)'; g.fill(); g.fillStyle = v.accent; g.fillRect(ex, ey - 50 * u, 8 * u, 100 * u); g.save(); g.beginPath(); g.rect(ex, ey - 50 * u, bw, 100 * u); g.clip(); T(g, v.text, ex + 34 * u, ey, { size: 52 * u, weight: 800, align: 'left', maxW: W * .36 }); g.restore(); }
+      g.restore();
+    }
+  },
+  {
+    id: 'versus', cat: 'Napisy', name: 'VS – pojedynek', d: 'Dwie strony wjeżdżają z boków, a na środku uderza VS. Idealne do pojedynków.', dur: 4,
+    fields: [['p1', 'text', 'Lewa strona', 'GRACZ 1'], ['p2', 'text', 'Prawa strona', 'GRACZ 2'], ['c1', 'color', 'Kolor lewej', '#22d3e6'], ['c2', 'color', 'Kolor prawej', '#ff3d6e']], sfx: [[0, 'whoosh'], [.7, 'boom']],
+    render(g, W, H, t, v, u) {
+      const k1 = E.out(seg(t, 0, .6)), k2 = E.out(seg(t, .1, .7)), sh = t > .7 && t < 1.1 ? (1 - seg(t, .7, 1.1)) * 20 * u : 0, sl = H * .18;
+      g.save(); g.translate(Math.sin(t * 90) * sh, Math.cos(t * 70) * sh);
+      g.fillStyle = v.c1; g.beginPath(); g.moveTo(-W * (1 - k1) - 20, -20); g.lineTo(W / 2 + sl - W * (1 - k1), -20); g.lineTo(W / 2 - sl - W * (1 - k1), H + 20); g.lineTo(-W * (1 - k1) - 20, H + 20); g.fill();
+      g.fillStyle = v.c2; g.beginPath(); g.moveTo(W * 2 - W * k2 + 20, -20); g.lineTo(W / 2 + sl + W * (1 - k2), -20); g.lineTo(W / 2 - sl + W * (1 - k2), H + 20); g.lineTo(W + W * (1 - k2) + 20, H + 20); g.fill();
+      const por = isPortrait(W, H);
+      T(g, v.p1, W * .26 - (1 - k1) * 300 * u, por ? H * .3 : H * .5, { size: 110 * u, font: 'Anton', weight: 400, maxW: W * .4, shadow: { color: 'rgba(0,0,0,.35)', y: 8 * u } });
+      T(g, v.p2, W * .74 + (1 - k2) * 300 * u, por ? H * .7 : H * .5, { size: 110 * u, font: 'Anton', weight: 400, maxW: W * .4, shadow: { color: 'rgba(0,0,0,.35)', y: 8 * u } });
+      const kv = seg(t, .7, 1.0); if (kv > 0) { g.fillStyle = `rgba(255,255,255,${(1 - seg(t, .7, 1.1)) * .8})`; g.fillRect(-50, -50, W + 100, H + 100); T(g, 'VS', W / 2, H / 2, { size: 260 * u, font: 'Anton', weight: 400, color: '#fff', scale: lerp(3, 1, E.out(kv)), alpha: kv * 2, stroke: { w: 22 * u, color: '#111' }, rot: -.08 }); }
+      g.restore();
+    }
+  },
+  {
+    id: 'stats', cat: 'Kanał', name: 'Statystyki', d: 'Trzy liczby odliczają w górę, np. filmy, subskrypcje i wyświetlenia.', dur: 5,
+    fields: [['n1', 'text', 'Liczba 1', '120'], ['l1', 'text', 'Opis 1', 'filmów'], ['n2', 'text', 'Liczba 2', '25000'], ['l2', 'text', 'Opis 2', 'subskrypcji'], ['n3', 'text', 'Liczba 3', '1000000'], ['l3', 'text', 'Opis 3', 'wyświetleń'], ['accent', 'color', 'Kolor', '#22d3e6']], sfx: [[2.4, 'ding']],
+    render(g, W, H, t, v, u) {
+      const por = isPortrait(W, H), items = [[v.n1, v.l1], [v.n2, v.l2], [v.n3, v.l3]];
+      items.forEach(([n, l], i) => {
+        const target = parseInt(String(n).replace(/\D/g, '')) || 0, k = E.out(seg(t, .3 + i * .2, 2.4 + i * .1)), ka = E.out(seg(t, i * .2, .5 + i * .2));
+        const x = por ? W / 2 : W * (.2 + i * .3), y = por ? H * (.28 + i * .22) : H / 2;
+        T(g, Math.round(target * k).toLocaleString('pl-PL'), x, y - 30 * u + (1 - ka) * 40 * u, { size: 110 * u, font: 'Montserrat', weight: 900, color: '#fff', alpha: ka, maxW: por ? W * .85 : W * .27 });
+        g.fillStyle = v.accent; g.fillRect(x - 40 * u * ka, y + 40 * u, 80 * u * ka, 6 * u);
+        T(g, l, x, y + 95 * u, { size: 44 * u, weight: 600, color: '#cfd0d8', alpha: ka, maxW: por ? W * .85 : W * .27 });
+      });
+    }
+  },
+  {
+    id: 'inkTr', cat: 'Przejścia', name: 'Plama tuszu', d: 'Organiczna plama zalewa ekran i odsłania kolejny klip.', dur: 1.5, defBg: 'green', keyHint: true,
+    fields: [['color', 'color', 'Kolor plamy', '#111118']], sfx: [[0, 'whoosh']],
+    render(g, W, H, t, v, u) {
+      const D = Math.hypot(W, H) * .62, r1 = D * E.inOut(seg(t, 0, .7)), r2 = D * E.inOut(seg(t, .8, 1.5));
+      g.save(); g.fillStyle = v.color; blobPath(g, W * .5, H * .5, r1, t, 1, .14); if (r2 > 0) { const p2 = new Path2D(); for (let i = 0; i <= 64; i++) { const a = i / 64 * Math.PI * 2, rr2 = r2 * (1 + .14 * (Math.sin(a * 4 + t * 3) * .6 + Math.sin(a * 7 - t * 2) * .4)); i ? p2.lineTo(W / 2 + Math.cos(a) * rr2, H / 2 + Math.sin(a) * rr2) : p2.moveTo(W / 2 + Math.cos(a) * rr2, H / 2 + Math.sin(a) * rr2); } g.fill(); g.globalCompositeOperation = 'destination-out'; g.fill(p2); } else g.fill(); g.restore();
+      if (ST.bg === 'green' || ST.bg === 'none') { /* hole shows the key colour so the next clip appears */ }
+    }
+  },
+  {
+    id: 'stripesTr', cat: 'Przejścia', name: 'Paski', d: 'Pionowe paski opadają i zasłaniają ekran, potem zjeżdżają w dół.', dur: 1.3, defBg: 'green', keyHint: true,
+    fields: [['c1', 'color', 'Kolor 1', '#22d3e6'], ['c2', 'color', 'Kolor 2', '#ffffff']], sfx: [[0, 'whoosh']],
+    render(g, W, H, t, v, u) {
+      const n = 9, sw = W / n;
+      for (let i = 0; i < n; i++) { const d = i * .04, kin = E.out(seg(t, d, d + .45)), kout = E.in(seg(t, .7 + d, 1.15 + d)); const y0 = lerp(-H, 0, kin) + kout * H; g.fillStyle = i % 2 ? v.c2 : v.c1; g.fillRect(i * sw - .5, y0, sw + 1, H); }
+    }
+  },
+  {
+    id: 'slideTr', cat: 'Przejścia', name: 'Szybki przesuw', d: 'Ukośny panel przelatuje z rozmyciem ruchu. Wstaw na cięcie.', dur: 1, defBg: 'green', keyHint: true,
+    fields: [['c1', 'color', 'Kolor panelu', '#ffffff'], ['c2', 'color', 'Kolor smugi', '#22d3e6']], sfx: [[0, 'whoosh']],
+    render(g, W, H, t, v, u) {
+      const D = W + H, x = lerp(-D, D, E.inOut(seg(t, 0, 1)));
+      g.save(); g.translate(W / 2, H / 2); g.rotate(-.3);
+      for (let i = 5; i >= 1; i--) { g.fillStyle = rgba(v.c2, .12 * (6 - i)); g.fillRect(x - D * .5 - i * 60 * u, -D, D, D * 2); }
+      g.fillStyle = v.c1; g.fillRect(x - D * .5, -D, D, D * 2);
+      g.fillStyle = v.c2; g.fillRect(x + D * .5, -D, 40 * u, D * 2);
+      g.restore();
+    }
+  },
+  {
+    id: 'bgLoop', cat: 'Montaż', name: 'Animowane tło', d: 'Miękkie, płynące kolory jako tło pod napisy albo zdjęcia. Zapętla się.', dur: 8,
+    fields: [['c1', 'color', 'Kolor 1', '#ff6a88'], ['c2', 'color', 'Kolor 2', '#7c5cff'], ['c3', 'color', 'Kolor 3', '#22d3e6']], sfx: [],
+    render(g, W, H, t, v, u) {
+      g.fillStyle = mix(v.c2, '#05050a', .75); g.fillRect(0, 0, W, H);
+      const P = Math.PI * 2 / 8;
+      [[v.c1, 0], [v.c2, 2], [v.c3, 4], [v.c1, 6]].forEach(([c, o], i) => { const x = W * (.5 + .35 * Math.sin(t * P + o)), y = H * (.5 + .35 * Math.cos(t * P * (i % 2 ? 1 : 2) + o)), r = Math.max(W, H) * .55; const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, rgba(c, .8)); gr.addColorStop(1, rgba(c, 0)); g.fillStyle = gr; g.fillRect(0, 0, W, H); });
+      for (let i = 0; i < 1500; i++) { g.fillStyle = `rgba(255,255,255,${rnd(i, Math.floor(t * 12)) * .05})`; g.fillRect(rnd(i, 1) * W, rnd(i, 2) * H, 2 * u, 2 * u); }
+    }
+  },
+  {
+    id: 'frameBorder', cat: 'Montaż', name: 'Animowana ramka', d: 'Linie rysują ramkę dookoła filmu, z napisem w rogu.', dur: 4, defBg: 'green', keyHint: true,
+    fields: [['label', 'text', 'Napis w rogu (opcjonalnie)', 'NA ŻYWO'], ['accent', 'color', 'Kolor', '#ffffff']], sfx: [[.1, 'whoosh']],
+    render(g, W, H, t, v, u) {
+      const m = 40 * u, k = E.inOut(seg(t, .1, 1.2)), per = 2 * (W + H - 4 * m), len = per * k;
+      g.strokeStyle = v.accent; g.lineWidth = 8 * u; g.lineCap = 'square'; g.beginPath();
+      const pts = [[m, m], [W - m, m], [W - m, H - m], [m, H - m], [m, m]]; let rem = len; g.moveTo(m, m);
+      for (let i = 1; i < pts.length && rem > 0; i++) { const [ax, ay] = pts[i - 1], [bx, by] = pts[i], L = Math.hypot(bx - ax, by - ay), f = Math.min(1, rem / L); g.lineTo(ax + (bx - ax) * f, ay + (by - ay) * f); rem -= L; }
+      g.stroke();
+      const kc = E.back(seg(t, 1.1, 1.5)); for (const [x, y, sx, sy] of [[m, m, 1, 1], [W - m, m, -1, 1], [m, H - m, 1, -1], [W - m, H - m, -1, -1]]) { g.save(); g.translate(x, y); g.scale(kc, kc); g.fillStyle = v.accent; g.fillRect(0, 0, sx * 60 * u, sy * 16 * u); g.fillRect(0, 0, sx * 16 * u, sy * 60 * u); g.restore(); }
+      if (v.label) { const kl = E.out(seg(t, 1.3, 1.7)); g.save(); g.globalAlpha = kl; rr(g, m + 30 * u, m + 30 * u, 260 * u, 70 * u, 10 * u); g.fillStyle = '#e62117'; g.fill(); if (t % 1 < .6) { g.fillStyle = '#fff'; g.beginPath(); g.arc(m + 66 * u, m + 65 * u, 10 * u, 0, Math.PI * 2); g.fill(); } T(g, v.label, m + 90 * u, m + 66 * u, { size: 36 * u, weight: 900, align: 'left', maxW: 190 * u }); g.restore(); }
+    }
+  }
+);
+
+const CATS = ['Wszystkie', 'Napisy', 'Kanał', 'Montaż', 'Przejścia', 'Postać', 'Film', 'Gry'];
 const CAT_NAMES = { 'Gry': 'Gry i bloki', 'Film': 'Efekty na Twoim filmie', 'Montaż': 'Do montażu', 'Postać': 'Postać ze skinem', 'Napisy': 'Napisy i intro', 'Kanał': 'Kanał', 'Przejścia': 'Przejścia' };
 let cineCv = null; function cineCanvas(W, H) { if (!cineCv) cineCv = document.createElement('canvas'); if (cineCv.width !== W || cineCv.height !== H) { cineCv.width = W; cineCv.height = H; } return cineCv; }
 const tintCvs = {}; function tintCanvas(src, col, W, H) { let c = tintCvs[col]; if (!c) c = tintCvs[col] = document.createElement('canvas'); if (c.width !== W || c.height !== H) { c.width = W; c.height = H; } const g = c.getContext('2d'); g.clearRect(0, 0, W, H); g.drawImage(src, 0, 0); g.globalCompositeOperation = 'source-in'; g.fillStyle = col; g.fillRect(0, 0, W, H); g.globalCompositeOperation = 'source-over'; return c; }
@@ -1585,7 +1838,8 @@ function renderCats() {
 }
 const posters = new Map();
 function renderGallery() {
-  const list = TEMPLATES.filter(t => ST.cat === 'Wszystkie' || t.cat === ST.cat);
+  const order = ['Napisy', 'Kanał', 'Montaż', 'Przejścia', 'Postać', 'Film', 'Gry'];
+  const list = TEMPLATES.filter(t => ST.cat === 'Wszystkie' || t.cat === ST.cat).sort((a, b) => ST.cat === 'Wszystkie' ? order.indexOf(a.cat) - order.indexOf(b.cat) : 0);
   $('#galCount').textContent = `${list.length} z ${TEMPLATES.length}`;
   $('#glist').replaceChildren(...list.map(tpl => {
     const cv = h('canvas', { width: 320, height: 180, 'data-tpl': tpl.id });
@@ -1601,7 +1855,7 @@ function makePosters(only) {
   for (const tpl of TEMPLATES) {
     if (only && !only(tpl)) continue;
     const c = posters.get(tpl.id) || document.createElement('canvas'); c.width = W; c.height = H;
-    const pt = { voxtext: 2.6, voxboom: .95, mine: 1.6, chest: 2.3, portal: .6, fallblocks: .75, emotes: 1.0, achievement: 1.2, hearts: 1.25, levelup: 2.1, death: 2.0, loading: 2.6, pixtext: 1.5, dramazoom: 1.2, beatshake: .05, lightning: .2, fire: 2, flare: 1.4, pulse: .3, crack: .5, confov: 2, comic: .5, notif: 1.5, counter: 3.0, karaoke: 2.2, runwipe: .55, sign: 2.5, speech: 3.5, flashtr: .22, iris: .35, leak: 1.6, burn: 1.0, speed: .6, glitchov: .5, rec: .3, arrow: 2.0, emoji: 2.4, bars: 1.5, sparkle: 1.3, smoke: 2.5, dustov: 1.2, enter: 3.0, spin: 3.2, dance: 1.3, subchar: 3.6, win: 1.6, land: 1.8, cine: 3.4, glitch: 2.0, count: 0.5, kinetic: 1.0, lower: 2.5, subscribe: 2.6, outro: 2.5, wipe: .78 }[tpl.id] ?? 2;
+    const pt = { maskTitle: 1.6, neon: 2.0, typewriter: 2.2, splitText: 2.0, quote: 3.5, logoReveal: 2.6, stamp: .9, gradTitle: 1.6, socials: 2.0, likeShare: 2.4, chapter: 2.0, callout: 2.0, versus: 1.6, stats: 2.8, inkTr: .5, stripesTr: .6, slideTr: .45, bgLoop: 2, frameBorder: 2, voxtext: 2.6, voxboom: .95, mine: 1.6, chest: 2.3, portal: .6, fallblocks: .75, emotes: 1.0, achievement: 1.2, hearts: 1.25, levelup: 2.1, death: 2.0, loading: 2.6, pixtext: 1.5, dramazoom: 1.2, beatshake: .05, lightning: .2, fire: 2, flare: 1.4, pulse: .3, crack: .5, confov: 2, comic: .5, notif: 1.5, counter: 3.0, karaoke: 2.2, runwipe: .55, sign: 2.5, speech: 3.5, flashtr: .22, iris: .35, leak: 1.6, burn: 1.0, speed: .6, glitchov: .5, rec: .3, arrow: 2.0, emoji: 2.4, bars: 1.5, sparkle: 1.3, smoke: 2.5, dustov: 1.2, enter: 3.0, spin: 3.2, dance: 1.3, subchar: 3.6, win: 1.6, land: 1.8, cine: 3.4, glitch: 2.0, count: 0.5, kinetic: 1.0, lower: 2.5, subscribe: 2.6, outro: 2.5, wipe: .78 }[tpl.id] ?? 2;
     renderTo(c.getContext('2d'), W, H, pt, tpl);
     posters.set(tpl.id, c);
   }
