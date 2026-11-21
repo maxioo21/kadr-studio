@@ -293,6 +293,7 @@ const ICON = {
 
 /* text drawing with auto-fit, letter spacing, stroke, gradient and shadow */
 function T(g, s, x, y, o = {}) {
+  if (PX_K[o.font] && !o.noPx) { const r = pxText(g, s, x, y, { size: o.size || 80, k: PX_K[o.font], color: o.grad ? o.grad[0] : (o.color || '#ffffff'), color2: o.grad ? o.grad[1] : '', style: o.shadow ? 'mc' : 'flat', shadow: o.shadow ? (o.shadow.color || 'rgba(0,0,0,.5)') : false, outline: o.stroke ? o.stroke.color : null, bold: o.font === 'Press Start 2P' || o.font === 'Silkscreen' || (o.weight || 400) >= 700, align: o.align, base: o.base, maxW: o.maxW, alpha: o.alpha, scale: o.scale, sy: o.sy, rot: o.rot, glow: o.glow, ls: o.ls }); if (r) return r; }
   let fs = o.size || 80; const fam = o.font || 'Inter', w = o.weight || 800;
   g.save(); g.translate(x, y); if (o.rot) g.rotate(o.rot);
   const sc = o.scale ?? 1; if (sc !== 1 || o.sy) g.scale(sc, sc * (o.sy ?? 1));
@@ -310,6 +311,128 @@ function T(g, s, x, y, o = {}) {
   g.restore(); return { fs, width };
 }
 function rr(g, x, y, w, hh, r) { g.beginPath(); g.roundRect(x, y, w, hh, r); }
+
+/* ================= pixel font: own 5x7 bitmap glyphs (Polish letters included), drawn crisp on the pixel grid ================= */
+const PXF = (() => {
+  const R = {
+    A: '.###.|#...#|#...#|#####|#...#|#...#|#...#', B: '####.|#...#|#...#|####.|#...#|#...#|####.', C: '.###.|#...#|#....|#....|#....|#...#|.###.', D: '####.|#...#|#...#|#...#|#...#|#...#|####.',
+    E: '#####|#....|#....|####.|#....|#....|#####', F: '#####|#....|#....|####.|#....|#....|#....', G: '.###.|#...#|#....|#.###|#...#|#...#|.###.', H: '#...#|#...#|#...#|#####|#...#|#...#|#...#',
+    I: '###|.#.|.#.|.#.|.#.|.#.|###', J: '....#|....#|....#|....#|....#|#...#|.###.', K: '#...#|#..#.|#.#..|##...|#.#..|#..#.|#...#', L: '#....|#....|#....|#....|#....|#....|#####',
+    M: '#...#|##.##|#.#.#|#...#|#...#|#...#|#...#', N: '#...#|##..#|#.#.#|#..##|#...#|#...#|#...#', O: '.###.|#...#|#...#|#...#|#...#|#...#|.###.', P: '####.|#...#|#...#|####.|#....|#....|#....',
+    Q: '.###.|#...#|#...#|#...#|#.#.#|#..#.|.##.#', R: '####.|#...#|#...#|####.|#..#.|#...#|#...#', S: '.###.|#...#|#....|.###.|....#|#...#|.###.', T: '#####|..#..|..#..|..#..|..#..|..#..|..#..',
+    U: '#...#|#...#|#...#|#...#|#...#|#...#|.###.', V: '#...#|#...#|#...#|#...#|.#.#.|.#.#.|..#..', W: '#...#|#...#|#...#|#...#|#.#.#|##.##|#...#', X: '#...#|#...#|.#.#.|..#..|.#.#.|#...#|#...#',
+    Y: '#...#|#...#|.#.#.|..#..|..#..|..#..|..#..', Z: '#####|....#|...#.|..#..|.#...|#....|#####', 'Ł': '.#...|.#...|.#.#.|.##..|##...|.#...|.####',
+    a: '.....|.....|.###.|....#|.####|#...#|.####', b: '#....|#....|#.##.|##..#|#...#|#...#|####.', c: '.....|.....|.###.|#...#|#....|#...#|.###.', d: '....#|....#|.##.#|#..##|#...#|#...#|.####',
+    e: '.....|.....|.###.|#...#|#####|#....|.####', f: '..##|.#..|####|.#..|.#..|.#..|.#..', g: '.....|.....|.####|#...#|#...#|#...#|.####|....#|####.', h: '#....|#....|#.##.|##..#|#...#|#...#|#...#',
+    i: '#|.|#|#|#|#|#', j: '...#|....|...#|...#|...#|...#|...#|#..#|.##.', k: '#...|#...|#..#|#.#.|##..|#.#.|#..#', l: '#.|#.|#.|#.|#.|#.|.#',
+    m: '.....|.....|##.#.|#.#.#|#.#.#|#...#|#...#', n: '.....|.....|####.|#...#|#...#|#...#|#...#', o: '.....|.....|.###.|#...#|#...#|#...#|.###.', p: '.....|.....|#.##.|##..#|#...#|#...#|####.|#....|#....',
+    q: '.....|.....|.##.#|#..##|#...#|#...#|.####|....#|....#', r: '.....|.....|#.##.|##..#|#....|#....|#....', s: '.....|.....|.####|#....|.###.|....#|####.', t: '.#..|.#..|####|.#..|.#..|.#..|..##',
+    u: '.....|.....|#...#|#...#|#...#|#...#|.####', v: '.....|.....|#...#|#...#|#...#|.#.#.|..#..', w: '.....|.....|#...#|#.#.#|#.#.#|#.#.#|.#.#.', x: '.....|.....|#...#|.#.#.|..#..|.#.#.|#...#',
+    y: '.....|.....|#...#|#...#|#...#|#...#|.####|....#|####.', z: '.....|.....|#####|...#.|..#..|.#...|#####', 'ł': '.#.|.#.|.##|##.|.#.|.#.|.#.',
+    0: '.###.|#...#|#..##|#.#.#|##..#|#...#|.###.', 1: '..#..|.##..|..#..|..#..|..#..|..#..|#####', 2: '.###.|#...#|....#|..##.|.#...|#....|#####', 3: '.###.|#...#|....#|..##.|....#|#...#|.###.',
+    4: '...##|..#.#|.#..#|#...#|#####|....#|....#', 5: '#####|#....|####.|....#|....#|#...#|.###.', 6: '..##.|.#...|#....|####.|#...#|#...#|.###.', 7: '#####|#...#|....#|...#.|..#..|..#..|..#..',
+    8: '.###.|#...#|#...#|.###.|#...#|#...#|.###.', 9: '.###.|#...#|#...#|.####|....#|...#.|.##..',
+    ' ': '...', '!': '#|#|#|#|#|.|#', '?': '.###.|#...#|....#|...#.|..#..|.....|..#..', '.': '.|.|.|.|.|.|#', ',': '.|.|.|.|.|.|#|#', ':': '.|.|#|.|.|.|#', ';': '.|.|#|.|.|.|#|#',
+    '-': '....|....|....|####', '+': '.....|..#..|..#..|#####|..#..|..#..', '=': '.....|.....|#####|.....|#####', '/': '....#|...#.|...#.|..#..|.#...|.#...|#....', '\\': '#....|.#...|.#...|..#..|...#.|...#.|....#',
+    '%': '##..#|##..#|...#.|..#..|.#...|#..##|#..##', '#': '.#.#.|.#.#.|#####|.#.#.|#####|.#.#.|.#.#.', '(': '..#|.#.|#..|#..|#..|.#.|..#', ')': '#..|.#.|..#|..#|..#|.#.|#..',
+    '[': '##|#.|#.|#.|#.|#.|##', ']': '##|.#|.#|.#|.#|.#|##', '"': '#.#|#.#', "'": '#|#', '&': '.##..|#..#.|.##..|.##.#|#..#.|#..#.|.##.#', '@': '.###.|#...#|#.###|#.#.#|#.###|#....|.####',
+    '*': '.....|..#..|#.#.#|.###.|#.#.#|..#..', '<': '...#|..#.|.#..|#...|.#..|..#.|...#', '>': '#...|.#..|..#.|...#|..#.|.#..|#...', '_': '.....|.....|.....|.....|.....|.....|.....|#####',
+    '$': '..#..|.####|#.#..|.###.|..#.#|####.|..#..', '€': '..###|.#...|####.|.#...|####.|.#...|..###', '|': '#|#|#|#|#|#|#', '°': '.#.|#.#|.#.', '^': '..#..|.#.#.|#...#', '~': '.....|.....|.#..#|#.##.',
+    '♥': '.....|.#.#.|#####|#####|.###.|..#..', '★': '..#..|..#..|#####|.###.|.#.#.|#...#', '→': '.....|...#.|....#|#####|....#|...#.', '←': '.....|.#...|#....|#####|#....|.#...'
+  };
+  const G = new Map();
+  const parse = s => { const rows = s.split('|'), w = Math.max(...rows.map(r => r.length)), px = []; rows.forEach((r, y) => { for (let x = 0; x < r.length; x++) if (r[x] === '#') px.push([x, y]); }); return { w, px }; };
+  for (const k in R) G.set(k, parse(R[k]));
+  const ACC = { 'Ą': ['A', 'og'], 'Ć': ['C', 'ac'], 'Ę': ['E', 'og'], 'Ń': ['N', 'ac'], 'Ó': ['O', 'ac'], 'Ś': ['S', 'ac'], 'Ź': ['Z', 'ac'], 'Ż': ['Z', 'dot'], 'ą': ['a', 'og'], 'ć': ['c', 'ac'], 'ę': ['e', 'og'], 'ń': ['n', 'ac'], 'ó': ['o', 'ac'], 'ś': ['s', 'ac'], 'ź': ['z', 'ac'], 'ż': ['z', 'dot'] };
+  for (const k in ACC) { const [b, m] = ACC[k], base = G.get(b), px = base.px.slice(), c = Math.floor(base.w / 2), up = b === b.toUpperCase();
+    if (m === 'ac') px.push(...(up ? [[c + 1, -3], [c, -2]] : [[c + 1, 0], [c, 1]])); else if (m === 'dot') px.push(up ? [c, -2] : [c, 0]); else px.push([base.w - 2, 7], [base.w - 1, 8]);
+    G.set(k, { w: base.w, px }); }
+  // bold versions for letters whose details would merge when thickened
+  const BOLD = { M: '##...##|###.###|#######|##.#.##|##...##|##...##|##...##', W: '##...##|##...##|##...##|##.#.##|#######|###.###|##...##', m: '.......|.......|######.|##.#.##|##.#.##|##.#.##|##.#.##', w: '.......|.......|##...##|##.#.##|##.#.##|##.#.##|.##.##.', 0: '.####.|##..##|##..##|##..##|##..##|##..##|.####.', N: '##...##|###..##|####.##|##.####|##..###|##...##|##...##', G: '.####.|##..##|##....|##.###|##..##|##..##|.#####', Q: '.####.|##..##|##..##|##..##|##.###|##.##.|.##.##' };
+  for (const k in BOLD) { const g0 = G.get(String(k)); if (g0) g0.b = parse(BOLD[k]); }
+  const ALIAS = { '„': '"', '”': '"', '“': '"', '«': '"', '»': '"', '’': "'", '‘': "'", '`': "'", '–': '-', '—': '-', '−': '-', '×': 'x', '·': '.', '•': '.', '❤': '♥', '♡': '♥', '☆': '★', '⭐': '★' };
+  function glyph(ch) { if (G.has(ch)) return G.get(ch); if (ALIAS[ch]) return G.get(ALIAS[ch]); const b = ch.normalize('NFD').replace(/[̀-ͯ]/g, ''); if (b && G.has(b)) return G.get(b); return null; }
+  return { glyph };
+})();
+const pxCache = new Map(), pxColCache = new Map(); let pxColCtx = null;
+function pxCol(c) {
+  c = String(c || '#ffffff'); let r = pxColCache.get(c); if (r) return r;
+  if (!pxColCtx) pxColCtx = document.createElement('canvas').getContext('2d');
+  pxColCtx.fillStyle = '#000000'; pxColCtx.fillStyle = c; const v = pxColCtx.fillStyle;
+  if (v[0] === '#') r = { hex: v, a: 1 }; else { const m = v.match(/[\d.]+/g) || [0, 0, 0, 1]; r = { hex: '#' + m.slice(0, 3).map(x => (+x | 0).toString(16).padStart(2, '0')).join(''), a: m[3] !== undefined ? +m[3] : 1 }; }
+  if (pxColCache.size > 500) pxColCache.clear(); pxColCache.set(c, r); return r;
+}
+function pxPrep(s) { s = String(s ?? '').replace(/…/g, '...').replace(/️/g, ''); const gl = [...s].map(ch => /\s/.test(ch) ? PXF.glyph(' ') : PXF.glyph(ch)); return gl.some(x => !x) ? null : gl; }
+// width of a string in pixel units (spacing 1, bold adds 1 per glyph)
+const pxAdv = (x, bold) => (bold ? (x.b ? x.b.w : x.w + 1) : x.w);
+function pxUnits(gl, bold, ls = 0) { let w = 0; gl.forEach((x, i) => { w += pxAdv(x, bold) + (i < gl.length - 1 ? 1 + ls : 0); }); return Math.max(1, w); }
+const PX_K = { 'Tiny5': .09, 'Pixelify Sans': .09, 'Silkscreen': .1, 'Press Start 2P': .105 };
+function pxMeasure(s, size, o = {}) { const gl = pxPrep(s); if (!gl) return s.length * size * .55; const u = size * (o.k || .09); return pxUnits(gl, o.bold) * u; }
+function pxShade(hex, f) { return f >= 0 ? mix(hex, '#ffffff', f) : mix(hex, '#000000', -f); }
+// one glyph rendered with all its layers on a tiny canvas, at 1 canvas px per font pixel
+function pxGlyphCanvas(gl0, st) {
+  const gl = st.bold && gl0.b ? gl0.b : gl0, key = st.key + '|' + gl.px.join(';') + '|' + gl.w; let c = pxCache.get(key); if (c) return c;
+  if (pxCache.size > 1500) pxCache.clear();
+  const bold = st.bold && !gl0.b ? 1 : 0, ex = st.extrude || 0, ol = st.outline ? 1 : 0, sh = st.shadow ? 1 : 0, P = ol + ex + sh + 1, w = gl.w + bold, cw = w + P * 2, chh = 12 + P * 2, ox = P, oy = 3 + P;
+  const N = cw * chh, M = new Uint8Array(N), X = new Uint8Array(N), at = (x, y) => (x >= 0 && y >= 0 && x < cw && y < chh ? y * cw + x : -1);
+  gl.px.forEach(([x, y]) => { for (let b = 0; b <= bold; b++) { const i = at(ox + x + b, oy + y); if (i >= 0) M[i] = 1; } });
+  // extrusion: the letter repeated downwards (and slightly right for depth)
+  for (let d = 1; d <= ex; d++) for (let y = 0; y < chh; y++) for (let x = 0; x < cw; x++) if (M[y * cw + x]) { const i = at(x + (st.exRight ? Math.ceil(d / 2) : 0), y + d); if (i >= 0 && !M[i] && !X[i]) X[i] = d; }
+  const body = i => M[i] || X[i];
+  const O = new Uint8Array(N); if (ol) for (let y = 0; y < chh; y++) for (let x = 0; x < cw; x++) { const i = y * cw + x; if (body(i)) continue; let hit = 0; for (let dy = -1; dy <= 1 && !hit; dy++) for (let dx = -1; dx <= 1; dx++) { if (st.thin && dx && dy) continue; const j = at(x + dx, y + dy); if (j >= 0 && body(j)) { hit = 1; break; } } O[i] = hit; }
+  const S = new Uint8Array(N); if (sh) for (let y = 0; y < chh; y++) for (let x = 0; x < cw; x++) { const i = y * cw + x; if (!(body(i) || O[i])) continue; const j = at(x + st.shadow[0], y + st.shadow[1]); if (j >= 0) S[j] = 1; }
+  const cv = document.createElement('canvas'); cv.width = cw; cv.height = chh; const cg = cv.getContext('2d'), img = cg.createImageData(cw, chh), D = img.data;
+  const rgb = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+  const put = (i, col, a = 255) => { D[i * 4] = col[0]; D[i * 4 + 1] = col[1]; D[i * 4 + 2] = col[2]; D[i * 4 + 3] = a; };
+  const noise = (x, y) => { const n = Math.sin(x * 127.1 + y * 311.7 + st.seed) * 43758.5453; return n - Math.floor(n); };
+  const fills = []; for (let r = -3; r <= 8; r++) { const t = clamp(r / 6, 0, 1), base = st.c2 && st.split ? (r <= 3 ? st.c1 : st.c2) : st.c2 ? mix(st.c1, st.c2, st.band ? Math.min(1, Math.floor(t * 3) / 2) : t) : st.c1; fills.push(rgb(base)); }
+  const hi = st.bevel ? fills.map(f => rgb(pxShade('#' + f.map(v => v.toString(16).padStart(2, '0')).join(''), .38))) : null, lo = st.bevel ? fills.map(f => rgb(pxShade('#' + f.map(v => v.toString(16).padStart(2, '0')).join(''), -.22))) : null;
+  const shC = st.shadow ? rgb(st.shadowColor) : null, olC = ol ? rgb(st.outline) : null, exC = ex ? Array.from({ length: ex + 1 }, (_, d) => rgb(pxShade(st.exColor, -.12 * (d - 1)))) : null;
+  for (let y = 0; y < chh; y++) for (let x = 0; x < cw; x++) {
+    const i = y * cw + x, r = y - oy;
+    if (M[i]) { const ri = clamp(r + 3, 0, 11); let col = fills[ri]; if (st.bevel) { const up = at(x, y - 1), dn = at(x, y + 1); if (up < 0 || !M[up]) col = hi[ri]; else if (dn < 0 || !M[dn]) col = lo[ri]; } if (st.tex) { const k = 1 + (noise(x, y) - .5) * st.tex; col = col.map(v => clamp(Math.round(v * k), 0, 255)); } put(i, col); }
+    else if (X[i]) put(i, exC[X[i]]);
+    else if (O[i]) put(i, olC);
+    else if (S[i]) put(i, shC, Math.round(255 * (st.shadowAlpha ?? 1)));
+  }
+  cg.putImageData(img, 0, 0); c = { cv, ox, oy, cw, chh }; pxCache.set(key, c); return c;
+}
+// style presets: mc = flat game text with its hard shadow; outline = + dark outline; title = bold, banded gradient, bevel; logo = chunky 3D block letters
+function pxStyle(o) {
+  const c1 = pxCol(o.color).hex, kind = o.style || 'mc', st = { c1, c2: o.color2 ? pxCol(o.color2).hex : '', bold: !!o.bold, seed: 1, split: !!o.split };
+  const shIn = o.shadow ? pxCol(o.shadow) : null; if (shIn) o = Object.assign({}, o, { shadow: shIn.hex, shadowAlpha: shIn.a }); if (o.outline) o = Object.assign({}, o, { outline: pxCol(o.outline).hex });
+  if (kind === 'flat') { st.shadow = null; }
+  else if (kind === 'mc') { st.shadow = [1, 1]; st.shadowColor = o.shadow || pxShade(c1, -.75); }
+  else if (kind === 'outline') { st.shadow = [1, 1]; st.shadowColor = o.shadow || pxShade(c1, -.82); st.outline = o.outline || pxShade(c1, -.86); st.thin = true; }
+  else if (kind === 'title') { st.bold = o.bold !== false; st.c2 = o.color2 || pxShade(c1, -.28); st.c1 = pxShade(c1, .22); st.band = true; st.bevel = false; st.extrude = 1; st.exColor = pxShade(c1, -.5); st.shadow = [1, 1]; st.shadowColor = o.shadow || pxShade(c1, -.82); st.shadowAlpha = .9; }
+  else if (kind === 'logo') { st.bold = o.bold !== false; st.c2 = o.color2 || pxShade(c1, -.25); st.c1 = pxShade(c1, .12); st.bevel = true; st.tex = .14; st.extrude = o.depth ?? 3; st.exRight = false; st.exColor = pxShade(c1, -.55); st.outline = o.outline || pxShade(c1, -.88); st.shadow = [0, 1]; st.shadowColor = '#000000'; st.shadowAlpha = .45; }
+  if (o.outline && kind !== 'logo') { st.outline = o.outline; st.thin = o.thinOutline !== false; }
+  if (o.shadow === false) st.shadow = null; if (o.shadowAlpha !== undefined && st.shadow) st.shadowAlpha = (st.shadowAlpha ?? 1) * o.shadowAlpha;
+  st.key = [kind, st.c1, st.c2, st.bold, st.shadow, st.shadowColor, st.shadowAlpha, st.outline, st.thin, st.extrude, st.exColor, st.bevel, st.tex, st.band, st.split].join(',');
+  return st;
+}
+// draws a string; returns null when it holds characters the pixel font does not have (caller falls back)
+function pxText(g, s, x, y, o = {}) {
+  const gl = pxPrep(s); if (!gl) return null;
+  const st = pxStyle(o), ls = o.ls ? Math.round(o.ls * 10) : 0, units = pxUnits(gl, st.bold, ls);
+  let u = o.unit || (o.size || 60) * (o.k || .09), limited = false;
+  if (o.maxW && units * u > o.maxW) { u = o.maxW / units; limited = true; }
+  if (u >= 2.5 && !o.noSnap) u = limited ? Math.floor(u) : Math.round(u);
+  const tw = units * u, x0 = o.align === 'left' ? 0 : o.align === 'right' ? -tw : -tw / 2, base = o.base || 'middle', top = base === 'top' ? 0 : base === 'alphabetic' || base === 'bottom' ? -7 * u : -3.5 * u;
+  g.save(); g.translate(x, y); if (o.rot) g.rotate(o.rot); const sc = o.scale ?? 1; if (sc !== 1 || o.sy) g.scale(sc, sc * (o.sy ?? 1));
+  g.globalAlpha *= clamp(o.alpha ?? 1, 0, 1); g.imageSmoothingEnabled = false;
+  if (o.glow) { g.shadowColor = o.glow.color || o.glow; g.shadowBlur = o.glow.blur || u * 4; }
+  let gx = 0; const n = gl.length;
+  gl.forEach((G1, i) => {
+    const adv = pxAdv(G1, st.bold); if (G1.px.length) {
+      const c = pxGlyphCanvas(G1, o.per ? pxStyle(Object.assign({}, o, o.per(i, n), { bold: st.bold })) : st), lx = x0 + gx * u, ly = top;
+      if (o.letter) { const f = o.letter(i, n); if (f && f.a !== 0) { g.save(); const cx = lx + adv * u / 2, cy = ly + 3.5 * u; g.translate(cx + (f.dx || 0), cy + (f.dy || 0)); if (f.r) g.rotate(f.r); if (f.s !== undefined) g.scale(f.s, f.s); if (f.a !== undefined) g.globalAlpha *= clamp(f.a, 0, 1); g.drawImage(c.cv, -adv * u / 2 - c.ox * u, -3.5 * u - c.oy * u, c.cw * u, c.chh * u); g.restore(); } }
+      else g.drawImage(c.cv, lx - c.ox * u, ly - c.oy * u, c.cw * u, c.chh * u);
+    }
+    gx += adv + 1 + ls;
+  });
+  g.restore(); return { fs: u / (o.k || .09), width: tw * sc, unit: u, height: 7 * u * sc };
+}
 
 /* ================= sound effects (synthesised, no files) ================= */
 let actx = null, recDest = null, master = null;
@@ -1160,14 +1283,14 @@ TEMPLATES.push(
     durFn: v => Math.max(2, v.text.trim().split(/\s+/).length * .38 + 1),
     render(g, W, H, t, v, u) {
       const words = v.text.trim().split(/\s+/).filter(Boolean); if (!words.length) return;
-      const fs = 88 * u; g.font = `900 ${fs}px Inter`; const maxW = W * .88, spW = g.measureText(' ').width;
+      const fs = 88 * u; g.font = `900 ${fs}px Inter`; if ('letterSpacing' in g) g.letterSpacing = '0px'; const maxW = W * .88, spW = g.measureText(' ').width * 1.3 + fs * .1;
       const lines = [[]]; let lw = 0;
       words.forEach((w, i) => { const ww = g.measureText(w).width; if (lw + ww > maxW && lines[lines.length - 1].length) { lines.push([]); lw = 0; } lines[lines.length - 1].push([w, i, ww]); lw += ww + spW; });
       const cur = t / .38, y0 = H * .82 - (lines.length - 1) * fs * 1.25;
       lines.forEach((ln, li) => {
         const tw = ln.reduce((s, [, , ww]) => s + ww, 0) + spW * (ln.length - 1); let x = W / 2 - tw / 2;
         for (const [w, i, ww] of ln) {
-          const on = cur >= i, act = cur >= i && cur < i + 1, sc = act ? 1 + .12 * Math.sin(Math.PI * (cur - i)) : 1;
+          const on = cur >= i, act = cur >= i && cur < i + 1, sc = act ? 1 + .08 * Math.sin(Math.PI * (cur - i)) : 1;
           T(g, w, x + ww / 2, y0 + li * fs * 1.25, { size: fs, weight: 900, color: on ? v.accent : '#ffffff', scale: sc, stroke: { w: 10 * u, color: '#111' } });
           x += ww + spW;
         }
@@ -1578,10 +1701,8 @@ TEMPLATES.push(
     fields: [['text', 'text', 'Napis', 'GAME OVER'], ['sub', 'text', 'Mrugający podpis', 'NACIŚNIJ START'], ['c1', 'color', 'Kolor', '#ffd23f']],
     sfx: [[0, 'tick'], [.3, 'tick'], [.6, 'tick']],
     render(g, W, H, t, v, u) {
-      const chars = [...v.text], fs = Math.min(150 * u, W * .85 / Math.max(1, chars.length) / 1.05);
-      g.font = `400 ${fs}px "Press Start 2P"`; const widths = chars.map(c => g.measureText(c).width), tw = widths.reduce((a, b) => a + b, 0);
-      let x = W / 2 - tw / 2;
-      chars.forEach((c, i) => { const k = seg(t, i * .07, i * .07 + .45), y = H * .45 - (1 - E.bounce(k)) * 300 * u; const hue = (i * 30 + t * 120) % 360; if (k > 0) T(g, c, x + widths[i] / 2, y, { size: fs, font: 'Press Start 2P', weight: 400, color: v.c1, stroke: { w: 10 * u, color: `hsl(${hue},90%,45%)` }, glow: { color: v.c1, blur: 18 * u } }); x += widths[i]; });
+      const fs = Math.min(170 * u, W * 1.25 / Math.max(4, [...v.text].length));
+      pxText(g, v.text, W / 2, H * .45, { size: fs, k: .105, color: v.c1, color2: mix(v.c1, '#ff3d1a', .55), style: 'title', outline: mix(v.c1, '#000000', .88), maxW: W * .9, glow: { color: rgba(v.c1, .35), blur: 26 * u }, letter: (i) => { const k = seg(t, i * .07, i * .07 + .45); return k <= 0 ? { a: 0 } : { dy: -(1 - E.bounce(k)) * 300 * u }; } });
       if (t > 1.2 && t % 1 < .6) T(g, v.sub, W / 2, H * .45 + fs + 60 * u, { size: 36 * u, font: 'Press Start 2P', weight: 400, color: '#fff', maxW: W * .9 });
       g.fillStyle = 'rgba(0,0,0,.22)'; for (let y = 0; y < H; y += 5 * u) g.fillRect(0, y, W, 2 * u);
     }
@@ -1718,8 +1839,11 @@ TEMPLATES.push(
       const k = E.out(seg(t, 0, .9)), fs = 170 * u, y = H * .47 + Math.sin(t * 1.4) * 8 * u;
       g.save(); g.font = `900 ${fs}px Montserrat`; let w = g.measureText(v.title).width; const scale = Math.min(1, W * .88 / w); w *= scale;
       const x0 = W / 2 - w / 2 - 200 * u + ((t * 250 * u) % (w + 400 * u)), gr = g.createLinearGradient(x0 - w, 0, x0 + w, 0); gr.addColorStop(0, v.c1); gr.addColorStop(.33, v.c2); gr.addColorStop(.66, v.c1); gr.addColorStop(1, v.c2);
-      g.globalAlpha = k; g.filter = `blur(${30 * u}px)`; g.fillStyle = gr; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = `900 ${fs * scale}px Montserrat`; g.fillText(v.title, W / 2, y); g.filter = 'none';
-      g.fillText(v.title, W / 2, y + (1 - k) * 40 * u); g.restore();
+      const f2 = fs * scale, yy = y + (1 - k) * 40 * u; g.globalAlpha = k; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round'; g.font = `900 ${f2}px Montserrat`;
+      for (let i = Math.round(f2 * .07); i > 0; i -= Math.max(1, f2 * .005)) { g.fillStyle = g.strokeStyle = mix(v.c2, '#000000', .6); g.lineWidth = f2 * .11; g.strokeText(v.title, W / 2, yy + i); }
+      g.shadowColor = rgba(v.c1, .5); g.shadowBlur = 45 * u; g.lineWidth = f2 * .11; g.strokeStyle = mix(v.c2, '#000000', .72); g.strokeText(v.title, W / 2, yy); g.shadowColor = 'transparent';
+      g.fillStyle = gr; g.fillText(v.title, W / 2, yy);
+      g.globalCompositeOperation = 'source-atop'; const gl = g.createLinearGradient(0, yy - f2 * .5, 0, yy); gl.addColorStop(0, 'rgba(255,255,255,.35)'); gl.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gl; g.globalAlpha = k * .6; g.fillText(v.title, W / 2, yy - f2 * .02); g.restore();
       T(g, v.sub, W / 2, y + 125 * u, { size: 48 * u, weight: 600, ls: .25, color: '#eef', alpha: seg(t, .7, 1.3), maxW: W * .85 });
     }
   },
@@ -2878,16 +3002,9 @@ const GUI_TPL = [
     fields: [['text', 'text', 'Napis', 'TWÓJ NAPIS'], ['c1', 'color', 'Kolor góry', '#ffe14d'], ['c2', 'color', 'Kolor dołu', '#ff7a1a']],
     sfx: [[.2, 'pop'], [.5, 'pop']],
     render(g, W, H, t, v, u) {
-      const chars = [...v.text], out = E.in(seg(t, 3.5, 4)), fs = Math.min(190 * u, W * 1.5 / Math.max(5, chars.length)), sh = Math.max(3, Math.round(fs * .07));
-      g.font = pxFont(fs, 700); const ws = chars.map(c => g.measureText(c).width), tw = ws.reduce((a, b) => a + b, 0); let x = W / 2 - tw / 2;
-      chars.forEach((c, i) => {
-        const k = E.back(seg(t, .15 + i * .05, .45 + i * .05)) * (1 - out), jy = Math.round(Math.sin(t * 6 + i) * 3 * u / sh) * sh; if (k <= 0) { x += ws[i]; return; }
-        const cxl = x + ws[i] / 2, cy = H / 2 + jy; g.save(); g.translate(cxl, cy); g.scale(k, k); g.font = pxFont(fs, 700); g.textAlign = 'center'; g.textBaseline = 'middle';
-        g.fillStyle = mix(v.c2, '#000000', .55); g.fillText(c, sh, sh);
-        g.save(); g.beginPath(); g.rect(-fs, -fs, fs * 2, fs); g.clip(); g.fillStyle = v.c1; g.fillText(c, 0, 0); g.restore();
-        g.save(); g.beginPath(); g.rect(-fs, 0, fs * 2, fs); g.clip(); g.fillStyle = v.c2; g.fillText(c, 0, 0); g.restore();
-        g.restore(); x += ws[i];
-      });
+      const chars = [...v.text], out = E.in(seg(t, 3.5, 4)), fs = Math.min(190 * u, W * 1.5 / Math.max(5, chars.length));
+      pxText(g, v.text, W / 2, H / 2, { size: fs, color: v.c1, color2: v.c2, split: true, bold: true, style: 'outline', outline: mix(v.c2, '#000000', .8), shadow: mix(v.c2, '#000000', .6), maxW: W * .9,
+        letter: (i) => { const k = E.back(seg(t, .15 + i * .05, .45 + i * .05)) * (1 - out); return k <= 0 ? { a: 0 } : { s: k, dy: Math.round(Math.sin(t * 6 + i) * 4 * u) }; } });
     }
   },
   {
@@ -2895,14 +3012,13 @@ const GUI_TPL = [
     fields: [['text', 'text', 'Napis', 'Twój własny tekst'], ['c1', 'color', 'Kolor 1', '#ff5edb'], ['c2', 'color', 'Kolor 2', '#5ef2ff']],
     sfx: [[.15, 'whoosh'], [.5, 'tick'], [.9, 'tick']],
     render(g, W, H, t, v, u) {
-      const out = E.in(seg(t, 4, 4.5)), fs = Math.min(96 * u, W * 1.6 / Math.max(6, v.text.length)); g.font = pxFont(fs, 600); const tw = g.measureText(v.text).width, bw = tw + 70 * u, bh = fs * 1.55;
+      const out = E.in(seg(t, 4, 4.5)), fs = Math.min(96 * u, W * 1.6 / Math.max(6, v.text.length)), tw = pxMeasure(v.text, fs, { bold: true }), bw = tw + 70 * u, bh = fs * 1.55;
       const kb = E.out(seg(t, .1, .5)) * (1 - out); if (kb <= 0) return; const w = bw * kb, x = W / 2 - w / 2, y = H / 2 - bh / 2;
       rr(g, x, y, w, bh, 14 * u); g.fillStyle = 'rgba(0,0,0,.78)'; g.fill();
       const n = Math.floor([...v.text].length * seg(t, .45, 1.6)), s = [...v.text].slice(0, n).join('');
-      g.save(); g.beginPath(); g.rect(x, y, w, bh); g.clip(); g.font = pxFont(fs, 600); g.textAlign = 'left'; g.textBaseline = 'middle'; const tx = W / 2 - tw / 2;
-      g.fillStyle = 'rgba(0,0,0,.6)'; g.fillText(s, tx + fs * .07, H / 2 + fs * .07);
-      const gr = g.createLinearGradient(tx, 0, tx + tw, 0); gr.addColorStop(0, v.c1); gr.addColorStop(1, v.c2); g.fillStyle = gr; g.fillText(s, tx, H / 2);
-      if (n < [...v.text].length && Math.floor(t * 4) % 2 === 0) { const cw = g.measureText(s).width; g.fillStyle = v.c2; g.fillRect(tx + cw + 6 * u, H / 2 - fs * .4, fs * .45, fs * .8); }
+      g.save(); g.beginPath(); g.rect(x, y, w, bh); g.clip(); const tx = W / 2 - tw / 2, NN = [...v.text].length;
+      if (s.trim()) pxText(g, s, tx, H / 2, { size: fs, bold: true, align: 'left', color: v.c1, style: 'mc', per: (i) => { const c = mix(v.c1, v.c2, NN > 1 ? i / (NN - 1) : 0); return { color: c, shadow: mix(c, '#000000', .72) }; } });
+      if (n < NN && Math.floor(t * 4) % 2 === 0) { const cw = s ? pxMeasure(s, fs, { bold: true }) : 0; g.fillStyle = v.c2; g.fillRect(tx + cw + 8 * u, H / 2 - fs * .32, fs * .4, fs * .64); }
       g.restore();
     }
   },
@@ -2932,7 +3048,7 @@ const GUI_TPL = [
       const out = E.in(seg(t, 4, 4.5)), k = guiPop(t, .05, .4) * (1 - out); if (k <= 0) return;
       const P = Math.max(2, Math.round(6 * u)), slot = 120 * u, gap = 18 * u, n = 5, pw = n * slot + (n - 1) * gap + 70 * u, ph = slot + 70 * u, x = W / 2 - pw / 2, y = H / 2 - ph / 2 + 40 * u, c = v.color;
       g.save(); g.translate(W / 2, H / 2); g.scale(k, k); g.translate(-W / 2, -H / 2);
-      g.font = pxFont(56 * u, 600); const tw = g.measureText(v.title).width + 60 * u, th = 84 * u;
+      const tw = pxMeasure(v.title, 56 * u) + 60 * u, th = 84 * u;
       g.save(); g.shadowColor = 'rgba(0,0,0,.5)'; g.shadowBlur = 30 * u; g.shadowOffsetY = 12 * u; pxPanel(g, x, y - th + P * 2, tw, th, P, c, mix(c, '#ffffff', .4), mix(c, '#000000', .45), '#1a0303'); pxPanel(g, x, y, pw, ph, P, c, mix(c, '#ffffff', .4), mix(c, '#000000', .45), '#1a0303'); g.restore();
       g.fillStyle = c; g.fillRect(x + 3 * P, y, tw - 6 * P, 3 * P);
       T(g, v.title, x + 30 * u, y - th / 2 + P * 2, { size: 56 * u, font: 'Tiny5', weight: 400, color: '#ffffff', align: 'left', shadow: { color: mix(c, '#000000', .6), x: 3 * u, y: 3 * u } });
@@ -3102,6 +3218,7 @@ function mcItem(g, kind, col, cx, cy, size, rot = 0, glint = -1) {
   g.restore();
 }
 function mcText(g, s, x, y, size, color, o = {}) {
+  const r = pxText(g, s, x, y, { size, color, color2: o.color2, style: o.style || 'mc', bold: o.bold ?? (o.weight || 400) >= 600, shadow: o.shadow, outline: o.outline, align: o.align, maxW: o.maxW, alpha: o.alpha, scale: o.scale, rot: o.rot, ls: o.ls, letter: o.letter, per: o.per, glow: o.glow }); if (r) return r;
   const sh = Math.max(2, Math.round(size * .1)), base = { size, font: o.font || 'Tiny5', weight: 400, align: o.align, maxW: o.maxW, alpha: o.alpha, scale: o.scale, rot: o.rot, ls: o.ls };
   T(g, s, x + sh, y + sh, Object.assign({}, base, { color: o.shadow || mix(color, '#000000', .74) }));
   return T(g, s, x, y, Object.assign({}, base, { color }));
@@ -3138,7 +3255,7 @@ const MC_TPL = [
       rr(g, x, y, w, hh, 18 * u); const bg = g.createRadialGradient(x + w * .7, y + hh * .5, 0, x + w * .5, y + hh * .5, w * .7); bg.addColorStop(0, mix(v.color, '#ff4fd8', .25)); bg.addColorStop(1, mix(v.color, '#000000', .55)); g.fillStyle = bg; g.fill();
       g.globalAlpha = .08; for (let i = 0; i < 26; i++) { g.fillStyle = '#fff'; g.fillRect(x + rnd(i, 1) * w, y + rnd(i, 2) * hh, 6 * u, 6 * u); } g.globalAlpha = 1;
       const lx = x + 70 * u, tagK = E.back(seg(t, .4, .7));
-      g.save(); g.translate(lx, y + 90 * u); g.scale(tagK, tagK); g.font = `400 ${26 * u}px "Tiny5"`; const tw = g.measureText(v.rarity).width + 24 * u; g.fillStyle = '#ffb21f'; g.fillRect(0, -20 * u, tw, 40 * u); T(g, v.rarity, 12 * u, 2 * u, { size: 26 * u, font: 'Tiny5', weight: 400, color: '#3a1a00', align: 'left' }); g.restore();
+      g.save(); g.translate(lx, y + 90 * u); g.scale(tagK, tagK); const tw = pxMeasure(v.rarity, 26 * u) + 24 * u; g.fillStyle = '#ffb21f'; g.fillRect(0, -20 * u, tw, 40 * u); T(g, v.rarity, 12 * u, 2 * u, { size: 26 * u, font: 'Tiny5', weight: 400, color: '#3a1a00', align: 'left' }); g.restore();
       const nl = proWrap(g, v.name, `400 ${110 * u}px "Tiny5"`, w * .5, 2); nl.forEach((ln, i) => { const kk = E.out(seg(t, .5 + i * .1, .85 + i * .1)); mcText(g, ln, lx - (1 - kk) * 80 * u, y + 190 * u + i * 104 * u, 110 * u, '#ff4fe0', { align: 'left', alpha: kk, maxW: w * .52, weight: 700, shadow: '#3b0a55' }); });
       [v.l1, v.l2, v.l3].forEach((s, i) => { if (!s) return; const kk = E.out(seg(t, .9 + i * .2, 1.2 + i * .2)), yy = y + 190 * u + nl.length * 104 * u + 20 * u + i * 58 * u; g.save(); g.globalAlpha *= kk; g.fillStyle = '#ffcf3a'; g.save(); g.translate(lx + 12 * u, yy); g.rotate(Math.PI / 4); g.fillRect(-8 * u, -8 * u, 16 * u, 16 * u); g.restore(); mcText(g, s, lx + 40 * u, yy, 40 * u, '#ffffff', { align: 'left', maxW: w * .45 }); g.restore(); });
       const is = Math.min(hh * .78, w * .34); mcItem(g, mcKind(v), v.tint, x + w * .76, y + hh / 2 + mcBob(t, u, 14), is * E.back(seg(t, .3, .8)), -.5 + Math.sin(t * 1.3) * .12, ((t - 1.2) % 2.2) / .5);
@@ -3188,12 +3305,9 @@ const MC_TPL = [
     fields: [['l1', 'text', 'Linia 1', 'TRYB'], ['l2', 'text', 'Linia 2', 'HARDCORE'], ['color', 'color', 'Kolor linii 2', '#e8232f']], sfx: [[.1, 'boom']],
     render(g, W, H, t, v, u) {
       const out = E.in(seg(t, 3.5, 4)), k = E.back(seg(t, .05, .5)) * (1 - out); if (k <= 0) return;
-      const block = (s, y, size, top, bottom) => { g.save(); g.font = `700 ${size}px Silkscreen, "Press Start 2P", monospace`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'miter'; const d = Math.round(size * .12);
-        let tw = g.measureText(s).width, sc = Math.min(1, W * .88 / tw); g.translate(W / 2, y); g.scale(sc, sc);
-        for (let i = d; i > 0; i--) { g.fillStyle = mix(bottom, '#000000', .55); g.fillText(s, 0, i); } g.lineWidth = size * .08; g.strokeStyle = '#141414'; g.strokeText(s, 0, 0);
-        const gr = g.createLinearGradient(0, -size * .45, 0, size * .45); gr.addColorStop(0, top); gr.addColorStop(1, bottom); g.fillStyle = gr; g.fillText(s, 0, 0); g.restore(); };
+      const block = (s, y, size, top, bottom) => { pxText(g, s, W / 2, y, { size, color: top, color2: bottom, style: 'logo', maxW: W * .88 }); };
       g.save(); g.translate(W / 2, H / 2); g.scale(k, k); g.rotate(-.04); g.translate(-W / 2, -H / 2);
-      block(v.l1, H * .4, 150 * u, '#e9e9e9', '#8a8a8a'); block(v.l2, H * .58, 150 * u, mix(v.color, '#ffffff', .25), mix(v.color, '#000000', .2));
+      block(v.l1, H * .37, 175 * u, '#d6d6d6', '#7d7d7d'); block(v.l2, H * .6, 215 * u, mix(v.color, '#ffffff', .15), mix(v.color, '#000000', .25));
       g.restore();
     }
   },
@@ -3770,11 +3884,11 @@ const aiCol = (c, d) => (typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c.trim(
 function aiSanitize(spec) {
   const s = spec && typeof spec === 'object' ? spec : {}, D = aiNum(s.duration, 5, 2, 10);
   const types = ['text', 'item', 'shape', 'panel', 'button', 'bar', 'counter', 'burst', 'rays', 'splash', 'character', 'avatar', 'cursor', 'particles', 'line'];
-  const anims = ['pop', 'fade', 'slideUp', 'slideDown', 'slideLeft', 'slideRight', 'zoom', 'drop', 'spin', 'type', 'wipe', 'none'];
+  const anims = ['pop', 'fade', 'slideUp', 'slideDown', 'slideLeft', 'slideRight', 'zoom', 'drop', 'spin', 'type', 'wipe', 'letters', 'none'];
   const layers = (Array.isArray(s.layers) ? s.layers : []).filter(l => l && types.includes(l.type)).slice(0, 18).map(l => ({
     ...l, x: aiNum(l.x, .5, -0.2, 1.2), y: aiNum(l.y, .5, -0.2, 1.2), size: aiNum(l.size, .1, .01, 1.2), w: aiNum(l.w, .4, .01, 1.2), h: aiNum(l.h, .2, .005, 1.2),
     start: aiNum(l.start, 0, 0, D), end: aiNum(l.end, D, 0, D), inDur: aiNum(l.inDur, l.in === 'type' ? 1 : .45, .05, 4), rotate: aiNum(l.rotate, 0, -180, 180),
-    in: anims.includes(l.in) ? l.in : 'pop', out: anims.includes(l.out) ? l.out : 'fade', loop: ['none', 'float', 'pulse', 'wiggle', 'spin', 'glint', 'shake'].includes(l.loop) ? l.loop : 'none',
+    in: anims.includes(l.in) ? l.in : 'pop', out: anims.includes(l.out) && l.out !== 'letters' ? l.out : 'fade', loop: ['none', 'float', 'pulse', 'wiggle', 'spin', 'glint', 'shake', 'wave'].includes(l.loop) ? l.loop : 'none', style: TX_STYLES.includes(l.style) ? l.style : (TX_FROM_FONT[l.font] || (l.type === 'text' ? 'thumb' : undefined)),
     color: aiCol(l.color, '#ffffff'), color2: aiCol(l.color2, ''), text: String(l.text ?? '').slice(0, 80), pressedText: String(l.pressedText ?? '').slice(0, 40), prefix: String(l.prefix ?? '').slice(0, 8), suffix: String(l.suffix ?? '').slice(0, 12)
   }));
   return { title: String(s.title || 'Animacja AI').slice(0, 40), duration: D, background: s.background === undefined ? 'none' : s.background, layers, aspect: s.aspect || ST.fmt };
@@ -3792,6 +3906,92 @@ function aiBg(g, W, H, bg, t) {
   if (!bg || bg === 'none') return;
   if (typeof bg === 'string' && /^#/.test(bg)) { g.fillStyle = aiCol(bg, '#111114'); g.fillRect(0, 0, W, H); return; }
   if (typeof bg === 'object' && Array.isArray(bg.gradient)) { const a = aiNum(bg.angle, 135, 0, 360) * Math.PI / 180, c1 = aiCol(bg.gradient[0], '#1a1a2e'), c2 = aiCol(bg.gradient[1], '#0a0a12'), dx = Math.cos(a) * W / 2, dy = Math.sin(a) * H / 2, gr = g.createLinearGradient(W / 2 - dx, H / 2 - dy, W / 2 + dx, H / 2 + dy); gr.addColorStop(0, c1); gr.addColorStop(1, c2); g.fillStyle = gr; g.fillRect(0, 0, W, H); }
+}
+
+/* ================= designed text styles: every AI text uses one of these finished looks ================= */
+const TX_STYLES = ['mc', 'mcTitle', 'mcLogo', 'tooltip', 'thumb', 'caption', 'neon', 'tag', 'clean', 'script'];
+const TX_PIXEL = { mc: 'mc', mcTitle: 'title', mcLogo: 'logo', tooltip: 'mc' };
+const TX_FROM_FONT = { pixel: 'mc', game3d: 'mcLogo', display: 'thumb', chunky: 'thumb', bold: 'caption', wide: 'clean', script: 'script', glow: 'neon' };
+const TX_FONT = { thumb: ['Lilita One', 400, .01], caption: ['Montserrat', 900, .01], neon: ['Lilita One', 400, .03], clean: ['Inter', 800, .04], tag: ['Montserrat', 800, .1], script: ['Pacifico', 400, 0] };
+const txLum = c => { const [r, g, b] = hex2rgb(pxCol(c).hex); return (r * .299 + g * .587 + b * .114) / 255; };
+const txCache = new Map(); let txMeasureCv = null;
+function txCtx() { if (!txMeasureCv) txMeasureCv = document.createElement('canvas'); return txMeasureCv.getContext('2d'); }
+function txFontStr(st, S) { const f = TX_FONT[st] || TX_FONT.thumb; return `${f[1]} ${S}px "${f[0]}", Inter, sans-serif`; }
+function txMeasure(s, st, S) { const m = txCtx(); m.font = txFontStr(st, S); if ('letterSpacing' in m) m.letterSpacing = ((TX_FONT[st] || TX_FONT.thumb)[2] * S).toFixed(1) + 'px'; return m.measureText(s).width; }
+// outline / depth / glow of each smooth style, in px for font size S
+function txGeom(st, S) { return { ol: { thumb: .13, caption: .15, script: .1, neon: .05, clean: 0, tag: 0 }[st] * S, ex: { thumb: .085, caption: .06, script: .045 }[st] * S || 0, glow: st === 'neon' ? .55 * S : 0 }; }
+// one smooth-font line rendered with all its layers onto a cached canvas
+function txLine(s, st, S, c1, c2) {
+  S = Math.max(6, Math.round(S)); const key = [s, st, S, c1, c2].join('|'); let c = txCache.get(key); if (c) return c; if (txCache.size > 300) txCache.clear();
+  const f = TX_FONT[st] || TX_FONT.thumb, G = txGeom(st, S), w = txMeasure(s, st, S), pad = Math.ceil(G.ol + G.ex + G.glow + S * .25), cw = Math.ceil(w + pad * 2), ch = Math.ceil(S * 1.45 + pad * 2), ay = pad + S * .72;
+  const A = document.createElement('canvas'); A.width = cw; A.height = ch; const a = A.getContext('2d'), B = document.createElement('canvas'); B.width = cw; B.height = ch; const b = B.getContext('2d');
+  [a, b].forEach(x => { x.font = txFontStr(st, S); if ('letterSpacing' in x) x.letterSpacing = (f[2] * S).toFixed(1) + 'px'; x.textAlign = 'left'; x.textBaseline = 'middle'; x.lineJoin = 'round'; x.miterLimit = 2; });
+  const dark = mix(c1, '#000000', .84), side = mix(c2 || c1, '#000000', .58);
+  if (st === 'neon') {
+    a.shadowColor = c1; a.shadowBlur = G.glow; a.strokeStyle = c1; a.lineWidth = G.ol * 2; a.strokeText(s, pad, ay); a.shadowBlur = G.glow * .45; a.strokeText(s, pad, ay); a.shadowColor = 'transparent';
+    a.fillStyle = mix(c1, '#ffffff', .78); a.fillText(s, pad, ay);
+  } else {
+    if (st !== 'clean') { a.shadowColor = 'rgba(0,0,0,.45)'; a.shadowBlur = S * .16; a.shadowOffsetY = S * .07; }
+    for (let i = Math.round(G.ex); i >= 1; i -= Math.max(1, G.ex / 14)) { a.fillStyle = a.strokeStyle = i > G.ex * .5 ? dark : side; if (G.ol) { a.lineWidth = G.ol * 2; a.strokeText(s, pad, ay + i); } a.fillText(s, pad, ay + i); a.shadowColor = 'transparent'; }
+    if (G.ol) { a.strokeStyle = dark; a.lineWidth = G.ol * 2; a.strokeText(s, pad, ay); }
+    a.shadowColor = 'transparent';
+    const gr = b.createLinearGradient(0, ay - S * .5, 0, ay + S * .5);
+    if (st === 'thumb') { gr.addColorStop(0, mix(c1, '#ffffff', .42)); gr.addColorStop(.5, c1); gr.addColorStop(1, c2 || mix(c1, '#000000', .18)); }
+    else { gr.addColorStop(0, c1); gr.addColorStop(1, c2 || c1); }
+    b.fillStyle = gr; if (st === 'clean') { b.shadowColor = 'rgba(0,0,0,.55)'; b.shadowBlur = S * .2; b.shadowOffsetY = S * .05; } b.fillText(s, pad, ay); b.shadowColor = 'transparent';
+    if (st === 'thumb') { b.globalCompositeOperation = 'source-atop'; const gl = b.createLinearGradient(0, ay - S * .55, 0, ay); gl.addColorStop(0, 'rgba(255,255,255,.5)'); gl.addColorStop(1, 'rgba(255,255,255,0)'); b.fillStyle = gl; b.fillRect(0, ay - S, cw, S * .98); b.globalCompositeOperation = 'source-over'; }
+    a.drawImage(B, 0, 0);
+  }
+  const m = txCtx(); m.font = txFontStr(st, S); if ('letterSpacing' in m) m.letterSpacing = (f[2] * S).toFixed(1) + 'px'; const xs = [0]; const chars = [...s]; for (let i = 1; i <= chars.length; i++) xs.push(m.measureText(chars.slice(0, i).join('')).width);
+  c = { cv: A, w, pad, ay, cw, ch, xs, n: chars.length }; txCache.set(key, c); return c;
+}
+// per-letter entrance: progress of letter i given time since the layer started
+function txLetter(te, i, n, S) { const st = Math.min(.07, .7 / Math.max(1, n)), p = clamp((te - i * st) / .38, 0, 1); return p <= 0 ? { a: 0 } : { s: E.back(p), dy: (1 - E.out(p)) * S * .35, a: Math.min(1, p * 3) }; }
+// width/height a text layer takes (for layout), in px
+function txBox(L, W, H) {
+  const S = L.size * H, st = L.style || 'thumb', lines = String(L.text).split('\n'), maxW = (L.maxW || .9) * W;
+  if (TX_PIXEL[st]) { const u = S * .1, bold = st !== 'mc' || L.size >= .08, ex = st === 'mcLogo' ? 4 : st === 'mcTitle' ? 2 : 1;
+    let w = Math.max(...lines.map(l => { const gl = pxPrep(l); return gl ? pxUnits(gl, bold) * u : l.length * 6 * u; })) + 2 * u;
+    if (st === 'tooltip') { const pd = Math.max(3 * u, S * .35); return { w: Math.min(w, maxW) + pd * 2, h: lines.length * S * 1.05 + pd * 2 - S * .3 }; }
+    const top = (lines.length - 1) * S * 1.05 / 2 + 4.5 * u, bot = (lines.length - 1) * S * 1.05 / 2 + (3.5 + ex + 1) * u; return { w: Math.min(w, maxW), h: top + bot, dy: (bot - top) / 2 }; }
+  if (st === 'tag') { const w = Math.max(...lines.map(l => txMeasure(l.toUpperCase(), 'tag', S))); return { w: Math.min(w, maxW) + S * 1.3, h: lines.length * S * 1.15 + S * .75 }; }
+  const G = txGeom(st, S), w = Math.max(...lines.map(l => txMeasure(st === 'caption' ? l.toUpperCase() : l, st, S))) + G.ol * 2;
+  return { w: Math.min(w, maxW), h: lines.length * S * 1.08 + G.ol * 2 + G.ex };
+}
+// draws a text layer centred at (0,0) of the current transform
+function txDraw(g, L, S, W, t, te, shown, u) {
+  const st = TX_STYLES.includes(L.style) ? L.style : 'thumb', all = String(L.text).split('\n'), lines = String(shown).split('\n'), align = ['left', 'center', 'right'].includes(L.align) ? L.align : 'center', maxW = (L.maxW || .9) * W;
+  const c1 = L.color || '#ffffff', c2 = L.color2 || '', letters = L.in === 'letters', wave = L.loop === 'wave';
+  const lh = TX_PIXEL[st] ? S * 1.05 : S * 1.08; let base = 0;
+  const lfn = (j0, n) => (letters || wave) ? (i) => { const f = letters ? txLetter(te, j0 + i, n, S) : { s: 1, a: 1, dy: 0 }; if (wave && f.a !== 0) f.dy = (f.dy || 0) + Math.sin(t * 6 - (j0 + i) * .55) * S * .05; return f; } : null;
+  const total = [...String(L.text).replace(/\n/g, '')].length;
+  if (st === 'tag') {
+    const up = lines.map(l => l.toUpperCase()), tw = Math.min(maxW, Math.max(...all.map(l => txMeasure(l.toUpperCase(), 'tag', S)))), pw = tw + S * 1.3, ph = all.length * S * 1.15 + S * .75, x0 = align === 'left' ? 0 : align === 'right' ? -pw : -pw / 2;
+    g.save(); g.shadowColor = 'rgba(0,0,0,.35)'; g.shadowBlur = S * .5; g.shadowOffsetY = S * .18; rr(g, x0, -ph / 2, pw, ph, Math.min(ph / 2, S * .55)); const gr = g.createLinearGradient(0, -ph / 2, 0, ph / 2); gr.addColorStop(0, mix(c1, '#ffffff', .12)); gr.addColorStop(1, c2 || mix(c1, '#000000', .12)); g.fillStyle = gr; g.fill(); g.restore();
+    g.save(); rr(g, x0, -ph / 2, pw, ph, Math.min(ph / 2, S * .55)); g.clip(); g.fillStyle = 'rgba(255,255,255,.16)'; g.fillRect(x0, -ph / 2, pw, ph * .45); g.restore();
+    const tc = L.textColor ? L.textColor : txLum(c1) > .62 ? '#16161a' : '#ffffff';
+    up.forEach((l, j) => { if (!l) return; T(g, l, x0 + pw / 2, (j - (all.length - 1) / 2) * S * 1.15 + S * .04, { size: S, font: 'Montserrat', weight: 800, ls: .1, color: tc, maxW: tw }); });
+    return;
+  }
+  if (st === 'tooltip') {
+    const u2 = S * .1, pd = Math.max(3 * u2, S * .35), widths = all.map(l => { const gl = pxPrep(l); return gl ? pxUnits(gl, true) * u2 : l.length * 6 * u2; }), tw = Math.min(maxW, Math.max(...widths)), pw = tw + pd * 2, ph = all.length * S * 1.05 + pd * 2 - S * .3, x0 = align === 'left' ? 0 : align === 'right' ? -pw : -pw / 2, y0 = -ph / 2, P = Math.max(1, Math.round(u2));
+    g.save(); g.fillStyle = 'rgba(16,0,16,.94)'; g.fillRect(x0 + P, y0, pw - 2 * P, ph); g.fillRect(x0, y0 + P, pw, ph - 2 * P);
+    const bg = g.createLinearGradient(0, y0, 0, y0 + ph); bg.addColorStop(0, mix(c1, '#5000ff', .55)); bg.addColorStop(1, mix(c1, '#28007f', .7)); g.fillStyle = bg;
+    g.fillRect(x0 + P, y0 + P, pw - 2 * P, P); g.fillRect(x0 + P, y0 + ph - 2 * P, pw - 2 * P, P); g.fillRect(x0 + P, y0 + P, P, ph - 2 * P); g.fillRect(x0 + pw - 2 * P, y0 + P, P, ph - 2 * P); g.restore();
+    let j0 = 0; lines.forEach((l, j) => { if (l) pxText(g, l, x0 + pd, y0 + pd + S * .35 + j * S * 1.05, { unit: u2, style: 'mc', bold: j === 0, color: j === 0 ? c1 : mix(c2 || '#aaaaaa', '#ffffff', .1), align: 'left', maxW: tw, letter: lfn(j0, total) }); j0 += [...l].length; });
+    return;
+  }
+  let j0 = 0;
+  lines.forEach((ln, j) => {
+    const y = (j - (all.length - 1) / 2) * lh; if (!ln) { return; }
+    if (TX_PIXEL[st]) { pxText(g, ln, 0, y, { unit: S * .1, style: TX_PIXEL[st], bold: st !== 'mc' || L.size >= .08, color: c1, color2: c2, align, maxW, letter: lfn(j0, total) }); j0 += [...ln].length; return; }
+    const s = st === 'caption' ? ln.toUpperCase() : ln, c = txLine(s, st, S, c1, c2), k = Math.min(1, maxW / c.w), ax = align === 'left' ? 0 : align === 'right' ? -c.w * k : -c.w * k / 2;
+    g.save(); g.translate(ax, y); g.scale(k, k); const f = lfn(j0, total);
+    if (!f) g.drawImage(c.cv, -c.pad, -c.ay);
+    else for (let i = 0; i < c.n; i++) { const fi = f(i); if (fi.a === 0) continue; const sx0 = i === 0 ? 0 : c.pad + c.xs[i], sx1 = i === c.n - 1 ? c.cw : c.pad + c.xs[i + 1], mid = (c.xs[i] + c.xs[i + 1]) / 2;
+      g.save(); g.translate(mid, (fi.dy || 0)); if (fi.s !== undefined) g.scale(fi.s, fi.s); if (fi.a !== undefined) g.globalAlpha *= clamp(fi.a, 0, 1); g.drawImage(c.cv, sx0, 0, sx1 - sx0, c.ch, sx0 - c.pad - mid, -c.ay, sx1 - sx0, c.ch); g.restore(); }
+    g.restore(); j0 += [...ln].length;
+  });
 }
 function renderSpec(g, W, H, t, spec, u) {
   const D = spec.duration; aiBg(g, W, H, spec.background, t);
@@ -3815,16 +4015,9 @@ function renderSpec(g, W, H, t, spec, u) {
     if (L.type === 'line') { const w = L.w * W * reveal * e; g.fillStyle = c1; rr(g, px - L.w * W / 2, py - Math.max(2, L.h * H) / 2, w, Math.max(2, L.h * H), Math.max(1, L.h * H / 2)); g.fill(); g.restore(); return; }
     g.translate(px, py); g.rotate(rot); g.scale(sc, sc);
     if (L.type === 'text') {
-      const f = AI_FONTS[L.font] || AI_FONTS.display, lines = String(L.text).split('\n'), maxW = aiNum(L.maxW, .9, .1, 1.2) * W, align = ['left', 'center', 'right'].includes(L.align) ? L.align : 'center';
-      let shown = L.text; if (L.in === 'type') { const n = Math.ceil([...L.text].length * reveal); shown = [...L.text].slice(0, n).join(''); } const sl = shown.split('\n');
-      if (L.in === 'wipe') { g.beginPath(); g.rect(-maxW / 2 - S, -S * lines.length, (maxW + S * 2) * reveal, S * lines.length * 2); g.clip(); }
-      sl.forEach((ln, j) => { const y = (j - (lines.length - 1) / 2) * S * 1.08; if (!ln) return;
-        if (L.font === 'pixel') mcText(g, ln, 0, y, S, c1, { align, maxW });
-        else if (L.font === 'game3d' || L.font === 'glow') { g.save(); g.font = `${f[1]} ${S}px "${f[0]}", Inter, sans-serif`; g.textAlign = align; g.textBaseline = 'middle'; g.lineJoin = 'round'; const tw = g.measureText(ln).width, k = Math.min(1, maxW / tw); g.scale(k, k); const d = Math.round(S * .1);
-          if (L.font === 'glow') { g.shadowColor = rgba(c2, .9); g.shadowBlur = S * .6; } g.fillStyle = mix(c2, '#000000', .55); g.fillText(ln, 0, y + d); g.shadowColor = 'transparent'; for (let q = d; q > 0; q -= Math.max(1, d / 10)) { g.fillStyle = mix(c2, '#000000', .5); g.fillText(ln, 0, y + q); }
-          g.lineWidth = S * .07; g.strokeStyle = mix(c2, '#000000', .7); g.strokeText(ln, 0, y); const gr = g.createLinearGradient(0, y - S * .5, 0, y + S * .5); gr.addColorStop(0, mix(c1, '#ffffff', .35)); gr.addColorStop(1, c1); g.fillStyle = gr; g.fillText(ln, 0, y); g.restore(); }
-        else proText(g, ln, 0, y, { size: S, font: f[0], weight: f[1], c1, c2, align, maxW, stroke: L.stroke ? { w: S * .12, color: aiCol(L.strokeColor, '#111111') } : null, glow: L.glowColor ? rgba(aiCol(L.glowColor, c2), .6) : null, gloss: L.font !== 'script' });
-      });
+      let shown = L.text; if (L.in === 'type') { const n = Math.ceil([...L.text].length * reveal); shown = [...L.text].slice(0, n).join(''); }
+      if (L.in === 'wipe') { const bw = txBox(L, W, H).w; g.beginPath(); g.rect(-bw / 2 - S, -S * 4, (bw + S * 2) * reveal, S * 8); g.clip(); }
+      txDraw(g, L, S, W, t, t - L.start, shown, u);
     } else if (L.type === 'item') {
       const kind = VALS.icon && L.custom ? '__custom' : (MC_DEF[L.item] ? L.item : 'diamond'); mcItem(g, kind, L.tint ? aiCol(L.tint, '') : '', 0, 0, S, 0, L.loop === 'glint' ? ((t - L.start - .5) % 2) / .45 : -1);
     } else if (L.type === 'shape') {
@@ -3859,7 +4052,7 @@ function renderSpec(g, W, H, t, spec, u) {
 let aiMeasureCv = null;
 function aiBox(L, W, H) {
   const cx = L.x * W, cy = L.y * H, S = L.size * H; if (!aiMeasureCv) aiMeasureCv = document.createElement('canvas'); const m = aiMeasureCv.getContext('2d');
-  if (L.type === 'text') { const f = AI_FONTS[L.font] || AI_FONTS.display; m.font = `${f[1]} ${S}px "${f[0]}", Inter, sans-serif`; const lines = String(L.text).split('\n'); const w = Math.min(Math.max(...lines.map(l => m.measureText(l).width)) * (L.font === 'game3d' || L.font === 'glow' ? 1.04 : 1), (L.maxW || .9) * W), h = S * 1.08 * lines.length + (L.font === 'game3d' || L.font === 'glow' ? S * .1 : 0); const x0 = L.align === 'left' ? cx : L.align === 'right' ? cx - w : cx - w / 2; return { x0, y0: cy - h / 2, x1: x0 + w, y1: cy + h / 2 }; }
+  if (L.type === 'text') { const b = txBox(L, W, H), x0 = L.align === 'left' ? cx : L.align === 'right' ? cx - b.w : cx - b.w / 2, c2 = cy + (b.dy || 0); return { x0, y0: c2 - b.h / 2, x1: x0 + b.w, y1: c2 + b.h / 2 }; }
   if (L.type === 'item' || L.type === 'avatar') return { x0: cx - S / 2, y0: cy - S / 2, x1: cx + S / 2, y1: cy + S / 2 };
   if (L.type === 'counter') { m.font = `400 ${S}px "Lilita One", sans-serif`; const w = m.measureText(`${L.prefix}${Number(L.to || 0).toLocaleString('pl-PL')}${L.suffix}`).width; return { x0: cx - w / 2, y0: cy - S * .55, x1: cx + w / 2, y1: cy + S * .6 }; }
   if (L.type === 'button') return { x0: cx - L.w * W / 2, y0: cy - L.h * H / 2, x1: cx + L.w * W / 2, y1: cy + L.h * H / 2 };
@@ -3868,6 +4061,32 @@ function aiBox(L, W, H) {
   return null;
 }
 const AI_DECOR = ['panel', 'splash', 'rays', 'line', 'burst', 'particles', 'cursor'];
+// typography pass: one finished style per text, a clear title > subtitle hierarchy, readable colours, long titles on two lines
+function aiTypo(L, notes) {
+  const FILLER = /^(start|tekst|text|title|tytuł|napis|reklama|odczyt|lorem ipsum|placeholder|subtitle|podtytuł|opis)$/i;
+  L.filter(x => x.type === 'text' && FILLER.test(x.text.trim())).forEach(x => { L.splice(L.indexOf(x), 1); notes.push(`usunięto pusty napis „${x.text.trim()}”`); });
+  const texts = L.filter(x => x.type === 'text').sort((a, b) => b.size - a.size); if (!texts.length) return;
+  const game = L.some(x => x.type === 'item' || x.type === 'character') || texts.some(x => TX_PIXEL[x.style]);
+  texts.forEach(x => { if (!TX_STYLES.includes(x.style)) x.style = TX_FROM_FONT[x.font] || (game ? 'mc' : 'thumb'); });
+  const [title, ...rest] = texts, before = texts.map(x => x.style).join();
+  if (['tag', 'clean', 'tooltip'].includes(title.style) && rest.length) title.style = game ? 'mcTitle' : 'thumb';
+  if (title.style === 'mc' && title.size >= .09) title.style = 'mcTitle';
+  title.size = clamp(title.size, ['tag', 'clean', 'tooltip'].includes(title.style) ? .05 : .13, .22);
+  if (['mcLogo', 'caption'].includes(title.style)) title.text = title.text.toUpperCase();
+  if (!title.text.includes('\n') && [...title.text].length > (title.style === 'mcLogo' ? 9 : 14) && title.text.includes(' ')) { const w = title.text.split(' '); let best = 1, bd = 1e9; for (let i = 1; i < w.length; i++) { const d = Math.abs(w.slice(0, i).join(' ').length - w.slice(i).join(' ').length); if (d < bd) { bd = d; best = i; } } title.text = w.slice(0, best).join(' ') + '\n' + w.slice(best).join(' '); notes.push('długi tytuł podzielono na dwie linie'); }
+  const pixelTitle = !!TX_PIXEL[title.style];
+  rest.forEach((x, i) => {
+    const ok = pixelTitle ? ['mc', 'tooltip', 'tag'] : ['clean', 'tag', 'caption', 'script'];
+    if (!ok.includes(x.style)) x.style = pixelTitle ? 'mc' : (i === 0 ? 'clean' : 'tag');
+    if (x.style === 'script' && title.style === 'script') x.style = 'clean';
+    x.size = clamp(x.size, x.style === 'script' ? .07 : .05, Math.max(.05, Math.min(x.style === 'script' ? .11 : .08, title.size * .5)));
+    x.text = x.text.replace(/\n/g, ' ');
+  });
+  // the same look for every subtitle
+  if (rest.length > 1 && rest[0].style === rest[1].style && rest[0].style === 'clean') rest[1].style = 'tag';
+  texts.forEach(x => { if (x.style === 'tag' || x.style === 'tooltip') return; if (txLum(x.color) < .42) { if (x !== title && !pixelTitle) x.style = 'tag'; else x.color = mix(x.color, '#ffffff', .6); notes.push('ciemny napis rozjaśniono, żeby był czytelny'); } });
+  if (texts.map(x => x.style).join() !== before) notes.push('dobrano style napisów: ' + texts.map(x => x.style).join(', '));
+}
 function aiPolish(spec) {
   const [W, H] = ST.fmt === '9:16' ? [1080, 1920] : ST.fmt === '1:1' ? [1080, 1080] : [1920, 1080], gap = .028 * H, mx = .06 * W, my = .07 * H, notes = [];
   let L = spec.layers.map(x => ({ ...x }));
@@ -3876,11 +4095,19 @@ function aiPolish(spec) {
   if (texts.length > 3) { texts.slice(3).forEach(x => { L.splice(L.indexOf(x), 1); }); notes.push(`usunięto ${texts.length - 3} nadmiarowe napisy`); }
   L.forEach(x => { if (x.type === 'text') { x.size = clamp(x.size, .045, .24); x.maxW = clamp(x.maxW || .88, .3, .88); } if (x.type === 'item') x.size = clamp(x.size, .1, .48); if (x.type === 'counter') x.size = clamp(x.size, .1, .3); });
   // a number shown as a counter is not repeated as text
-  L.filter(x => x.type === 'counter').forEach(c => { if (!/^[\p{L}\d$€£#x+\-: ]{0,6}$/u.test(c.prefix)) c.prefix = ''; if (!/^[\p{L}\d%$€£ .+\-]{0,12}$/u.test(c.suffix)) c.suffix = ''; const sw = c.suffix.trim().toLowerCase(); if (sw.length > 1) L.filter(x => x.type === 'text' && x.text.toLowerCase().replace(/\s+/g, ' ').trim() === sw).forEach(x => { L.splice(L.indexOf(x), 1); notes.push('usunięto napis powtarzający licznik'); }); const num = String(Math.round(Number(c.to) || 0)); L.filter(x => x.type === 'text' && x.text.includes(num)).forEach(x => { const rest = x.text.replace(num, '').replace(/^\s+|\s+$/g, '').replace(/\n+/g, ' '); if (rest.length < 2) L.splice(L.indexOf(x), 1); else x.text = rest; notes.push(`liczba ${num} nie powtarza się już w napisie`); }); });
+  L.filter(x => x.type === 'counter').forEach(c => { if (!/^[\p{L}\d$€£#x+\-: ]{0,6}$/u.test(c.prefix)) c.prefix = ''; if (!/^[\p{L}\d%$€£ .+\-]{0,12}$/u.test(c.suffix)) c.suffix = ''; const num = String(Math.round(Number(c.to) || 0)); L.filter(x => x.type === 'text' && x.text.includes(num)).forEach(x => { const rest = x.text.replace(num, '').replace(/^\s+|\s+$/g, '').replace(/\n+/g, ' '); if (rest.length < 2) L.splice(L.indexOf(x), 1); else x.text = rest; notes.push(`liczba ${num} nie powtarza się już w napisie`); }); const sw = c.suffix.trim().toLowerCase(); if (sw.length > 1) L.filter(x => x.type === 'text' && x.text.toLowerCase().replace(/\s+/g, ' ').trim() === sw).forEach(x => { L.splice(L.indexOf(x), 1); notes.push('usunięto napis powtarzający licznik'); }); });
+  aiTypo(L, notes);
   // decorations follow the element they sit behind
   const content = L.filter(x => !AI_DECOR.includes(x.type) && x.type !== 'shape' && aiBox(x, W, H));
   const owner = new Map(); L.filter(x => ['panel', 'splash', 'line', 'burst', 'rays'].includes(x.type)).forEach(d => { let best = null, bd = 1e9; content.forEach(c => { const b = aiBox(c, W, H), dx = Math.max(b.x0 - d.x * W, 0, d.x * W - b.x1), dy = Math.max(b.y0 - d.y * H, 0, d.y * H - b.y1), dist = Math.hypot(dx, dy); if (dist < bd) { bd = dist; best = c; } }); if (best && bd < .18 * H) owner.set(d, best); });
-  const shift = (c, dy) => { c.y += dy / H; owner.forEach((o, d) => { if (o === c) { d.y += dy / H; if (d.at !== undefined) { } } }); };
+  const shift = (c, dy, dx = 0) => { c.y += dy / H; c.x += dx / W; owner.forEach((o, d) => { if (o === c) { d.y += dy / H; d.x += dx / W; } }); };
+  // a centred composition becomes one clean column: same axis, even gaps, centred in the frame
+  if (content.length >= 2 && content.every(c => Math.abs(c.x - .5) < .2 && (c.type !== 'text' || (c.align || 'center') === 'center'))) {
+    const order = content.slice().sort((a, b) => a.y - b.y), bx = order.map(c => aiBox(c, W, H)), gapOf = (a, b) => (a.type === 'text' && b.type === 'text' ? .03 : b.type === 'button' || a.type === 'button' ? .045 : .035) * H;
+    let total = 0; order.forEach((c, i) => { total += bx[i].y1 - bx[i].y0 + (i ? gapOf(order[i - 1], c) : 0); });
+    let y = H * .5 - total / 2; order.forEach((c, i) => { if (i) y += gapOf(order[i - 1], c); const h = bx[i].y1 - bx[i].y0; shift(c, y + h / 2 - (bx[i].y0 + bx[i].y1) / 2, (.5 - c.x) * W); y += h; });
+    notes.push('ułożono wszystko w równą kolumnę');
+  }
   // unstack: anything that overlaps horizontally is pushed below the element above it
   content.sort((a, b) => aiBox(a, W, H).y0 - aiBox(b, W, H).y0); let moved = 0;
   for (let j = 1; j < content.length; j++) for (let i = 0; i < j; i++) { const A = aiBox(content[i], W, H), B = aiBox(content[j], W, H), ox = Math.min(A.x1, B.x1) - Math.max(A.x0, B.x0); if (ox > .12 * Math.min(A.x1 - A.x0, B.x1 - B.x0) && B.y0 < A.y1 + gap) { shift(content[j], A.y1 + gap - B.y0); moved++; } }
@@ -3949,7 +4176,10 @@ Reply with ONE JSON object:
 Every layer: {"type", "x", "y", "start", "end" (seconds; default = duration), "in": "pop|fade|slideUp|slideDown|slideLeft|slideRight|zoom|drop|spin|type|wipe|none", "inDur" (seconds, default 0.45; ~1 for "type"), "out": same values (plays in the last 0.4 s before end), "loop": "none|float|pulse|wiggle|spin|glint|shake", "rotate" (degrees), "color": "#rrggbb", "color2": "#rrggbb" (gradient end, optional)}
 
 Types and their extra fields:
-- "text": text ("\\n" = new line), size, font: "display" (tall condensed bold) | "bold" (heavy geometric) | "wide" (wide modern) | "chunky" (rounded game-like) | "pixel" (pixel game font with hard shadow) | "game3d" (blocky extruded 3D title) | "glow" (3D with strong glow in color2) | "script" (handwritten); align: left|center|right; maxW (fraction of width); stroke: true|false; glowColor.
+- "text": text ("\\n" = new line), size, style (a finished, professionally designed look; pick by role):
+    game look (Minecraft-like videos): "mcLogo" = huge chunky 3D block letters with texture (hero titles, 1-2 short words, UPPERCASE) | "mcTitle" = bold pixel title with banded colour and depth | "mc" = crisp pixel game text with hard shadow (subtitles, labels, chat lines) | "tooltip" = dark game tooltip box with pixel text (first line = name in color, next lines grey: item stats, descriptions)
+    creator look: "thumb" = YouTube-thumbnail title: chunky rounded font, thick dark outline, 3D depth, glossy gradient | "caption" = Shorts caption: heavy uppercase white/colour with black outline | "neon" = glowing neon sign | "script" = handwritten (names, signatures) | "clean" = refined small subtitle | "tag" = coloured pill label (small labels like NOWOŚĆ, ODCINEK 12, LIVE; color = pill colour)
+  color = main colour (light, saturated colours read best), color2 = optional bottom colour; align: left|center|right; maxW (fraction of width). Entrances for texts: "letters" (letters pop in one by one) looks great on titles; loop "wave" makes letters ride a wave.
 - "item": item: diamond|emerald|gold|sword|pickaxe|bow|apple|heart|potion|gift (pixel game items), size; tint only to recolour (omit to keep the natural colour); loop "glint"/"float" gives life; custom: true uses the viewer's uploaded item picture.
 - "shape": shape: star|heart|diamond|bolt|spark (glossy stickers; size) | circle | ring (size; with in "wipe" it draws itself) | rect | roundrect (w, h, radius 0..0.5) | arrow (size; aim with rotate).
 - "panel": w, h, style: "glass" (dark glossy card, color→color2) | "game" (grey game-menu window) | "sticker" (flat colour, thick outline, hard shadow) | "card" (flat colour card with soft shadow).
@@ -3971,11 +4201,12 @@ B) hero left, text right: hero at x 0.27, y 0.5; texts align "left" at x 0.47, m
 C) toast in a corner: panel (style glass or game) w 0.42 h 0.17 at x 0.74 y 0.14; small item at x 0.58 y 0.14 size 0.1; texts align "left" at x 0.64 (title y 0.115 size 0.05, line 2 y 0.17 size 0.035).
 D) big title: one title at x 0.5 y 0.46 size 0.16-0.22 with splash or rays behind, subtitle at y 0.62.
 E) call to action: avatar or item at y 0.3, button (w 0.34 h 0.11) at x 0.5 y 0.62 with a cursor that clicks it.
+Text styling: one title (biggest) + at most one subtitle + at most one small label. Title in mcLogo/mcTitle/thumb/caption/neon/script; subtitles in mc or tooltip (under a game title) or clean/tag (under a creator title). Never mix more than two styles. Never dark text.
 Texts: at most 3; short natural Polish a creator would really show (e.g. "NOWY REKORD", "Przetrwałem 100 dni", "Subskrybuj!", "Witaj na kanale", the creator's nick); never filler or random words like REKLAMA, START, ODCZYT, TEKST, TITLE; never show the same information twice (a counter and the same number in a text).
 Work like a senior motion designer: one hero element and a clear reading order; 2-3 colours plus white that fit the topic; big readable text (titles 0.12-0.22, labels at least 0.05); text never overlaps other text and never runs off the frame; balanced composition with margins; stagger entrances by 0.1-0.3 s; everything readable by ~40% of the duration, then hold, then exits near the end; a few accents (burst, rays, stickers, glint) without clutter; texts in Polish unless the request uses another language; use the creator's own words and nick from the request; background "none" unless the request asks for one, because these overlays go on top of the creator's video.
 
 Example (shape only, not a design to copy):
-{"title":"Nowy rekord","duration":5,"background":"none","layers":[{"type":"rays","x":0.5,"y":0.42,"color":"#ffd23f","alpha":0.08,"in":"fade"},{"type":"item","item":"gold","x":0.5,"y":0.38,"size":0.3,"in":"pop","loop":"glint"},{"type":"text","text":"NOWY REKORD","font":"glow","x":0.5,"y":0.66,"size":0.15,"color":"#ffe14d","color2":"#ff8a00","start":0.3,"in":"zoom"},{"type":"burst","kind":"confetti","x":0.5,"y":0.4,"at":0.35,"count":90,"color":"#ffd23f","color2":"#ffffff"}]}`;
+{"title":"Nowy rekord","duration":5,"background":"none","layers":[{"type":"rays","x":0.5,"y":0.42,"color":"#ffd23f","alpha":0.08,"in":"fade"},{"type":"item","item":"gold","x":0.5,"y":0.38,"size":0.3,"in":"pop","loop":"glint"},{"type":"text","text":"NOWY REKORD","style":"mcLogo","x":0.5,"y":0.64,"size":0.15,"color":"#ffd23f","start":0.3,"in":"letters"},{"type":"text","text":"Przetrwałem 100 dni","style":"mc","x":0.5,"y":0.76,"size":0.055,"color":"#ffffff","start":0.8,"in":"fade"},{"type":"burst","kind":"confetti","x":0.5,"y":0.4,"at":0.35,"count":90,"color":"#ffd23f","color2":"#ffffff"}]}`;
 function aiPromptText(req) { return `You design overlay animations for YouTube and TikTok creators (many make Minecraft videos). Design ONE animation for the request below.\nAspect ratio of the frame: ${ST.fmt}.\n\n${AI_SCHEMA}\n\nRequest from the creator: «${req}»\n\nReply with only the JSON object.`; }
 function aiCritiqueText(req, spec, times, withImages) {
   const notes = (spec._notes || []).length ? `\nThe page's layout checker already fixed: ${spec._notes.join('; ')}. Keep those fixes.` : '';
