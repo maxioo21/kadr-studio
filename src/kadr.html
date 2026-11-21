@@ -129,9 +129,11 @@ button{cursor:pointer}
 .acard.on .stage{box-shadow:0 0 0 2px var(--acc)}
 .acard .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .acard .box.m{background:none;box-shadow:none;width:52%;aspect-ratio:3/4}
-.acard .box,.acard .ch{animation:none;will-change:transform}
+.acard .box,.acard .ch{animation:var(--a) var(--d,1.8s) linear infinite;animation-delay:var(--dl,0s);will-change:transform}
+.acard .stage .ghost{position:absolute;animation:none!important;pointer-events:none}
+.acard .stage .ghost.g1{opacity:.16}.acard .stage .ghost.g2{opacity:.3}
+.acard:hover .box:not(.ghost),.acard.on .box:not(.ghost){animation-duration:calc(var(--d,1.8s) * .85)}
 .acard .ch{display:inline-block}
-.acard:hover .box,.acard.on .box,.acard:hover .ch,.acard.on .ch,.acard:focus-visible .box,.acard:focus-visible .ch{animation:var(--a) var(--d,1.8s) linear infinite}
 .acard .stage{background:radial-gradient(120% 80% at 50% 115%,#2b3550 0,#1d1f27 60%)}
 /* player */
 #stage{grid-area:stage}
@@ -254,7 +256,7 @@ input[type=color]{width:100%;height:28px;border:0;border-radius:5px;background:v
 #toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,16px);background:#f2f2f5;color:#111;font-weight:600;padding:8px 14px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:60;max-width:calc(100% - 32px);text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.5)}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 .kbd{font:500 10.5px/1 var(--f-mono);background:var(--raise);border-radius:3px;padding:2px 5px;color:var(--dim)}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}.acard .box{animation:none!important}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}.acard .box,.acard .ch{animation:none!important}}
 /* phone */
 @media (max-width:880px){
   body{overflow:auto}
@@ -1789,7 +1791,7 @@ function tick(now) {
     T = nt;
     if (T >= total) { T = total; renderFrame(T); setPlaying(false); if (exporting) finishExport(); }
   }
-  if (hoverThumb && !exporting) thumbOne(hoverThumb.cv, (now - hoverThumb.t0) / 1000);
+  if (!exporting) thumbTick(now);
   if (playing || needsRender) {
     needsRender = false; const r0 = performance.now(); renderFrame(T); const dt = performance.now() - r0; updateSelBox();
     if (playing && !exporting && (S.settings.preview || 'auto') === 'auto') {
@@ -2084,7 +2086,7 @@ function targetClip() {
   return activeClips(T)[0] || S.clips[0] || null;
 }
 function renderLib() {
-  renderTabs(); hoverThumb = null;
+  renderTabs();
   const cats = LIB_CATS()[libTab] || [];
   if (cats.length && !cats.includes(libCat[libTab])) libCat[libTab] = cats[0];
   $('#libcats').replaceChildren(...cats.map(c => h('button', { class: `lc${libCat[libTab] === c ? ' on' : ''}`, title: c, onclick: () => { libCat[libTab] = c; renderLib(); } }, c)));
@@ -2187,15 +2189,13 @@ function libSticker(b, cat) {
 function thumbCard(kind, v, name, on, onAdd, onClick) {
   const cv = h('canvas', { 'data-thumb': kind, 'data-v': v, width: 128, height: 128 });
   const card = h('button', { class: `card${on ? ' on' : ''}`, title: name, onclick: onClick || onAdd }, h('div', { class: 'thw' }, cv, plusBtn('Dodaj', onAdd)), h('span', { class: 'nm' }, name));
-  card.addEventListener('pointerenter', () => { hoverThumb = { cv, t0: performance.now() }; });
-  card.addEventListener('pointerleave', () => { if (hoverThumb && hoverThumb.cv === cv) { hoverThumb = null; thumbOne(cv, null); } });
   return card;
 }
 function libFx(b, cat) {
   const ids = cat === 'Popularne' ? FX_POPULAR : EFFECTS.filter(e => e.cat === cat).map(e => e.id);
   const selAdj = sel && sel.kind === 'adj' ? findAdj(sel.id) : null;
   const curId = selAdj && selAdj.kind === 'fx' ? selAdj.effect.id : -1;
-  b.append(h('div', { class: 'hint' }, 'Najedź, żeby zobaczyć efekt. Kliknij, żeby dodać go na oś czasu', sel && sel.kind === 'clip' ? ' (na zaznaczony klip).' : ' (od miejsca wskaźnika).'));
+  b.append(h('div', { class: 'hint' }, 'Kliknij efekt, żeby dodać go na oś czasu', sel && sel.kind === 'clip' ? ' (na zaznaczony klip).' : ' (od miejsca wskaźnika).'));
   b.append(h('div', { class: 'grid' }, ids.map(id => { const e = EFFECTS.find(x => x.id === id); return thumbCard('fx', id, e.name, curId === id, () => addEffectSeg(id)); })));
   scheduleThumbs();
 }
@@ -2217,7 +2217,7 @@ function libTrans(b, cat) {
   if (!c) { const tc = targetClip(); const i = tc ? S.clips.indexOf(tc) : -1; if (i >= 0 && i < S.clips.length - 1) c = tc; else if (S.clips.length > 1) c = S.clips[S.clips.length - 2]; }
   const ids = TR_CATS[cat];
   if (!c || S.clips.length < 2) b.append(h('div', { class: 'hint' }, 'Przejścia działają między dwoma klipami. Dodaj co najmniej dwa, a na razie obejrzyj podglądy.'));
-  else b.append(h('div', { class: 'hint' }, `Najedź, żeby zobaczyć. Kliknij, żeby wstawić między klip ${S.clips.indexOf(c) + 1} i ${S.clips.indexOf(c) + 2}.`));
+  else b.append(h('div', { class: 'hint' }, `Kliknij, żeby wstawić przejście między klip ${S.clips.indexOf(c) + 1} i ${S.clips.indexOf(c) + 2}.`));
   b.append(h('div', { class: 'grid' }, ids.map(id => { const t = TRANS.find(x => x.id === id); return thumbCard('trans', id, t.name, c && c.trans.type === id, () => { if (!c || S.clips.length < 2) return toast('Dodaj co najmniej dwa klipy'); c.trans.type = id; c.trans.dur = Math.max(c.trans.dur, .6); if (!sel || sel.kind !== 'trans') sel = { kind: 'trans', id: c.id }; touch(); renderLib(); renderInspector(); commit(); previewTransition(c); }); })));
   if (c && S.clips.length > 1) b.append(h('div', { class: 'list' },
     slider('Czas trwania', () => c.trans.dur, v => c.trans.dur = v, .1, 2.5, .05, fmtS, { timeline: true }),
@@ -2306,23 +2306,33 @@ function textAnimKF(kind, type) {
   kfRule(base, blk); chars.forEach((fr, c) => kfRule(`${base}-c${c}`, fr));
   return base;
 }
-function animCard(kind, type, label, on, isText, onclick) {
+function animCard(kind, type, label, on, isText, onclick, idx = 0) {
   const stage = h('div', { class: 'stage' });
-  const dur = kind === 'loop' ? '2.4s' : '1.8s';
+  const dur = kind === 'loop' ? '2.4s' : '1.8s', dl = `${(-idx * .23).toFixed(2)}s`;
   if (type === 'none') stage.append(h('div', { class: 'none' }));
   else if (isText) {
     const name = textAnimKF(kind, type);
-    const box = h('div', { class: 'box txt', style: `--a:${name};--d:${dur}` }, [...PREVIEW_WORD].map((ch, i) => h('span', { class: 'ch', style: `--a:${name}-c${i};--d:${dur}` }, ch)));
+    const box = h('div', { class: 'box txt', style: `--a:${name};--d:${dur};--dl:${dl}` }, [...PREVIEW_WORD].map((ch, i) => h('span', { class: 'ch', style: `--a:${name}-c${i};--d:${dur};--dl:${dl}` }, ch)));
     stage.append(box);
   } else {
     const name = clipAnimKF(kind, type);
-    stage.append(h('div', { class: 'box m', style: `--a:${name};--d:${dur}`, html: MASCOT }));
+    // ghosts: faint copies at the start / middle of the move, so the direction is visible even on a still card
+    const samples = kind === 'in' ? [0, .4] : kind === 'out' ? [.6, 0] : [.6, 1.8];
+    samples.forEach((v, gi) => {
+      const st = newAnimState();
+      if (kind === 'loop') clipAnimLoop(type, v, 2.4, st); else clipAnimPart(type, v, st);
+      const big = Math.max(Math.abs(st.sc * st.sx), Math.abs(st.sc * st.sy)); if (big > 1.45) { const k = 1.45 / big; st.sc *= k; }
+      if (Math.abs(st.sc) < .3) st.sc = .3 * Math.sign(st.sc || 1);
+      const css = stateCss(Object.assign({}, st, { op: 1, blur: 0, flash: 0 }), 2.17, 1.63);
+      stage.append(h('div', { class: `box m ghost g${gi + 1}`, style: css, html: MASCOT }));
+    });
+    stage.append(h('div', { class: 'box m', style: `--a:${name};--d:${dur};--dl:${dl}`, html: MASCOT }));
   }
   return h('button', { class: `acard${on ? ' on' : ''}`, title: label, onclick }, stage, h('span', { class: 'nm' }, label));
 }
 function animPicker(kind, list, get, set, after, isText) {
   const g = h('div', { class: 'anim-grid' });
-  const draw = () => g.replaceChildren(...list.map(([v, l]) => animCard(kind, v, l, get() === v, isText, () => { set(v); draw(); needsRender = true; after && after(); commit(); })));
+  const draw = () => g.replaceChildren(...list.map(([v, l], i) => animCard(kind, v, l, get() === v, isText, () => { set(v); draw(); needsRender = true; after && after(); commit(); }, i)));
   draw(); return g;
 }
 
@@ -2360,7 +2370,7 @@ function animSection(A, dur, isText, start, LIN, LOUT, LLOOP) {
     const replay = () => { if (kind === 'out') seek(Math.max(start, start + dur - A.outDur - .4)); else seek(start); setPlaying(true); if (kind !== 'loop') setTimeout(() => { if (playing) setPlaying(false); }, (kind === 'in' ? A.inDur + .8 : A.outDur + .6) * 1000); };
     wrap.replaceChildren(
       segmented([['in', 'Wejście'], ['out', 'Wyjście'], ['loop', 'W pętli']], () => animSub, v => { animSub = v; draw(); }),
-      h('div', { class: 'hint' }, 'Najedź na kafelek, żeby zobaczyć ruch. Kliknij, żeby nałożyć.'),
+      h('div', { class: 'hint' }, 'Każdy kafelek pokazuje ruch, a blade postacie pokazują, skąd i dokąd. Kliknij, żeby nałożyć.'),
       animPicker(kind, list, () => A[kind], v => A[kind] = v, () => { draw(); replay(); }, isText),
       kind !== 'loop' && A[kind] !== 'none' ? slider('Czas trwania', () => kind === 'in' ? A.inDur : A.outDur, v => { if (kind === 'in') A.inDur = v; else A.outDur = v; }, .1, Math.max(.3, dur * .8), .05, fmtS) : null
     );
@@ -2629,7 +2639,7 @@ function pickBgImage(c) {
    Thumbnails for filters / effects / transitions (rendered with the real shaders)
    ========================================================= */
 const HIT_FX = new Set([47, 53, 54, 55, 56, 57, 58, 62, 36]);
-let thumbTimer = 0, patA = null, patB = null, hoverThumb = null, previewClip = null;
+let thumbTimer = 0, patA = null, patB = null, previewClip = null;
 function scheduleThumbs() { clearTimeout(thumbTimer); thumbTimer = setTimeout(renderThumbs, 60); }
 function sceneTex(key) {
   const m = getGenMedia(key); m.gen(2.2);
@@ -2644,32 +2654,67 @@ function thumbSourceClip() {
   if (!previewClip) { const m = getGenMedia('city'); previewClip = newClip(m); previewClip.id = 'preview'; previewClip._start = 0; previewClip._dur = 4; }
   return previewClip;
 }
-function thumbOne(cv, time) {
-  if (!glOk || exporting || !cv.isConnected) return;
-  const kind = cv.dataset.thumb, tw = cv.width, th = cv.height;
-  if (R.cv.width < tw || R.cv.height < th) return;
+/* render one preview frame into the corner of the GL canvas; phase = transition progress, or effect time */
+function thumbRender(kind, v, phase, tw, th) {
   if (kind === 'trans') {
     if (!patA) { patA = sceneTex('sunset'); patB = sceneTex('city'); }
-    const id = +cv.dataset.v;
-    const p = time == null ? ([2, 3, 27, 41].includes(id) ? .3 : .5) : clamp(((time % 1.8) - .25) / 1.1, 0, 1);
-    drawTransition(patA.tex, patB.tex, p, +cv.dataset.v, [tw, th]);
-  } else {
-    const c = thumbSourceClip(); if (!c) return;
-    const hit = kind === 'fx' && HIT_FX.has(+cv.dataset.v);
-    const lt = time == null ? (kind === 'fx' ? (hit ? .05 : .62) : 1) : (hit ? time % .9 : time % 3);
-    const src = clipSource(c, (c._start || 0) + (c.type === 'video' ? 0 : (time == null ? Math.max(0, T - (c._start || 0)) : time)));
-    if (!src) return;
-    const base = Object.assign({}, c, { _dur: c._dur || 3 });
-    const v = cv.dataset.v;
-    const over = kind === 'fx' ? { effect: { id: +v, amt: .85, speed: 1 }, noAnim: true } : { filter: { id: v, amt: c.filter.id === v ? c.filter.amt : .85 }, noAnim: true };
-    drawLayer(base, src, lt, [tw, th], null, over);
+    drawTransition(patA.tex, patB.tex, phase, +v, [tw, th]);
+    return true;
   }
-  const g = cv.getContext('2d'); g.drawImage(R.cv, 0, R.cv.height - th, tw, th, 0, 0, tw, th);
+  const c = thumbSourceClip(); if (!c) return false;
+  const lt = phase == null ? 1 : phase;
+  const src = clipSource(c, (c._start || 0) + (c.type === 'video' ? 0 : (phase == null ? Math.max(0, T - (c._start || 0)) : 1 + phase)));
+  if (!src) return false;
+  const base = Object.assign({}, c, { _dur: c._dur || 3 });
+  const over = kind === 'fx' ? { effect: { id: +v, amt: .9, speed: 1 }, noAnim: true } : { filter: { id: v, amt: c.filter.id === v ? c.filter.amt : .85 }, noAnim: true };
+  drawLayer(base, src, lt, [tw, th], null, over);
+  return true;
+}
+function framePhases(kind, v) {
+  if (kind === 'filter') return [null];
+  if (kind === 'trans') { const f = [0, 0, 0]; for (let i = 1; i <= 11; i++) f.push(easeInOut(i / 12)); f.push(1, 1, 1); return f; }
+  if (HIT_FX.has(+v)) return Array.from({ length: 12 }, (_, i) => i * .6 / 12);
+  return Array.from({ length: 16 }, (_, i) => i * 2.4 / 16);
+}
+const TF = new Map(); let tfQueue = [], tfStep = -1;
+function thumbKey(cv) {
+  const kind = cv.dataset.thumb, v = cv.dataset.v;
+  if (kind === 'trans') return 'trans:' + v;
+  const c = thumbSourceClip();
+  return `${kind}:${v}:${c ? c.id + ':' + c.mediaId + ':' + c.filter.amt : 'none'}`;
+}
+function buildFrames(cv) {
+  const key = cv._key; if (TF.has(key)) return;
+  const kind = cv.dataset.thumb, v = cv.dataset.v, tw = cv.width, th = cv.height;
+  if (R.cv.width < tw || R.cv.height < th) return;
+  const ph = framePhases(kind, v);
+  const strip = document.createElement('canvas'); strip.width = tw * ph.length; strip.height = th; const g = strip.getContext('2d');
+  for (let i = 0; i < ph.length; i++) { if (!thumbRender(kind, v, ph[i], tw, th)) return; g.drawImage(R.cv, 0, R.cv.height - th, tw, th, i * tw, 0, tw, th); }
+  TF.set(key, { strip, n: ph.length, tw, th });
+  if (TF.size > 56) TF.delete(TF.keys().next().value);
   needsRender = true;
 }
+function drawThumbFrame(cv, idx) {
+  const f = TF.get(cv._key); if (!f) return false;
+  const i = idx % f.n; if (cv._fi === i) return true; cv._fi = i;
+  cv.getContext('2d').drawImage(f.strip, i * f.tw, 0, f.tw, f.th, 0, 0, cv.width, cv.height);
+  return true;
+}
+function thumbTick(now) {
+  if (!glOk) return;
+  if (tfQueue.length) {
+    const t0 = performance.now();
+    while (tfQueue.length && performance.now() - t0 < 10) { const cv = tfQueue.shift(); if (cv.isConnected) { buildFrames(cv); drawThumbFrame(cv, 0); } }
+  }
+  const step = Math.floor(now / 90);
+  if (step === tfStep) return; tfStep = step;
+  for (const cv of document.querySelectorAll('canvas[data-thumb]')) if (cv._key) drawThumbFrame(cv, step + (cv._off || 0));
+}
+function thumbOne(cv) { cv._key = thumbKey(cv); cv._fi = -1; if (!TF.has(cv._key)) tfQueue.push(cv); }
 function renderThumbs() {
   if (!glOk || exporting) return;
-  for (const cv of document.querySelectorAll('canvas[data-thumb]')) thumbOne(cv, null);
+  tfQueue = [];
+  [...document.querySelectorAll('canvas[data-thumb]')].forEach((cv, i) => { cv._off = (i * 5) % 17; thumbOne(cv); });
 }
 
 /* =========================================================
@@ -2900,7 +2945,7 @@ async function applyEditPreset(P) {
   toast(fromMusic ? `Preset „${P.name}” dopasowany do rytmu muzyki` : `Preset „${P.name}” nałożony (bez muzyki: rytm 120 BPM)`, 3500);
 }
 function libGotowe(b, cat) {
-  b.append(h('div', { class: 'hint' }, 'Najedź, żeby zobaczyć efekt. Kliknij, a preset nałoży się na cały film. Gdy na osi jest muzyka, uderzenia trafią w jej rytm.'));
+  b.append(h('div', { class: 'hint' }, 'Kliknij, a preset nałoży się na cały film. Gdy na osi jest muzyka, uderzenia trafią w jej rytm.'));
   b.append(h('div', { class: 'grid' }, EDIT_PRESETS.filter(p => p.cat === cat).map(P => { const card = thumbCard('fx', P.hero, P.name, false, () => applyEditPreset(P)); card.title = P.name + ': ' + P.d; return card; })));
   b.append(h('div', { class: 'pills' }, h('button', { class: 'pill', onclick: () => { const n = S.adj.filter(a => a.preset).length; S.adj = S.adj.filter(a => !a.preset); touch(true); commit(); toast(n ? 'Usunięto efekty presetu' : 'Brak efektów presetu do usunięcia'); } }, 'Usuń efekty presetu'), h('button', { class: 'pill', onclick: () => setLibTab('audio') }, 'Dodaj muzykę')));
   scheduleThumbs();
