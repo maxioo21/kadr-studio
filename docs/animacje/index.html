@@ -362,7 +362,7 @@ function pxCol(c) {
   if (v[0] === '#') r = { hex: v, a: 1 }; else { const m = v.match(/[\d.]+/g) || [0, 0, 0, 1]; r = { hex: '#' + m.slice(0, 3).map(x => (+x | 0).toString(16).padStart(2, '0')).join(''), a: m[3] !== undefined ? +m[3] : 1 }; }
   if (pxColCache.size > 500) pxColCache.clear(); pxColCache.set(c, r); return r;
 }
-function pxPrep(s) { s = String(s ?? '').replace(/…/g, '...').replace(/️/g, ''); const gl = [...s].map(ch => /\s/.test(ch) ? PXF.glyph(' ') : PXF.glyph(ch)); return gl.some(x => !x) ? null : gl; }
+function pxPrep(s) { s = String(s ?? '').replace(/…/g, '...').replace(/[️‍]/g, '').replace(/\p{Extended_Pictographic}/gu, '').replace(/^\s+|\s+$/g, ''); const gl = [...s].map(ch => /\s/.test(ch) ? PXF.glyph(' ') : PXF.glyph(ch)); return gl.some(x => !x) ? null : gl; }
 // width of a string in pixel units (spacing 1, bold adds 1 per glyph)
 const pxAdv = (x, bold) => (bold ? (x.b ? x.b.w : x.w + 1) : x.w);
 function pxUnits(gl, bold, ls = 0) { let w = 0; gl.forEach((x, i) => { w += pxAdv(x, bold) + (i < gl.length - 1 ? 1 + ls : 0); }); return Math.max(1, w); }
@@ -4068,12 +4068,14 @@ function aiTypo(L, notes) {
   const texts = L.filter(x => x.type === 'text').sort((a, b) => b.size - a.size); if (!texts.length) return;
   const game = L.some(x => x.type === 'item' || x.type === 'character') || texts.some(x => TX_PIXEL[x.style]);
   texts.forEach(x => { if (!TX_STYLES.includes(x.style)) x.style = TX_FROM_FONT[x.font] || (game ? 'mc' : 'thumb'); });
+  texts.forEach(x => { if (TX_PIXEL[x.style] || (game && !TX_STYLES.includes(x.style))) { const c = x.text.replace(/[️‍]/g, '').replace(/\p{Extended_Pictographic}/gu, '').split('\n').map(l => l.replace(/\s{2,}/g, ' ').trim()).filter(Boolean).join('\n'); if (c) x.text = c; else if (TX_PIXEL[x.style]) x.style = 'thumb'; } });
   const [title, ...rest] = texts, before = texts.map(x => x.style).join();
   if (['tag', 'clean', 'tooltip'].includes(title.style) && rest.length) title.style = game ? 'mcTitle' : 'thumb';
   if (title.style === 'mc' && title.size >= .09) title.style = 'mcTitle';
   title.size = clamp(title.size, ['tag', 'clean', 'tooltip'].includes(title.style) ? .05 : .13, .22);
   if (['mcLogo', 'caption'].includes(title.style)) title.text = title.text.toUpperCase();
   if (!title.text.includes('\n') && [...title.text].length > (title.style === 'mcLogo' ? 9 : 14) && title.text.includes(' ')) { const w = title.text.split(' '); let best = 1, bd = 1e9; for (let i = 1; i < w.length; i++) { const d = Math.abs(w.slice(0, i).join(' ').length - w.slice(i).join(' ').length); if (d < bd) { bd = d; best = i; } } title.text = w.slice(0, best).join(' ') + '\n' + w.slice(best).join(' '); notes.push('długi tytuł podzielono na dwie linie'); }
+  if (TX_PIXEL[title.style] && /\n/.test(title.text) && title.text.split('\n').some(l => !pxPrep(l)?.length)) title.text = title.text.replace(/\n+/g, ' ');
   const pixelTitle = !!TX_PIXEL[title.style];
   rest.forEach((x, i) => {
     const ok = pixelTitle ? ['mc', 'tooltip', 'tag'] : ['clean', 'tag', 'caption', 'script'];
@@ -4144,21 +4146,27 @@ async function aiOnline(prompt, signal) {
   }
   throw { code: 'rate_limited' };
 }
-let wlEngine = null, wlModel = null;
+let wlEngine = null, wlModel = null; const aiLocalId = () => (aiLocalSize === '3' ? 'Qwen2.5-3B-Instruct-q4f16_1-MLC' : 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC');
 async function aiLocal(prompt, signal) {
   if (!AI_HAS_GPU) throw { code: 'no_webgpu' };
   if (!wlEngine) { let ad = null; try { ad = await navigator.gpu.requestAdapter(); } catch (e) { } if (!ad) throw { code: 'no_webgpu' }; }
-  const id = aiLocalSize === '3' ? 'Qwen2.5-3B-Instruct-q4f16_1-MLC' : 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC';
+  const id = aiLocalId();
   if (!wlEngine || wlModel !== id) {
     aiLoadMsg = 'Ładuję bibliotekę AI…'; renderAiLoad();
     let webllm; try { webllm = await import('https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.87/+esm'); } catch (e) { throw { code: 'offline' }; }
-    try { wlEngine = await webllm.CreateMLCEngine(id, { initProgressCallback: p => { aiLoadMsg = `Pobieram i uruchamiam model: ${Math.round((p.progress || 0) * 100)}%`; renderAiLoad(); } }); wlModel = id; }
+    try { wlEngine = await webllm.CreateMLCEngine(id, { initProgressCallback: p => { aiLoadMsg = `Pobieram i uruchamiam model: ${Math.round((p.progress || 0) * 100)}%`; renderAiLoad(); } }, { context_window_size: 8192 }); wlModel = id; }
     catch (e) { wlEngine = null; throw { code: 'local_failed', message: String(e && e.message || e) }; }
     aiLoadMsg = ''; renderAiLoad();
   }
   const stop = () => { try { wlEngine.interruptGenerate(); } catch (e) { } }; signal?.addEventListener('abort', stop, { once: true });
-  try { const r = await wlEngine.chat.completions.create({ messages: [{ role: 'user', content: prompt }], response_format: { type: 'json_object' }, temperature: .7, max_tokens: 2200 }); if (signal?.aborted) throw { code: 'cancelled' }; return aiParse(r.choices[0].message.content); }
+  let r;
+  try { r = await wlEngine.chat.completions.create({ messages: [{ role: 'user', content: prompt }], response_format: { type: 'json_object' }, temperature: .7, max_tokens: 2400 }); }
+  catch (e) { if (signal?.aborted) throw { code: 'cancelled' }; const m = String(e && e.message || e); console.error(e);
+    if (/context.?window|prompt tokens/i.test(m)) throw { code: 'too_long', message: m };
+    if (/device|lost|gpu|webgpu|out of memory|oom/i.test(m)) { try { wlEngine.unload(); } catch (x) { } wlEngine = null; throw { code: 'gpu_lost', message: m }; }
+    throw { code: 'local_failed', message: m }; }
   finally { signal?.removeEventListener('abort', stop); }
+  if (signal?.aborted) throw { code: 'cancelled' }; return aiParse(r.choices[0].message.content);
 }
 async function aiCall(prompt, signal, images) {
   if (aiProv === 'online') return aiOnline(prompt, signal);
@@ -4230,22 +4238,28 @@ async function aiFrames(spec) {
   for (const t of times) { g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.fillStyle = '#111114'; g.fillRect(0, 0, W, H); try { renderSpec(g, W, H, t, spec, Math.min(W, H) / 1080); } catch (e) { console.error(e); } blobs.push(await new Promise(r => c.toBlob(r, 'image/jpeg', .86))); }
   return { times, blobs };
 }
-const AI_ERR = { offline: 'Brak połączenia z AI. Sprawdź internet i spróbuj ponownie.', online_error: 'Darmowe AI ma teraz problem. Spróbuj za chwilę albo wybierz tryb Na komputerze.', no_webgpu: 'Ta przeglądarka nie obsługuje WebGPU. Użyj Chrome lub Edge na komputerze albo trybu Online.', local_failed: 'Nie udało się uruchomić AI na tym komputerze (za mało pamięci karty graficznej?). Wybierz mniejszy model albo tryb Online.', not_granted: 'Nie zezwolono stronie na użycie Claude. Możesz to zmienić w uprawnieniach tej strony.', sampling_disabled: 'AI jest wyłączone dla tego konta.', rate_limited: 'Darmowe AI ma limit zapytań i teraz jest przekroczony. Odczekaj chwilę albo użyj trybu Na komputerze, który nie ma limitu.', refused: 'AI nie chce zrobić tego tematu. Zmień opis.', invalid_json: 'AI odpowiedziało w złym formacie. Kliknij Generuj jeszcze raz.', empty_spec: 'AI nie dało żadnych elementów. Opisz animację dokładniej.', session_expired: 'Zaloguj się ponownie do Claude.', image_rejected: 'Nie udało się wysłać klatek do sprawdzenia.' };
+const AI_ERR = { offline: 'Brak połączenia z AI. Sprawdź internet i spróbuj ponownie.', online_error: 'Darmowe AI ma teraz problem. Spróbuj za chwilę albo wybierz tryb Na komputerze.', no_webgpu: 'Ta przeglądarka nie obsługuje WebGPU, więc AI na komputerze tu nie ruszy. Otwórz stronę w Chrome lub Edge na komputerze.', local_failed: 'Nie udało się uruchomić AI na tym komputerze (za mało pamięci karty graficznej?). Wybierz mniejszy model 1 GB i spróbuj jeszcze raz.', not_granted: 'Nie zezwolono stronie na użycie Claude. Możesz to zmienić w uprawnieniach tej strony.', sampling_disabled: 'AI jest wyłączone dla tego konta.', rate_limited: 'Darmowe AI ma limit zapytań i teraz jest przekroczony. Odczekaj chwilę albo użyj trybu Na komputerze, który nie ma limitu.', refused: 'AI nie chce zrobić tego tematu. Zmień opis.', invalid_json: 'AI odpowiedziało w złym formacie. Kliknij Generuj jeszcze raz.', empty_spec: 'AI nie dało żadnych elementów. Opisz animację dokładniej.', session_expired: 'Zaloguj się ponownie do Claude.', image_rejected: 'Nie udało się wysłać klatek do sprawdzenia.',
+  upstream_error: 'Claude chwilowo nie odpowiada (problem po stronie serwera Claude, nie u ciebie). Kliknij Generuj jeszcze raz za chwilę.', empty_completion: 'AI nic nie odpowiedziało. Kliknij Generuj jeszcze raz albo opisz animację prościej.',
+  invalid_request: 'Strona wysłała do AI błędne zapytanie. To błąd strony, nie twój: wyślij mi zrzut tego komunikatu.', transform_error: 'Strona wysłała do AI błędne zapytanie. To błąd strony, nie twój: wyślij mi zrzut tego komunikatu.', prompt_too_large: 'Opis był za długi. Skróć go i spróbuj jeszcze raz.',
+  not_declared: 'Ta wersja strony nie może teraz używać Claude. Otwórz wersję z GitHub i wybierz tryb Na komputerze.', capability_disabled: 'Claude jest wyłączony w tym widoku. Otwórz wersję z GitHub i wybierz tryb Na komputerze.', capability_removed: 'Ta aplikacja jest za stara na tryb Claude. Zaktualizuj ją albo otwórz wersję z GitHub.',
+  too_long: 'Opis był za długi dla AI na komputerze. Skróć opis albo wybierz dokładność Szybko.', gpu_lost: 'Karta graficzna przerwała pracę AI (za mało pamięci albo sterownik). Kliknij Generuj jeszcze raz albo wybierz mniejszy model 1 GB.' };
+function aiPolishSafe(s) { try { return aiPolish(s); } catch (e) { console.error('polish failed', e); return s; } }
 function aiSetSteps(steps) { aiSteps = steps; renderAi(); }
 async function aiGenerate() {
   const box = $('#aiPrompt'), req = (box?.value || '').trim(); if (!req) { toast('Opisz, jaką animację chcesz'); box?.focus(); return; }
   if (!aiProv || aiBusy) return;
-  const rounds = +aiLevel, steps = [{ t: aiProv === 'local' && !wlEngine ? 'Uruchamiam AI i wymyślam scenariusz' : 'Wymyślam scenariusz i układ', s: 'run' }, ...Array.from({ length: rounds }, (_, r) => ({ t: aiProv === 'claude' && aiImages ? `Oglądam klatki i poprawiam (${r + 1}/${rounds})` : `Sprawdzam projekt i poprawiam (${r + 1}/${rounds})`, s: 'wait' })), { t: 'Zapisuję animację', s: 'wait' }];
+  const rounds = +aiLevel, steps = [{ t: aiProv === 'local' && (!wlEngine || wlModel !== aiLocalId()) ? 'Uruchamiam AI i wymyślam scenariusz' : 'Wymyślam scenariusz i układ', s: 'run' }, ...Array.from({ length: rounds }, (_, r) => ({ t: aiProv === 'claude' && aiImages ? `Oglądam klatki i poprawiam (${r + 1}/${rounds})` : `Sprawdzam projekt i poprawiam (${r + 1}/${rounds})`, s: 'wait' })), { t: 'Zapisuję animację', s: 'wait' }];
   aiBusy = true; aiMsg = ''; aiCtl = new AbortController(); aiT0 = performance.now(); clearInterval(aiTimer); aiTimer = setInterval(() => { const el = $('#aiTime'); if (el) el.textContent = Math.round((performance.now() - aiT0) / 1000) + ' s'; }, 1000); aiSetSteps(steps);
   const id = 'ai' + Date.now().toString(36), rec = { id, prompt: req, spec: null };
   try {
-    let spec = aiPolish(aiSanitize(await aiCall(aiPromptText(req), aiCtl.signal)));
+    let spec = aiPolishSafe(aiSanitize(await aiCall(aiPromptText(req), aiCtl.signal)));
     if (!spec.layers.length) throw { code: 'empty_spec' };
     rec.spec = spec; selectTpl(aiTemplate(rec)); steps[0].s = 'done';
     for (let r = 0; r < rounds; r++) {
       steps[r + 1].s = 'run'; aiSetSteps(steps);
       const vision = aiProv === 'claude' && aiImages, fr = await aiFrames(spec); if (aiProv === 'online') await aiWait(2500, aiCtl.signal);
-      let better = aiPolish(aiSanitize(await aiCall(aiCritiqueText(req, spec, fr.times, vision), aiCtl.signal, vision ? fr.blobs : null)));
+      let better; try { better = aiPolishSafe(aiSanitize(await aiCall(aiCritiqueText(req, spec, fr.times, vision), aiCtl.signal, vision ? fr.blobs : null))); }
+      catch (e) { if (e && e.code === 'cancelled') throw e; console.warn('review round failed, keeping the current version', e); better = { layers: [] }; }
       if (better.layers.length) { spec = better; rec.spec = spec; selectTpl(aiTemplate(rec)); }
       steps[r + 1].s = 'done'; aiSetSteps(steps);
     }
@@ -4255,7 +4269,9 @@ async function aiGenerate() {
     steps[steps.length - 1].s = 'done'; aiMsg = 'Gotowe. Animacja gra w podglądzie, a w ustawieniach zmienisz jej napisy i kolory.'; toast('Animacja AI gotowa');
   } catch (e) {
     const code = e && e.code; steps.forEach(s => { if (s.s === 'run') s.s = 'fail'; });
-    aiMsg = code === 'cancelled' ? 'Zatrzymano.' : (AI_ERR[code] || 'Coś poszło nie tak po stronie AI. Spróbuj jeszcze raz.');
+    console.error('AI error', e);
+    aiMsg = code === 'cancelled' ? 'Zatrzymano.' : (AI_ERR[code] || (code ? 'Coś poszło nie tak po stronie AI. Kliknij Generuj jeszcze raz.' : 'Błąd strony: ' + String(e && e.message || e).slice(0, 140) + '. Wyślij mi zrzut tego komunikatu.'));
+    if (code && code !== 'cancelled') aiMsg += ` (kod: ${code})`;
     if (rec.spec && code === 'cancelled') { const list = aiStore(); list.unshift(rec); aiSave(list); const tp = aiRegister(rec); makePosters(x => x.id === id); renderCats(); selectTpl(tp); aiMsg = 'Zatrzymano. Zapisałem wersję, którą AI zdążyło zrobić.'; }
     if ((code === 'not_granted' || code === 'sampling_disabled') && aiProv === 'claude') { aiSample = null; aiProv = AI_PROVS()[0]?.[0] || null; }
   } finally { aiBusy = false; clearInterval(aiTimer); renderAi(); }
