@@ -356,23 +356,54 @@ function frameCam(W, H, hf, sx, sy, fov = 30) {
   return { fov, pos: [tx, ty + 3, dist], look: [tx, ty, 0], visW, visH };
 }
 /* pose: {x,y,z,rotY,rotX,rotZ,scale,sy, head:[x,y], armR:[x,z], armL:[x,z], legR, legL, bodyY} */
-function drawChar(g, W, H, p, cam, opts = {}) {
+/* generic 3D scene: optional character + pooled cubes + template props */
+const tmpObj = () => (C3._o || (C3._o = new THREE.Object3D()));
+const tmpCol = () => (C3._c || (C3._c = new THREE.Color()));
+function c3Pool() {
+  if (C3.cubes) return;
+  const geo = new THREE.BoxGeometry(1, 1, 1); geo.setAttribute('color', new THREE.Float32BufferAttribute(new Array(geo.attributes.position.count * 3).fill(1), 3));
+  const im = new THREE.InstancedMesh(geo, new THREE.MeshLambertMaterial({ color: 0xffffff, vertexColors: true }), 900);
+  im.instanceMatrix.setUsage(THREE.DynamicDrawUsage); im.castShadow = true; im.receiveShadow = false; im.frustumCulled = false;
+  const c = new THREE.Color(1, 1, 1); for (let i = 0; i < 900; i++) im.setColorAt(i, c);
+  im.instanceColor.setUsage(THREE.DynamicDrawUsage); im.count = 0;
+  C3.scene.add(im); C3.cubes = im; C3.props = {};
+}
+function prop(key, make) { c3Pool(); if (!C3.props[key]) { const o = make(); o.visible = false; C3.scene.add(o); C3.props[key] = o; } return C3.props[key]; }
+function drawScene(g, W, H, cam, o = {}) {
   if (!C3.ok) return;
+  c3Pool();
   const { r, scene } = C3;
   if (r.domElement.width !== W || r.domElement.height !== H) r.setSize(W, H, false);
-  C3.cam.fov = cam.fov; C3.cam.aspect = W / H; C3.cam.position.set(...cam.pos); C3.cam.lookAt(...cam.look); C3.cam.updateProjectionMatrix();
-  const R = C3.root; R.position.set(p.x || 0, p.y || 0, p.z || 0); R.rotation.set(p.rotX || 0, p.rotY || 0, p.rotZ || 0);
-  const s = p.scale ?? 1; R.scale.set(s * (p.sx ?? 1), s * (p.sy ?? 1), s * (p.sx ?? 1));
-  C3.head.rotation.set(p.head?.[0] || 0, p.head?.[1] || 0, p.head?.[2] || 0);
-  C3.armR.rotation.set(p.armR?.[0] || 0, p.armR?.[2] || 0, p.armR?.[1] || 0);
-  C3.armL.rotation.set(p.armL?.[0] || 0, p.armL?.[2] || 0, p.armL?.[1] || 0);
-  C3.legR.rotation.set(p.legR || 0, 0, 0); C3.legL.rotation.set(p.legL || 0, 0, 0);
-  C3.body.rotation.set(0, p.bodyY || 0, 0);
-  C3.ground.visible = opts.shadow !== false && !isKeyBg();
-  C3.ground.position.y = 0; C3.key.target.position.set(p.x || 0, 0, 0); C3.key.position.set((p.x || 0) + 28, 50, 40);
-  C3.rim.color.set(opts.rim || '#22d3e6');
+  applyCam(W, H, cam);
+  const p = o.pose;
+  C3.root.visible = !!p;
+  if (p) {
+    const R = C3.root; R.position.set(p.x || 0, p.y || 0, p.z || 0); R.rotation.set(p.rotX || 0, p.rotY || 0, p.rotZ || 0);
+    const s = p.scale ?? 1; R.scale.set(s * (p.sx ?? 1), s * (p.sy ?? 1), s * (p.sx ?? 1));
+    C3.head.rotation.set(p.head?.[0] || 0, p.head?.[1] || 0, p.head?.[2] || 0);
+    C3.armR.rotation.set(p.armR?.[0] || 0, p.armR?.[2] || 0, p.armR?.[1] || 0);
+    C3.armL.rotation.set(p.armL?.[0] || 0, p.armL?.[2] || 0, p.armL?.[1] || 0);
+    C3.legR.rotation.set(p.legR || 0, 0, 0); C3.legL.rotation.set(p.legL || 0, 0, 0);
+    C3.body.rotation.set(0, p.bodyY || 0, 0);
+  }
+  const cubes = o.cubes || [], im = C3.cubes, ob = tmpObj(), col = tmpCol();
+  const n = Math.min(cubes.length, 900);
+  for (let i = 0; i < n; i++) { const c = cubes[i]; ob.position.set(c.x, c.y, c.z || 0); ob.rotation.set(c.rx || 0, c.ry || 0, c.rz || 0); const s = c.s ?? 1; ob.scale.set(s * (c.sx ?? 1), s * (c.sy ?? 1), s * (c.sz ?? 1)); ob.updateMatrix(); im.setMatrixAt(i, ob.matrix); col.set(c.color); if (col.convertSRGBToLinear) col.convertSRGBToLinear(); im.setColorAt(i, col); }
+  im.count = n; im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true;
+  for (const [k, m] of Object.entries(C3.props)) m.visible = !!(o.show && o.show.includes(k));
+  C3.ground.visible = o.shadow !== false && !isKeyBg();
+  const fx = p ? (p.x || 0) : (o.focusX || 0);
+  C3.key.target.position.set(fx, 0, 0); C3.key.position.set(fx + 28, 60, 45);
+  C3.rim.color.set(o.rim || '#22d3e6');
   r.render(scene, C3.cam);
   g.drawImage(r.domElement, 0, 0, W, H);
+}
+function applyCam(W, H, cam) { C3.cam.fov = cam.fov; C3.cam.aspect = W / H; C3.cam.position.set(...cam.pos); C3.cam.lookAt(...cam.look); C3.cam.updateProjectionMatrix(); C3.cam.updateMatrixWorld(); }
+function drawChar(g, W, H, p, cam, opts = {}) { drawScene(g, W, H, cam, Object.assign({}, opts, { pose: p })); }
+/* camera that fits a box (w × h world units) centred on (cx, cy) */
+function frameBox(W, H, w, hh, cx, cy, margin = 1.3, fov = 30) {
+  const visH = Math.max(hh * margin, w * margin * H / W), dist = (visH / 2) / Math.tan(fov * Math.PI / 360);
+  return { fov, pos: [cx, cy + visH * .08, dist], look: [cx, cy, 0], visH, visW: visH * W / H };
 }
 /* reusable motions */
 const walkPose = (ph, amp = .9) => ({ legR: Math.sin(ph) * amp, legL: -Math.sin(ph) * amp, armR: [-Math.sin(ph) * amp * .8, 0], armL: [Math.sin(ph) * amp * .8, 0], y: Math.abs(Math.sin(ph)) * .8 });
@@ -1110,8 +1141,385 @@ TEMPLATES.push(
   }
 );
 
-const CATS = ['Wszystkie', 'Montaż', 'Postać', 'Napisy', 'Kanał', 'Przejścia'];
-const CAT_NAMES = { 'Montaż': 'Do montażu', 'Postać': 'Postać ze skinem', 'Napisy': 'Napisy i intro', 'Kanał': 'Kanał', 'Przejścia': 'Przejścia' };
+/* ================= games & blocks (original voxel art, nothing copied from any game) ================= */
+const PAL = {
+  ziemia: ['#7a5230', '#8b5e36', '#6b4628', '#5d8c3a', '#4f7a31', '#946b45'], kamien: ['#7d7d82', '#6c6c71', '#8e8e93', '#5f5f64', '#9a9aa0'],
+  kolor: ['#ff4f6d', '#ffd23f', '#22d3e6', '#7c5cff', '#5ad19a', '#ff8a3d'], czerwony: ['#d8322e', '#b8231f', '#f0f0f0', '#e24a3a', '#9e1b17'],
+  drewno: ['#8b5a2b', '#a06a35', '#6f4521', '#b88049'], lod: ['#bfe9ff', '#8fd3ff', '#e6f7ff', '#6cc4f0']
+};
+const MAT_OPTS = [['ziemia', 'Ziemia i trawa'], ['kamien', 'Kamień'], ['czerwony', 'Czerwono-biały'], ['kolor', 'Kolorowe'], ['drewno', 'Drewno'], ['lod', 'Lód']];
+const pick = (arr, i, k = 0) => arr[Math.floor(rnd(i, k) * arr.length) % arr.length];
+/* 5×7 block font */
+const GLYPH = {
+  A: [' ### ', '#   #', '#   #', '#####', '#   #', '#   #', '#   #'], B: ['#### ', '#   #', '#   #', '#### ', '#   #', '#   #', '#### '], C: [' ####', '#    ', '#    ', '#    ', '#    ', '#    ', ' ####'],
+  D: ['#### ', '#   #', '#   #', '#   #', '#   #', '#   #', '#### '], E: ['#####', '#    ', '#    ', '#### ', '#    ', '#    ', '#####'], F: ['#####', '#    ', '#    ', '#### ', '#    ', '#    ', '#    '],
+  G: [' ####', '#    ', '#    ', '#  ##', '#   #', '#   #', ' ####'], H: ['#   #', '#   #', '#   #', '#####', '#   #', '#   #', '#   #'], I: ['#####', '  #  ', '  #  ', '  #  ', '  #  ', '  #  ', '#####'],
+  J: ['  ###', '   # ', '   # ', '   # ', '#  # ', '#  # ', ' ##  '], K: ['#   #', '#  # ', '# #  ', '##   ', '# #  ', '#  # ', '#   #'], L: ['#    ', '#    ', '#    ', '#    ', '#    ', '#    ', '#####'],
+  M: ['#   #', '## ##', '# # #', '# # #', '#   #', '#   #', '#   #'], N: ['#   #', '##  #', '# # #', '#  ##', '#   #', '#   #', '#   #'], O: [' ### ', '#   #', '#   #', '#   #', '#   #', '#   #', ' ### '],
+  P: ['#### ', '#   #', '#   #', '#### ', '#    ', '#    ', '#    '], Q: [' ### ', '#   #', '#   #', '#   #', '# # #', '#  # ', ' ## #'], R: ['#### ', '#   #', '#   #', '#### ', '# #  ', '#  # ', '#   #'],
+  S: [' ####', '#    ', '#    ', ' ### ', '    #', '    #', '#### '], T: ['#####', '  #  ', '  #  ', '  #  ', '  #  ', '  #  ', '  #  '], U: ['#   #', '#   #', '#   #', '#   #', '#   #', '#   #', ' ### '],
+  V: ['#   #', '#   #', '#   #', '#   #', '#   #', ' # # ', '  #  '], W: ['#   #', '#   #', '#   #', '# # #', '# # #', '## ##', '#   #'], X: ['#   #', '#   #', ' # # ', '  #  ', ' # # ', '#   #', '#   #'],
+  Y: ['#   #', '#   #', ' # # ', '  #  ', '  #  ', '  #  ', '  #  '], Z: ['#####', '    #', '   # ', '  #  ', ' #   ', '#    ', '#####'],
+  0: [' ### ', '#   #', '#  ##', '# # #', '##  #', '#   #', ' ### '], 1: ['  #  ', ' ##  ', '  #  ', '  #  ', '  #  ', '  #  ', ' ### '], 2: [' ### ', '#   #', '    #', '   # ', '  #  ', ' #   ', '#####'],
+  3: ['#### ', '    #', '    #', ' ### ', '    #', '    #', '#### '], 4: ['#   #', '#   #', '#   #', '#####', '    #', '    #', '    #'], 5: ['#####', '#    ', '#    ', '#### ', '    #', '    #', '#### '],
+  6: [' ### ', '#    ', '#    ', '#### ', '#   #', '#   #', ' ### '], 7: ['#####', '    #', '   # ', '  #  ', '  #  ', '  #  ', '  #  '], 8: [' ### ', '#   #', '#   #', ' ### ', '#   #', '#   #', ' ### '],
+  9: [' ### ', '#   #', '#   #', ' ####', '    #', '    #', ' ### '], '!': ['  #  ', '  #  ', '  #  ', '  #  ', '  #  ', '     ', '  #  '], '?': [' ### ', '#   #', '    #', '   # ', '  #  ', '     ', '  #  '],
+  '.': ['     ', '     ', '     ', '     ', '     ', '     ', '  #  '], '-': ['     ', '     ', '     ', '#####', '     ', '     ', '     '], ' ': ['     ', '     ', '     ', '     ', '     ', '     ', '     ']
+};
+const PL_BASE = { Ą: ['A', 'tail'], Ć: ['C', 'acute'], Ę: ['E', 'tail'], Ł: ['L', 'stroke'], Ń: ['N', 'acute'], Ó: ['O', 'acute'], Ś: ['S', 'acute'], Ź: ['Z', 'acute'], Ż: ['Z', 'dot'] };
+function textPixels(text) {
+  const px = []; const chars = [...text.toLocaleUpperCase('pl').slice(0, 16)];
+  chars.forEach((ch, li) => {
+    let g = GLYPH[ch], mark = null; if (!g && PL_BASE[ch]) { g = GLYPH[PL_BASE[ch][0]]; mark = PL_BASE[ch][1]; } if (!g) g = GLYPH['?'];
+    g.forEach((row, r) => [...row].forEach((c, col) => { if (c === '#') px.push([li, col, r]); }));
+    if (mark === 'acute') px.push([li, 3, -2], [li, 2, -1]); else if (mark === 'dot') px.push([li, 2, -1]); else if (mark === 'tail') px.push([li, 4, 7]); else if (mark === 'stroke') px.push([li, 1, 3], [li, 2, 2]);
+  });
+  return { px, n: chars.length, w: chars.length * 6 - 1 };
+}
+/* procedural 16×16 block textures */
+function texCanvas(fn) { const c = document.createElement('canvas'); c.width = 16; c.height = 16; const g = c.getContext('2d'); fn(g); const t = new THREE.CanvasTexture(c); t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestFilter; t.generateMipmaps = false; if ('encoding' in t) t.encoding = THREE.sRGBEncoding; return t; }
+function noise16(g, cols, seed) { for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) { g.fillStyle = cols[Math.floor(rnd(x + y * 16, seed) * cols.length)]; g.fillRect(x, y, 1, 1); } }
+function blockMaterials(kind) {
+  const L = map => new THREE.MeshLambertMaterial({ map });
+  if (kind === 'trawa') {
+    const top = texCanvas(g => noise16(g, ['#5d9c3a', '#6aab42', '#4f8a31', '#73b84a'], 1));
+    const side = texCanvas(g => { noise16(g, ['#7a5230', '#8b5e36', '#6b4628', '#946b45'], 2); for (let x = 0; x < 16; x++) { const d = 3 + Math.floor(rnd(x, 3) * 2.5); for (let y = 0; y < d; y++) { g.fillStyle = ['#5d9c3a', '#6aab42', '#4f8a31'][Math.floor(rnd(x, y + 4) * 3)]; g.fillRect(x, y, 1, 1); } } });
+    const bot = texCanvas(g => noise16(g, ['#7a5230', '#8b5e36', '#6b4628', '#946b45'], 5));
+    return [L(side), L(side), L(top), L(bot), L(side), L(side)];
+  }
+  if (kind === 'drewno') {
+    const side = texCanvas(g => { for (let x = 0; x < 16; x++) for (let y = 0; y < 16; y++) { g.fillStyle = (x % 4 === 0 || rnd(x, y) > .85) ? '#4e321a' : ['#6f4521', '#7d4f27'][Math.floor(rnd(x, y + 9) * 2)]; g.fillRect(x, y, 1, 1); } });
+    const top = texCanvas(g => { for (let x = 0; x < 16; x++) for (let y = 0; y < 16; y++) { const r = Math.round(Math.hypot(x - 7.5, y - 7.5)); g.fillStyle = r > 7 ? '#5a3a1e' : r % 2 ? '#c8955a' : '#a97a44'; g.fillRect(x, y, 1, 1); } });
+    return [L(side), L(side), L(top), L(top), L(side), L(side)];
+  }
+  const stone = ['#7d7d82', '#6c6c71', '#8e8e93', '#5f5f64'];
+  const t = texCanvas(g => { noise16(g, stone, 7); if (kind === 'ruda') for (let k = 0; k < 5; k++) { const cx = 2 + Math.floor(rnd(k, 8) * 12), cy = 2 + Math.floor(rnd(k, 9) * 12); for (const [dx, dy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) { if (rnd(k + dx, dy) > .25) { g.fillStyle = dx + dy === 0 ? '#c9fbff' : '#3fd8e6'; g.fillRect(cx + dx, cy + dy, 1, 1); } } } });
+  return Array(6).fill(0).map(() => L(t));
+}
+const BLOCK_COLS = { trawa: ['#5d9c3a', '#7a5230', '#8b5e36', '#6aab42'], kamien: ['#7d7d82', '#6c6c71', '#8e8e93'], ruda: ['#7d7d82', '#6c6c71', '#3fd8e6', '#c9fbff'], drewno: ['#6f4521', '#a97a44', '#4e321a'] };
+let crackTex = null;
+function crackStages() {
+  if (crackTex) return crackTex;
+  crackTex = [];
+  for (let s = 0; s <= 9; s++) crackTex.push(texCanvas(g => { g.clearRect(0, 0, 16, 16); g.fillStyle = 'rgba(15,10,10,.8)'; for (let k = 0; k < s * 3; k++) { let x = 7 + Math.floor((rnd(k, 1) - .5) * 4), y = 7 + Math.floor((rnd(k, 2) - .5) * 4); const dx = rnd(k, 3) > .5 ? 1 : -1, dy = rnd(k, 4) > .5 ? 1 : -1; for (let st = 0; st < 2 + s; st++) { g.fillRect(x, y, 1, 1); if (rnd(k, st + 5) > .5) x += dx; else y += dy; if (x < 0 || y < 0 || x > 15 || y > 15) break; } } }));
+  return crackTex;
+}
+function propBlock(kind) {
+  return prop('block_' + kind, () => {
+    const grp = new THREE.Group();
+    const m = new THREE.Mesh(new THREE.BoxGeometry(16, 16, 16), blockMaterials(kind)); m.castShadow = true; grp.add(m);
+    const cr = new THREE.Mesh(new THREE.BoxGeometry(16.15, 16.15, 16.15), new THREE.MeshBasicMaterial({ map: crackStages()[0], transparent: true, depthWrite: false })); grp.add(cr); grp.userData.crack = cr;
+    return grp;
+  });
+}
+function propChest() {
+  return prop('chest', () => {
+    const grp = new THREE.Group();
+    const plank = texCanvas(g => { for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) { g.fillStyle = (y % 5 === 0) ? '#5a3618' : (x === 0 || x === 15 || y === 15) ? '#4a2c12' : ['#9a6230', '#8b5627', '#a56b36'][Math.floor(rnd(x, y + 21) * 3)]; g.fillRect(x, y, 1, 1); } });
+    const mat = new THREE.MeshLambertMaterial({ map: plank });
+    const base = new THREE.Mesh(new THREE.BoxGeometry(14, 9, 10), mat); base.position.y = 4.5; base.castShadow = true; grp.add(base);
+    const inner = new THREE.Mesh(new THREE.BoxGeometry(12.6, .4, 8.6), new THREE.MeshBasicMaterial({ color: 0x1a0f06 })); inner.position.y = 8.9; grp.add(inner);
+    const lid = new THREE.Group(); lid.position.set(0, 9, -5); grp.add(lid);
+    const lidM = new THREE.Mesh(new THREE.BoxGeometry(14, 4, 10), mat); lidM.position.set(0, 2, 5); lidM.castShadow = true; lid.add(lidM);
+    const latch = new THREE.Mesh(new THREE.BoxGeometry(2, 3, 1), new THREE.MeshLambertMaterial({ color: 0xcfcfd6 })); latch.position.set(0, 1, 10.3); lid.add(latch);
+    for (const x of [-6.6, 6.6]) { const band = new THREE.Mesh(new THREE.BoxGeometry(.8, 9.2, 10.2), new THREE.MeshLambertMaterial({ color: 0x3b3b42 })); band.position.set(x, 4.5, 0); grp.add(band); }
+    grp.userData.lid = lid; return grp;
+  });
+}
+let portalCv = null;
+function propPortal() {
+  return prop('portal', () => {
+    portalCv = document.createElement('canvas'); portalCv.width = 64; portalCv.height = 104;
+    const tex = new THREE.CanvasTexture(portalCv); tex.magFilter = THREE.NearestFilter; tex.minFilter = THREE.NearestFilter; tex.generateMipmaps = false;
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(12, 20), new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: .92 }));
+    m.position.set(0, 14, -24); m.userData.tex = tex; return m;
+  });
+}
+function paintPortal(t, col) {
+  const g = portalCv.getContext('2d'), [R, G, B] = hex2rgb(col);
+  for (let y = 0; y < 104; y += 2) for (let x = 0; x < 64; x += 2) { const v = .5 + .5 * Math.sin(x * .18 + Math.sin(y * .1 + t * 2) * 2 + t * 3) * Math.cos(y * .12 - t * 2.4); g.fillStyle = `rgb(${Math.round(R * (.35 + .65 * v))},${Math.round(G * (.25 + .5 * v))},${Math.round(B * (.55 + .45 * v))})`; g.fillRect(x, y, 2, 2); }
+  propPortal().userData.tex.needsUpdate = true;
+}
+function pixelArt(g, rows, x, y, s, colors) { rows.forEach((row, r) => [...row].forEach((c, k) => { if (c !== ' ' && colors[c]) { g.fillStyle = colors[c]; g.fillRect(x + k * s, y + r * s, s + .5, s + .5); } })); }
+const HEART = [' oo oo ', 'orrorro', 'orwrrro', 'orrrrro', ' orrro ', '  oro  ', '   o   '];
+const TROPHY = ['yyyyyyyy', 'yYyyyyyy', 'yYyyyyyy', ' yyyyyy ', '  yyyy  ', '   yy   ', '  yyyy  ', ' oooooo '];
+function drawFootage(g, W, H, o = {}) {
+  const vd = ST.bgVid; g.save(); g.translate(W / 2 + (o.ox || 0), H / 2 + (o.oy || 0)); if (o.rot) g.rotate(o.rot); g.scale(o.s || 1, o.s || 1); if (o.filter) g.filter = o.filter;
+  if (vd && vd.readyState >= 2) { const k = Math.max(W / vd.videoWidth, H / vd.videoHeight); g.drawImage(vd, -vd.videoWidth * k / 2, -vd.videoHeight * k / 2, vd.videoWidth * k, vd.videoHeight * k); }
+  else { const gr = g.createLinearGradient(-W / 2, -H / 2, W / 2, H / 2); gr.addColorStop(0, '#2b3a67'); gr.addColorStop(1, '#6a2c5a'); g.fillStyle = gr; g.fillRect(-W / 2, -H / 2, W, H); const u = Math.min(W, H) / 1080; T(g, 'TWÓJ FILM', 0, -20 * u, { size: 120 * u, weight: 900, color: 'rgba(255,255,255,.85)' }); T(g, 'Wgraj nagranie: panel Tło → Twój film', 0, 90 * u, { size: 40 * u, weight: 600, color: 'rgba(255,255,255,.7)' }); }
+  g.restore();
+}
+function emotePose(e, t) {
+  const p = { ...idlePose(t) }, s = Math.sin;
+  switch (e) {
+    case 'wave': p.armR = [0, -2.7 + s(t * 10) * .35]; p.head = [0, s(t * 2) * .15]; break;
+    case 'clap': { const c = Math.abs(s(t * 8)); p.armR = [-1.35, -.55 * c + .05]; p.armL = [-1.35, .55 * c - .05]; break; }
+    case 'bow': { const k = Math.sin(Math.PI * clamp((t % 2.4) / 1.6, 0, 1)); p.rotX = .5 * k; p.legR = -.5 * k; p.legL = -.5 * k; p.armR = [.3 * k, -.1]; p.armL = [.3 * k, .1]; p.head = [.4 * k, 0]; break; }
+    case 'surprise': { const k = E.out(clamp((t % 2) / .3, 0, 1)) * (1 - seg(t % 2, 1.4, 2)); p.z = -4 * k; p.y = Math.sin(Math.PI * clamp((t % 2) / .4, 0, 1)) * 4; p.armR = [0, -2.2 * k]; p.armL = [0, 2.2 * k]; p.head = [-.35 * k, 0]; break; }
+    case 'facepalm': p.armR = [-2.5, .35]; p.head = [.35 + s(t * 2) * .05, -.15]; break;
+    case 'point': p.armR = [-1.55, -.1]; p.head = [s(t * 4) * .08, 0]; break;
+    case 'sad': p.head = [.45, s(t * .8) * .1]; p.armR = [.1, .05]; p.armL = [.1, -.05]; p.y = -.6; break;
+    case 'cheer': p.y = Math.abs(s(t * 5)) * 6; p.armR = [0, -2.8]; p.armL = [0, 2.8]; break;
+    case 'hips': { const w = s(t * 7); p.rotY = w * .6; p.armR = [w * .9, -.4]; p.armL = [-w * .9, .4]; p.legR = w * .3; p.legL = -w * .3; p.head = [0, -w * .3]; break; }
+    case 'think': p.armR = [-2.1, .55]; p.head = [-.15, .35 + s(t) * .08]; p.armL = [-.8, -.4]; break;
+  }
+  return p;
+}
+TEMPLATES.push(
+  {
+    id: 'voxtext', cat: 'Gry', name: 'Nick z bloków', d: 'Bloki zlatują z nieba i układają się w Twój nick.', dur: 5,
+    fields: [['text', 'text', 'Napis (do 16 znaków)', 'TwójNick'], ['sub', 'text', 'Podpis pod spodem', 'SUBSKRYBUJ'], ['c1', 'color', 'Kolor góry', '#22d3e6'], ['c2', 'color', 'Kolor dołu', '#7c5cff']],
+    sfx: [[0, 'whoosh'], [1.55, 'boom'], [2.0, 'ding']],
+    render(g, W, H, t, v, u) {
+      const { px, n, w } = textPixels(v.text || ' '), base = 2, cubes = [];
+      const sway = Math.sin(t * .8) * .22 * seg(t, 2, 2.6);
+      px.forEach(([li, col, row], i) => {
+        const x0 = li * 6 + col - w / 2 + .5, y0 = (6 - row) + base + .5;
+        const d = rnd(i, 1) * .8 + li * .06, k = seg(t, d, d + .75), e = E.back(k);
+        const fx = x0 + (rnd(i, 2) - .5) * 40, fy = y0 + 30 + rnd(i, 3) * 20, fz = (rnd(i, 4) - .5) * 40;
+        let x = lerp(fx, x0, e), y = lerp(fy, y0, e), z = lerp(fz, 0, e);
+        const c = Math.cos(sway), sn = Math.sin(sway); const xr = x * c + z * sn, zr = -x * sn + z * c;
+        cubes.push({ x: xr, y, z: zr, s: k > 0 ? .96 : 0, rx: (1 - e) * 6 * rnd(i, 5), ry: sway + (1 - e) * 6 * rnd(i, 6), color: mix(v.c1, v.c2, clamp((row + 2) / 9, 0, 1)) });
+      });
+      const cam = frameBox(W, H, Math.max(w, 14), 9 + 6, 0, 6, isPortrait(W, H) ? 1.12 : 1.35);
+      drawScene(g, W, H, cam, { cubes, focusX: 0, rim: v.c1 });
+      const k = seg(t, 2.0, 2.4);
+      T(g, v.sub, W / 2, H * .82, { size: 64 * u, font: 'Bungee', weight: 400, alpha: k, scale: E.back(k), color: '#fff', maxW: W * .9, shadow: { color: 'rgba(0,0,0,.45)', x: 5 * u, y: 5 * u } });
+      void n;
+    }
+  },
+  {
+    id: 'voxboom', cat: 'Gry', name: 'Blokowa eksplozja', d: 'Blok mruga, a potem wybucha na setki kostek z hukiem.', dur: 4,
+    fields: [['mat', 'select', 'Rodzaj bloków', 'czerwony', MAT_OPTS], ['text', 'text', 'Napis przy wybuchu', 'BUM!']],
+    sfx: [[.1, 'tick'], [.35, 'tick'], [.55, 'tick'], [.7, 'boom'], [.72, 'glass']],
+    render(g, W, H, t, v, u) {
+      const t0 = .7, dt = t - t0, pal = PAL[v.mat] || PAL.czerwony, N = 5, s = 1.7, cubes = [];
+      const sh = dt > 0 && dt < .6 ? (1 - dt / .6) * 30 * u : 0;
+      g.save(); g.translate(Math.sin(t * 90) * sh, Math.cos(t * 70) * sh);
+      const flashOn = t < t0 && Math.floor(t * 8) % 2 === 1;
+      for (let i = 0, ix = 0; ix < N; ix++) for (let iy = 0; iy < N; iy++) for (let iz = 0; iz < N; iz++, i++) {
+        const x0 = (ix - (N - 1) / 2) * s, y0 = iy * s + s / 2, z0 = (iz - (N - 1) / 2) * s;
+        let x = x0, y = y0, z = z0, rx = 0, ry = 0, sc = s * .98;
+        if (dt > 0) {
+          const dx = x0 + (rnd(i, 1) - .5) * .5, dy = y0 - 2 + rnd(i, 2), dz = z0 + (rnd(i, 3) - .5) * .5, L = Math.hypot(dx, dy, dz) || 1, sp = 22 + rnd(i, 4) * 26, drag = 1 - Math.exp(-dt * 1.6);
+          x = x0 + dx / L * sp * drag / 1.6 * 1.6; z = z0 + dz / L * sp * drag; y = y0 + (dy / L * sp + 14) * drag - 26 * dt * dt; y = Math.max(sc / 2, y);
+          rx = dt * (4 + rnd(i, 5) * 10); ry = dt * (3 + rnd(i, 6) * 8); sc *= 1 - seg(dt, 1.8, 3);
+        } else { const pulse = 1 + .08 * seg(t, 0, t0) * Math.sin(t * 40); x *= pulse; z *= pulse; y = y0 * pulse; }
+        cubes.push({ x, y, z, s: sc, rx, ry, color: flashOn ? '#ffffff' : pick(pal, i, 9) });
+      }
+      const cam = frameBox(W, H, 48, 30, 0, 9, 1.15);
+      drawScene(g, W, H, cam, { cubes, focusX: 0 });
+      if (dt > 0) {
+        g.fillStyle = `rgba(255,255,255,${Math.max(0, .9 - dt * 3)})`; g.fillRect(-50, -50, W + 100, H + 100);
+        for (let i = 0; i < 14; i++) { const a = rnd(i, 1) * Math.PI * 2, r = (120 + rnd(i, 2) * 260) * u * E.out(seg(dt, 0, 1.2)), x = W / 2 + Math.cos(a) * r, y = H * .62 + Math.sin(a) * r * .5 - dt * 60 * u, rad = (80 + rnd(i, 3) * 120) * u * (.6 + dt); const gr = g.createRadialGradient(x, y, 0, x, y, rad); const al = clamp(.55 - dt * .22, 0, 1); gr.addColorStop(0, `rgba(200,200,205,${al})`); gr.addColorStop(1, 'rgba(200,200,205,0)'); g.fillStyle = gr; g.fillRect(x - rad, y - rad, rad * 2, rad * 2); }
+        const k = seg(dt, 0, .25); if (v.text) T(g, v.text, W / 2, H * .25, { size: 210 * u, font: 'Bangers', weight: 400, color: '#ffd23f', scale: lerp(2.6, 1, E.out(k)) * (1 - seg(dt, 2.4, 3.2)), alpha: k * 2, stroke: { w: 16 * u, color: '#111' }, rot: -.08, maxW: W * .9 });
+      }
+      g.restore();
+    }
+  },
+  {
+    id: 'mine', cat: 'Gry', name: 'Kopanie bloku', d: 'Postać uderza w blok, ten pęka i rozpada się na kawałki.', dur: 4.5, skin: true,
+    fields: [['kind', 'select', 'Blok', 'trawa', [['trawa', 'Trawa'], ['kamien', 'Kamień'], ['ruda', 'Ruda diamentu'], ['drewno', 'Drewno']]], ['caption', 'text', 'Napis (opcjonalnie)', '']],
+    sfx: [[.5, 'step'], [.9, 'step'], [1.3, 'step'], [1.7, 'step'], [2.1, 'step'], [2.3, 'pop'], [2.6, 'pop']],
+    render(g, W, H, t, v, u) {
+      const blk = propBlock(v.kind), brk = 2.3, show = [];
+      const swing = t > .3 && t < brk ? Math.abs(Math.sin((t - .3) * 7.85)) : 0;
+      const p = { x: -14, rotY: Math.PI / 2, ...idlePose(t), armR: [-(.5 + 1.5 * swing), 0], head: [.1, 0] };
+      if (t >= brk + .1) { const c = seg(t, brk + .2, brk + .5) * (1 - seg(t, 3.8, 4.2)); p.armR = [0, -2.6 * c]; p.armL = [0, 2.6 * c]; p.rotY = lerp(Math.PI / 2, .25, seg(t, brk + .1, brk + .4)); }
+      const cubes = [];
+      if (t < brk) { blk.position.set(6, 8, 0); blk.rotation.set(0, 0, 0); blk.scale.setScalar(1 + (swing > .95 ? .02 : 0)); blk.userData.crack.material.map = crackStages()[Math.min(9, Math.floor(seg(t, .45, brk) * 10))]; show.push('block_' + v.kind); }
+      else {
+        const dt = t - brk, cols = BLOCK_COLS[v.kind];
+        for (let i = 0; i < 64; i++) { const x0 = 6 + (rnd(i, 1) - .5) * 14, y0 = 8 + (rnd(i, 2) - .5) * 14, z0 = (rnd(i, 3) - .5) * 14; const vx = (x0 - 6) * 1.6, vz = z0 * 1.6, vy = 10 + rnd(i, 4) * 12; const x = x0 + vx * dt, z = z0 + vz * dt, y = Math.max(1, y0 + vy * dt - 40 * dt * dt); cubes.push({ x, y, z, s: 2.2 * (1 - seg(dt, .6, 1.2)), rx: dt * 8 * rnd(i, 5), ry: dt * 6, color: pick(cols, i, 6) }); }
+        const ik = E.back(seg(dt, .25, .6)); if (ik > 0) { blk.position.set(6, 3.2 + Math.sin(t * 3) * .8, 0); blk.rotation.set(0, t * 1.5, 0); blk.scale.setScalar(.32 * ik); blk.userData.crack.material.map = crackStages()[0]; show.push('block_' + v.kind); }
+      }
+      const cam = isPortrait(W, H) ? frameBox(W, H, 44, 36, -4, 15, 1.05) : frameBox(W, H, 46, 36, -4, 16, 1.12);
+      drawScene(g, W, H, cam, { pose: p, cubes, show });
+      if (v.caption) T(g, v.caption, W / 2, H * .88, { size: 64 * u, font: 'Bungee', weight: 400, alpha: seg(t, brk + .3, brk + .7), maxW: W * .9, shadow: { color: 'rgba(0,0,0,.5)', x: 5 * u, y: 5 * u } });
+    }
+  },
+  {
+    id: 'chest', cat: 'Gry', name: 'Skrzynia z nagrodą', d: 'Skrzynia spada, trzęsie się i otwiera, a ze środka lecą klejnoty.', dur: 5,
+    fields: [['title', 'text', 'Napis', 'LEGENDARNA NAGRODA!'], ['accent', 'color', 'Kolor światła', '#ffd23f']],
+    sfx: [[.45, 'boom'], [1.3, 'click'], [1.55, 'ding'], [1.9, 'pop'], [2.1, 'pop']],
+    render(g, W, H, t, v, u) {
+      const ch = propChest(), drop = seg(t, 0, .45);
+      ch.position.set(0, lerp(40, 0, E.bounce(drop)), 0);
+      const wob = t > .7 && t < 1.25 ? Math.sin(t * 40) * .06 : 0; ch.rotation.set(0, -.35 + Math.sin(t * .6) * .05, wob);
+      ch.userData.lid.rotation.x = -1.9 * E.back(seg(t, 1.3, 1.75));
+      const cam = frameBox(W, H, 44, 32, 0, 11, isPortrait(W, H) ? 1.05 : 1.15);
+      const [rx, ry] = (() => { if (!C3.ok) return [W / 2, H / 2]; applyCam(W, H, cam); const vv = new THREE.Vector3(0, 10, 0).project(C3.cam); return [(vv.x + 1) / 2 * W, (1 - vv.y) / 2 * H]; })();
+      const open = seg(t, 1.35, 1.9);
+      if (open > 0) { g.save(); g.translate(rx, ry); g.globalCompositeOperation = 'lighter'; for (let i = 0; i < 14; i++) { g.save(); g.rotate(i / 14 * Math.PI * 2 + t * .4); const gr = g.createLinearGradient(0, 0, 0, -900 * u); gr.addColorStop(0, rgba(v.accent, .45 * open)); gr.addColorStop(1, rgba(v.accent, 0)); g.fillStyle = gr; g.beginPath(); g.moveTo(0, 0); g.lineTo(-60 * u, -900 * u); g.lineTo(60 * u, -900 * u); g.fill(); g.restore(); } g.restore(); }
+      const gems = [];
+      const gcols = ['#3fd8e6', '#5ad19a', '#ffd23f', '#ff4f6d', '#a77bff'];
+      for (let i = 0; i < 14; i++) { const k = E.out(seg(t, 1.5 + i * .05, 2.4 + i * .05)); if (k <= 0) continue; const a = (i / 14) * Math.PI * 2, r = 9 + 5 * rnd(i, 1); gems.push({ x: Math.cos(a) * r * k, y: 9 + k * (12 + rnd(i, 2) * 8) + Math.sin(t * 3 + i) * .6, z: Math.sin(a) * r * k * .5, s: 1.8 + rnd(i, 3), rx: t * 2 + i, ry: t * 3 + i, color: gcols[i % gcols.length] }); }
+      drawScene(g, W, H, cam, { cubes: gems, show: ['chest'], rim: v.accent, focusX: 0 });
+      const k = seg(t, 1.95, 2.35);
+      T(g, v.title, W / 2, H * .14, { size: 96 * u, font: 'Bungee', weight: 400, grad: ['#fff6c8', v.accent], stroke: { w: 10 * u, color: '#2a1a05' }, scale: E.back(k), alpha: k * 2, maxW: W * .92 });
+      for (let i = 0; i < 24; i++) { const lt = (t - 1.6 - rnd(i, 1) * 2) % 1.6; if (t < 1.6 || lt < 0) continue; const x = rx + (rnd(i, 2) - .5) * 600 * u, y = ry - lt * 400 * u - rnd(i, 3) * 100 * u, s = Math.sin(Math.PI * lt / 1.6) * 14 * u; g.fillStyle = rgba(v.accent, .9); g.beginPath(); g.moveTo(x, y - s); g.lineTo(x + s * .3, y); g.lineTo(x, y + s); g.lineTo(x - s * .3, y); g.fill(); g.beginPath(); g.moveTo(x - s, y); g.lineTo(x, y + s * .3); g.lineTo(x + s, y); g.lineTo(x, y - s * .3); g.fill(); }
+    }
+  },
+  {
+    id: 'portal', cat: 'Gry', name: 'Wejście do portalu', d: 'Postać macha, odwraca się i wchodzi w portal, a ekran zalewa błysk. Świetne na przejście.', dur: 4, skin: true,
+    fields: [['accent', 'color', 'Kolor portalu', '#9b5cff']],
+    sfx: [[1.4, 'riser'], [2.9, 'whoosh']],
+    render(g, W, H, t, v, u) {
+      const portal = propPortal(); paintPortal(t, v.accent);
+      const frame = [];
+      for (let x = -8; x <= 8; x += 4) { frame.push({ x, y: 2, z: -24, s: 4, color: pick(['#1e1530', '#261a3d', '#150f22'], x + 20, 1) }); frame.push({ x, y: 26, z: -24, s: 4, color: pick(['#1e1530', '#261a3d', '#150f22'], x + 40, 1) }); }
+      for (let y = 6; y <= 22; y += 4) for (const x of [-8, 8]) frame.push({ x, y, z: -24, s: 4, color: pick(['#1e1530', '#261a3d', '#150f22'], y + x, 2) });
+      let p = { x: 10, z: 0, ...idlePose(t) };
+      if (t < 1.1) { const w = seg(t, .2, .35) * (1 - seg(t, .9, 1.05)); p.armR = [0, -2.7 * w + Math.sin(t * 11) * .3 * w]; }
+      else if (t < 1.5) p.rotY = lerp(0, Math.PI + .38, E.inOut(seg(t, 1.1, 1.5)));
+      else { const k = seg(t, 1.5, 3.0); p = { ...p, ...walkPose(t * 10), rotY: Math.PI + .38, x: lerp(10, 0, k), z: lerp(0, -22, k) }; }
+      const cam = frameBox(W, H, 40, 36, 2, 15, isPortrait(W, H) ? 1.1 : 1.3);
+      drawScene(g, W, H, cam, { pose: t < 3.05 ? p : null, cubes: frame, show: ['portal'], rim: v.accent });
+      const fl = seg(t, 2.85, 3.15) * (1 - seg(t, 3.3, 4));
+      if (fl > 0) { const gr = g.createRadialGradient(W / 2, H * .45, 0, W / 2, H * .45, Math.max(W, H) * .8); gr.addColorStop(0, rgba('#ffffff', fl)); gr.addColorStop(.4, rgba(v.accent, fl)); gr.addColorStop(1, rgba(v.accent, fl * .9)); g.fillStyle = gr; g.fillRect(0, 0, W, H); }
+      void portal;
+    }
+  },
+  {
+    id: 'fallblocks', cat: 'Przejścia', name: 'Spadające bloki', d: 'Ekran zasypują spadające bloki, potem się osuwają. Wstaw między klipy.', dur: 2, defBg: 'green', keyHint: true,
+    fields: [['mat', 'select', 'Rodzaj bloków', 'ziemia', MAT_OPTS]],
+    sfx: [[0, 'whoosh'], [.55, 'boom'], [1.15, 'whoosh']],
+    render(g, W, H, t, v, u) {
+      const visH = 60, visW = visH * W / H, cell = Math.max(4, Math.sqrt(visW * visH / 520)), cols = Math.ceil(visW / cell) + 1, rows = Math.ceil(visH / cell) + 1, pal = PAL[v.mat] || PAL.ziemia, cubes = [];
+      for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+        const i = r * cols + c, x = -visW / 2 + c * cell + cell / 2, y0 = r * cell + cell / 2;
+        const d = r * .035 + rnd(i, 1) * .12, k = seg(t, d, d + .45), e = E.bounce(k);
+        const d2 = 1.1 + (rows - r) * .02 + rnd(i, 2) * .1, out = E.in(seg(t, d2, d2 + .5));
+        const y = lerp(y0 + visH + 10 + rnd(i, 3) * 20, y0, e) - out * (visH + 30);
+        if (k <= 0) continue;
+        cubes.push({ x, y, z: 0, s: cell * 1.001, rz: out * (rnd(i, 4) - .5) * 2, color: pick(pal, i, 5) });
+      }
+      const cam = { fov: 20, pos: [0, visH / 2, (visH / 2) / Math.tan(10 * Math.PI / 180)], look: [0, visH / 2, 0] };
+      drawScene(g, W, H, cam, { cubes, shadow: false });
+    }
+  },
+  {
+    id: 'emotes', cat: 'Postać', name: 'Emotki postaci', d: 'Wybierz emotkę: macha, klaszcze, kłania się, myśli, tańczy i inne.', dur: 4, skin: true,
+    fields: [['emote', 'select', 'Emotka', 'wave', [['wave', 'Macha'], ['clap', 'Klaszcze'], ['bow', 'Ukłon'], ['surprise', 'Zdziwienie'], ['facepalm', 'Facepalm'], ['point', 'Wskazuje na Ciebie'], ['think', 'Myśli'], ['sad', 'Smutek'], ['cheer', 'Radość'], ['hips', 'Taniec biodrami']]], ['caption', 'text', 'Napis (opcjonalnie)', '']],
+    sfx: [],
+    render(g, W, H, t, v, u) {
+      const por = isPortrait(W, H), cam = por ? frameCam(W, H, .45, .5, .45) : frameCam(W, H, .66, .5, .5);
+      drawChar(g, W, H, emotePose(v.emote, t), cam, {});
+      if (v.caption) T(g, v.caption, W / 2, por ? H * .82 : H * .9, { size: 70 * u, font: 'Bungee', weight: 400, maxW: W * .9, shadow: { color: 'rgba(0,0,0,.5)', x: 5 * u, y: 5 * u }, alpha: seg(t, .2, .5) });
+    }
+  },
+  {
+    id: 'achievement', cat: 'Gry', name: 'Osiągnięcie zdobyte', d: 'Okienko osiągnięcia wjeżdża z boku z ikoną pucharu.', dur: 4, defBg: 'green', keyHint: true,
+    fields: [['title', 'text', 'Tytuł', 'Osiągnięcie zdobyte!'], ['desc', 'text', 'Opis', '1000 subskrybentów'], ['accent', 'color', 'Kolor tytułu', '#ffd23f']],
+    sfx: [[.25, 'ding']],
+    render(g, W, H, t, v, u) {
+      const por = isPortrait(W, H), w = Math.min(W * .9, 820 * u), hh = 170 * u, k = E.back(seg(t, .2, .6)), out = E.in(seg(t, 3.3, 3.8));
+      const x = por ? W / 2 - w / 2 : lerp(W + 20, W - w - 50 * u, k) + out * (w + 80 * u), y = por ? lerp(-hh - 20, 70 * u, k) - out * (hh + 100 * u) : 50 * u;
+      g.save(); g.shadowColor = 'rgba(0,0,0,.45)'; g.shadowBlur = 30 * u; rr(g, x, y, w, hh, 18 * u); g.fillStyle = '#1b1b22'; g.fill(); g.shadowColor = 'transparent'; g.lineWidth = 6 * u; g.strokeStyle = '#3c3c48'; g.stroke();
+      g.save(); g.clip(); const sx = x + lerp(-200 * u, w + 200 * u, seg(t, .8, 1.4)); const sg = g.createLinearGradient(sx - 100 * u, 0, sx + 100 * u, 0); sg.addColorStop(0, 'rgba(255,255,255,0)'); sg.addColorStop(.5, 'rgba(255,255,255,.18)'); sg.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = sg; g.fillRect(x, y, w, hh); g.restore();
+      rr(g, x + 25 * u, y + 25 * u, 120 * u, 120 * u, 12 * u); g.fillStyle = '#2b2b36'; g.fill();
+      pixelArt(g, TROPHY, x + 37 * u, y + 37 * u, 12 * u, { y: '#ffd23f', Y: '#fff2a8', o: '#9a6a1c' });
+      T(g, v.title, x + 170 * u, y + 62 * u, { size: 44 * u, font: 'Press Start 2P', weight: 400, color: v.accent, align: 'left', maxW: w - 200 * u });
+      T(g, v.desc, x + 170 * u, y + 120 * u, { size: 40 * u, weight: 700, color: '#f0f0f4', align: 'left', maxW: w - 200 * u });
+      g.restore();
+    }
+  },
+  {
+    id: 'hearts', cat: 'Gry', name: 'Pasek życia', d: 'Serduszka znikają po uderzeniu, ekran błyska na czerwono.', dur: 3.5, defBg: 'green', keyHint: true,
+    fields: [['start', 'text', 'Serca na początku (1–10)', '10'], ['end', 'text', 'Serca po uderzeniu', '7']],
+    sfx: [[1.0, 'boom']],
+    render(g, W, H, t, v, u) {
+      const a = clamp(parseInt(v.start) || 10, 1, 10), b = clamp(parseInt(v.end) || 0, 0, a), hit = 1.0, ps = 9 * u, sw = 8 * ps;
+      const sh = t > hit && t < hit + .4 ? Math.sin(t * 80) * 10 * u * (1 - (t - hit) / .4) : 0;
+      if (t > hit && t < hit + .6) { const al = (1 - (t - hit) / .6) * .55; const gr = g.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .3, W / 2, H / 2, Math.max(W, H) * .75); gr.addColorStop(0, 'rgba(255,0,0,0)'); gr.addColorStop(1, `rgba(255,0,0,${al})`); g.fillStyle = gr; g.fillRect(0, 0, W, H); }
+      const x0 = W / 2 - (a * sw) / 2 + sh, y0 = isPortrait(W, H) ? H * .12 : H * .1;
+      for (let i = 0; i < a; i++) {
+        const lost = i >= b && t > hit, blink = lost && t < hit + .6 && Math.floor((t - hit) * 12) % 2 === 0;
+        const empty = lost && !blink, cols = empty ? { o: '#1a0808', r: '#3a2626', w: '#4a3434' } : blink ? { o: '#1a0808', r: '#ffffff', w: '#ffffff' } : { o: '#1a0808', r: '#e8323b', w: '#ffb3b8' };
+        pixelArt(g, HEART, x0 + i * sw, y0 + (lost && t < hit + .3 ? -6 * u : 0), ps, cols);
+      }
+      if (t > hit && a > b) { const k = seg(t, hit, hit + 1.2); T(g, `−${a - b}`, x0 + b * sw + sw, y0 - 30 * u - k * 80 * u, { size: 70 * u, font: 'Press Start 2P', weight: 400, color: '#ff4040', alpha: 1 - k, stroke: { w: 8 * u, color: '#000' } }); }
+    }
+  },
+  {
+    id: 'levelup', cat: 'Gry', name: 'Level up', d: 'Pasek doświadczenia się zapełnia i wskakuje nowy poziom.', dur: 3.5,
+    fields: [['level', 'text', 'Poziom', '30'], ['label', 'text', 'Napis', 'LEVEL UP!'], ['accent', 'color', 'Kolor', '#7cff6b']],
+    sfx: [[1.8, 'ding'], [1.85, 'pop']],
+    render(g, W, H, t, v, u) {
+      const bw = Math.min(W * .8, 1100 * u), bh = 36 * u, bx = W / 2 - bw / 2, by = H * .62, f = E.inOut(seg(t, .2, 1.8));
+      g.fillStyle = '#121216'; g.fillRect(bx - 6 * u, by - 6 * u, bw + 12 * u, bh + 12 * u);
+      const segs = 18; for (let i = 0; i < segs; i++) { const sx = bx + i * bw / segs + 2 * u, sw2 = bw / segs - 4 * u; g.fillStyle = '#2a2a33'; g.fillRect(sx, by, sw2, bh); const fill = clamp(f * segs - i, 0, 1); if (fill > 0) { g.fillStyle = v.accent; g.fillRect(sx, by, sw2 * fill, bh); g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(sx, by, sw2 * fill, bh * .3); } }
+      const done = t >= 1.8, k = seg(t, 1.8, 2.2);
+      T(g, done ? String(v.level) : String(Math.max(0, (parseInt(v.level) || 1) - 1)), W / 2, by - 90 * u, { size: (done ? 150 : 110) * u, font: 'Press Start 2P', weight: 400, color: v.accent, scale: done ? lerp(1.8, 1, E.elastic(k)) : 1, stroke: { w: 12 * u, color: '#0a1a08' } });
+      if (done) { T(g, v.label, W / 2, by + 140 * u, { size: 80 * u, font: 'Press Start 2P', weight: 400, color: '#fff', scale: E.back(k), alpha: k * 2, maxW: W * .9, glow: { color: v.accent, blur: 30 * u } }); confetti(g, W, H, 1.8, t, 70, [{ x: W / 2, y: by, a: -Math.PI / 2, spread: 2.4 }], u, [v.accent, '#ffffff', '#ffd23f']); }
+    }
+  },
+  {
+    id: 'death', cat: 'Gry', name: 'Ekran porażki', d: 'Czerwony ekran z napisem ZGINĄŁEŚ i przyciskami. Najlepiej na tle „Twój film”.', dur: 4, footHint: true,
+    fields: [['title', 'text', 'Napis', 'ZGINĄŁEŚ!'], ['sub', 'text', 'Podpis', 'Wynik: 0'], ['b1', 'text', 'Przycisk 1', 'Odrodź się'], ['b2', 'text', 'Przycisk 2', 'Menu główne']],
+    sfx: [[.1, 'boom']],
+    render(g, W, H, t, v, u) {
+      const k = E.out(seg(t, 0, .8)); g.fillStyle = `rgba(120,0,0,${.55 * k})`; g.fillRect(0, 0, W, H);
+      const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, `rgba(80,0,0,${.4 * k})`); gr.addColorStop(1, `rgba(20,0,0,${.6 * k})`); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+      T(g, v.title, W / 2, H * .3, { size: 110 * u, font: 'Press Start 2P', weight: 400, color: '#fff', alpha: k, scale: lerp(1.3, 1, k), maxW: W * .9, shadow: { color: 'rgba(0,0,0,.7)', x: 8 * u, y: 8 * u } });
+      T(g, v.sub, W / 2, H * .3 + 120 * u, { size: 40 * u, font: 'Press Start 2P', weight: 400, color: '#ffd9d9', alpha: seg(t, .6, 1) });
+      [[v.b1, 1.1], [v.b2, 1.3]].forEach(([lbl, t0], i) => { const kb = E.out(seg(t, t0, t0 + .35)); const bw = Math.min(W * .7, 720 * u), bh = 90 * u, bx = W / 2 - bw / 2, by = H * .58 + i * 120 * u + (1 - kb) * 40 * u; g.globalAlpha = kb; g.fillStyle = '#6e6e72'; g.fillRect(bx, by, bw, bh); g.fillStyle = '#9a9aa0'; g.fillRect(bx, by, bw, 8 * u); g.fillStyle = '#4a4a4f'; g.fillRect(bx, by + bh - 8 * u, bw, 8 * u); g.strokeStyle = '#111'; g.lineWidth = 5 * u; g.strokeRect(bx, by, bw, bh); T(g, lbl, W / 2, by + bh / 2 + 2 * u, { size: 36 * u, font: 'Press Start 2P', weight: 400, color: '#fff', maxW: bw * .9, shadow: { color: '#333', x: 4 * u, y: 4 * u } }); g.globalAlpha = 1; });
+    }
+  },
+  {
+    id: 'loading', cat: 'Gry', name: 'Ładowanie świata', d: 'Ekran ładowania z paskiem postępu i procentami.', dur: 5,
+    fields: [['title', 'text', 'Napis', 'Generowanie świata'], ['accent', 'color', 'Kolor paska', '#5ad19a']],
+    sfx: [[4.2, 'ding']],
+    render(g, W, H, t, v, u) {
+      const cell = 48 * u; for (let y = 0; y < H + cell; y += cell) for (let x = 0; x < W + cell; x += cell) { const i = Math.floor(x / cell) * 131 + Math.floor(y / cell); for (let k = 0; k < 4; k++) { g.fillStyle = ['#2a2420', '#332b25', '#251f1b', '#3a312a'][Math.floor(rnd(i, k) * 4)]; g.fillRect(x + (k % 2) * cell / 2, y + Math.floor(k / 2) * cell / 2, cell / 2 + 1, cell / 2 + 1); } }
+      g.fillStyle = 'rgba(0,0,0,.45)'; g.fillRect(0, 0, W, H);
+      const keys = [[0, 0], [.6, .18], [1.2, .2], [1.8, .47], [2.3, .52], [3.0, .78], [3.6, .8], [4.2, 1]];
+      let p = 1; for (let i = 0; i < keys.length - 1; i++) if (t < keys[i + 1][0]) { p = lerp(keys[i][1], keys[i + 1][1], E.inOut(seg(t, keys[i][0], keys[i + 1][0]))); break; }
+      const dots = '.'.repeat(1 + Math.floor(t * 3) % 3);
+      T(g, t >= 4.2 ? 'Gotowe!' : v.title + dots, W / 2, H * .42, { size: 52 * u, font: 'Press Start 2P', weight: 400, color: '#fff', maxW: W * .9, shadow: { color: '#000', x: 5 * u, y: 5 * u } });
+      const bw = Math.min(W * .7, 900 * u), bh = 26 * u, bx = W / 2 - bw / 2, by = H * .52;
+      g.fillStyle = '#111'; g.fillRect(bx - 5 * u, by - 5 * u, bw + 10 * u, bh + 10 * u); g.fillStyle = '#3a3a3f'; g.fillRect(bx, by, bw, bh); g.fillStyle = v.accent; g.fillRect(bx, by, bw * p, bh);
+      T(g, Math.round(p * 100) + '%', W / 2, by + 75 * u, { size: 36 * u, font: 'Press Start 2P', weight: 400, color: '#ddd' });
+    }
+  },
+  {
+    id: 'pixtext', cat: 'Gry', name: 'Napis 8-bit', d: 'Litery w stylu starych gier wskakują po kolei i świecą.', dur: 4,
+    fields: [['text', 'text', 'Napis', 'GAME OVER'], ['sub', 'text', 'Mrugający podpis', 'NACIŚNIJ START'], ['c1', 'color', 'Kolor', '#ffd23f']],
+    sfx: [[0, 'tick'], [.3, 'tick'], [.6, 'tick']],
+    render(g, W, H, t, v, u) {
+      const chars = [...v.text], fs = Math.min(150 * u, W * .85 / Math.max(1, chars.length) / 1.05);
+      g.font = `400 ${fs}px "Press Start 2P"`; const widths = chars.map(c => g.measureText(c).width), tw = widths.reduce((a, b) => a + b, 0);
+      let x = W / 2 - tw / 2;
+      chars.forEach((c, i) => { const k = seg(t, i * .07, i * .07 + .45), y = H * .45 - (1 - E.bounce(k)) * 300 * u; const hue = (i * 30 + t * 120) % 360; if (k > 0) T(g, c, x + widths[i] / 2, y, { size: fs, font: 'Press Start 2P', weight: 400, color: v.c1, stroke: { w: 10 * u, color: `hsl(${hue},90%,45%)` }, glow: { color: v.c1, blur: 18 * u } }); x += widths[i]; });
+      if (t > 1.2 && t % 1 < .6) T(g, v.sub, W / 2, H * .45 + fs + 60 * u, { size: 36 * u, font: 'Press Start 2P', weight: 400, color: '#fff', maxW: W * .9 });
+      g.fillStyle = 'rgba(0,0,0,.22)'; for (let y = 0; y < H; y += 5 * u) g.fillRect(0, y, W, 2 * u);
+    }
+  },
+  {
+    id: 'dramazoom', cat: 'Film', name: 'Dramatyczny zoom', d: 'Mocny najazd na środek Twojego filmu z trzęsieniem, jak w memach.', dur: 3, footage: true,
+    fields: [['text', 'text', 'Napis', '???'], ['accent', 'color', 'Kolor napisu', '#ff2b2b']],
+    sfx: [[.4, 'boom']],
+    render(g, W, H, t, v, u) {
+      const k = E.out(seg(t, .4, .65)), sh = t > .4 ? (1 - seg(t, .4, 1.6)) * 18 * u + 3 * u : 0;
+      drawFootage(g, W, H, { s: lerp(1, 2.4, k) + Math.sin(t * 2) * .02 * k, ox: Math.sin(t * 61) * sh, oy: Math.cos(t * 47) * sh, filter: k > .02 ? `grayscale(${k}) contrast(${1 + .35 * k})` : 'none' });
+      if (k > 0) { const gr = g.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .25, W / 2, H / 2, Math.max(W, H) * .7); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, `rgba(0,0,0,${.75 * k})`); g.fillStyle = gr; g.fillRect(0, 0, W, H); g.fillStyle = `rgba(255,255,255,${(1 - seg(t, .4, .6)) * .7})`; g.fillRect(0, 0, W, H); }
+      if (v.text) T(g, v.text, W / 2, H * .8, { size: 140 * u, font: 'Anton', weight: 400, color: v.accent, alpha: seg(t, .7, .9), scale: E.back(seg(t, .7, 1)), stroke: { w: 12 * u, color: '#000' }, maxW: W * .9 });
+    }
+  },
+  {
+    id: 'beatshake', cat: 'Film', name: 'Trzęsienie na bit', d: 'Twój film podskakuje, błyska i trzęsie się w rytm muzyki.', dur: 4, footage: true,
+    fields: [['bpm', 'select', 'Tempo', '120', [['100', '100 BPM'], ['120', '120 BPM'], ['140', '140 BPM']]]],
+    sfx: [],
+    render(g, W, H, t, v, u) {
+      const per = 60 / (parseInt(v.bpm) || 120), ph = (t % per) / per, hit = Math.exp(-ph * 7);
+      drawFootage(g, W, H, { s: 1.04 + .12 * hit, ox: Math.sin(t * 70) * 14 * u * hit, oy: Math.cos(t * 55) * 10 * u * hit, rot: Math.sin(t * 40) * .02 * hit, filter: `brightness(${1 + .4 * hit}) saturate(${1 + .5 * hit})` });
+      g.save(); g.globalCompositeOperation = 'lighter'; g.fillStyle = `rgba(255,255,255,${.15 * hit})`; g.fillRect(0, 0, W, H); g.restore();
+    }
+  }
+);
+
+const CATS = ['Wszystkie', 'Gry', 'Montaż', 'Postać', 'Napisy', 'Kanał', 'Przejścia', 'Film'];
+const CAT_NAMES = { 'Gry': 'Gry i bloki', 'Film': 'Efekty na Twoim filmie', 'Montaż': 'Do montażu', 'Postać': 'Postać ze skinem', 'Napisy': 'Napisy i intro', 'Kanał': 'Kanał', 'Przejścia': 'Przejścia' };
 let cineCv = null; function cineCanvas(W, H) { if (!cineCv) cineCv = document.createElement('canvas'); if (cineCv.width !== W || cineCv.height !== H) { cineCv.width = W; cineCv.height = H; } return cineCv; }
 const tintCvs = {}; function tintCanvas(src, col, W, H) { let c = tintCvs[col]; if (!c) c = tintCvs[col] = document.createElement('canvas'); if (c.width !== W || c.height !== H) { c.width = W; c.height = H; } const g = c.getContext('2d'); g.clearRect(0, 0, W, H); g.drawImage(src, 0, 0); g.globalCompositeOperation = 'source-in'; g.fillStyle = col; g.fillRect(0, 0, W, H); g.globalCompositeOperation = 'source-over'; return c; }
 
@@ -1153,7 +1561,7 @@ function renderTo(g, W, H, t, tpl = ST.tpl, forExport = false) {
 }
 let blendCv = null; function blendCanvas(W, H) { if (!blendCv) blendCv = document.createElement('canvas'); if (blendCv.width !== W || blendCv.height !== H) { blendCv.width = W; blendCv.height = H; } return blendCv; }
 function syncBgVideo(t, playing) {
-  const vd = ST.bgVid; if (!vd || ST.bg !== 'video' || vd.readyState < 1) return;
+  const vd = ST.bgVid; if (!vd || (ST.bg !== 'video' && !ST.tpl.footage) || vd.readyState < 1) return;
   const want = vd.duration ? t % vd.duration : t;
   if (playing) { if (vd.paused) vd.play().catch(() => { }); if (Math.abs(vd.currentTime - want) > .3) vd.currentTime = want; vd.playbackRate = ST.speed; }
   else { if (!vd.paused) vd.pause(); if (Math.abs(vd.currentTime - want) > .04 && !vd.seeking) vd.currentTime = want; }
@@ -1193,7 +1601,7 @@ function makePosters(only) {
   for (const tpl of TEMPLATES) {
     if (only && !only(tpl)) continue;
     const c = posters.get(tpl.id) || document.createElement('canvas'); c.width = W; c.height = H;
-    const pt = { lightning: .2, fire: 2, flare: 1.4, pulse: .3, crack: .5, confov: 2, comic: .5, notif: 1.5, counter: 3.0, karaoke: 2.2, runwipe: .55, sign: 2.5, speech: 3.5, flashtr: .22, iris: .35, leak: 1.6, burn: 1.0, speed: .6, glitchov: .5, rec: .3, arrow: 2.0, emoji: 2.4, bars: 1.5, sparkle: 1.3, smoke: 2.5, dustov: 1.2, enter: 3.0, spin: 3.2, dance: 1.3, subchar: 3.6, win: 1.6, land: 1.8, cine: 3.4, glitch: 2.0, count: 0.5, kinetic: 1.0, lower: 2.5, subscribe: 2.6, outro: 2.5, wipe: .78 }[tpl.id] ?? 2;
+    const pt = { voxtext: 2.6, voxboom: .95, mine: 1.6, chest: 2.3, portal: .6, fallblocks: .75, emotes: 1.0, achievement: 1.2, hearts: 1.25, levelup: 2.1, death: 2.0, loading: 2.6, pixtext: 1.5, dramazoom: 1.2, beatshake: .05, lightning: .2, fire: 2, flare: 1.4, pulse: .3, crack: .5, confov: 2, comic: .5, notif: 1.5, counter: 3.0, karaoke: 2.2, runwipe: .55, sign: 2.5, speech: 3.5, flashtr: .22, iris: .35, leak: 1.6, burn: 1.0, speed: .6, glitchov: .5, rec: .3, arrow: 2.0, emoji: 2.4, bars: 1.5, sparkle: 1.3, smoke: 2.5, dustov: 1.2, enter: 3.0, spin: 3.2, dance: 1.3, subchar: 3.6, win: 1.6, land: 1.8, cine: 3.4, glitch: 2.0, count: 0.5, kinetic: 1.0, lower: 2.5, subscribe: 2.6, outro: 2.5, wipe: .78 }[tpl.id] ?? 2;
     renderTo(c.getContext('2d'), W, H, pt, tpl);
     posters.set(tpl.id, c);
   }
@@ -1208,9 +1616,14 @@ function selectTpl(tpl) {
   if (window.matchMedia('(max-width:900px)').matches) $('#stage').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 function updateTitle() { $('#tplTitle').textContent = ST.tpl.name; $('#tplHint').textContent = ST.tpl.bgHint && ST.bg !== 'green' ? 'Do nałożenia na film wybierz zielone tło' : ''; $('#tDur').textContent = durOf(ST.tpl).toFixed(1); }
-function field(key, type, label, def) {
+function field(key, type, label, def, opts) {
   const id = 'f-' + key;
   const val = VALS[key] ?? def;
+  if (type === 'select') {
+    const sel = h('select', { id }, opts.map(([v2, l]) => h('option', { value: v2, selected: String(val) === String(v2) }, l)));
+    sel.addEventListener('change', () => { VALS[key] = sel.value; dirty = true; makePosters(t => t.fields.some(f => f[0] === key)); });
+    return h('div', { class: 'field' }, h('label', { for: id }, label), sel);
+  }
   if (type === 'color') {
     const inp = h('input', { type: 'color', id, value: val }); const sp = h('span', null, val.toUpperCase());
     inp.addEventListener('input', () => { VALS[key] = inp.value; sp.textContent = inp.value.toUpperCase(); dirty = true; });
@@ -1227,6 +1640,9 @@ function renderEditor() {
   const tpl = ST.tpl, b = $('#ebody'); b.replaceChildren();
   b.append(h('div', { class: 'group' }, h('div', { class: 'gh' }, tpl.name), h('div', { class: 'hint' }, tpl.d),
     tpl.blendHint ? h('div', { class: 'hint', style: 'color:var(--fg)' }, 'Jak użyć w CapCut: dodaj pobrany film jako Nakładkę na swój klip, potem Tryb mieszania → Ekran. Czarne tło zniknie, zostanie samo światło.') : null,
+    tpl.footage ? h('div', { class: 'hint', style: 'color:var(--fg)' }, ST.bgVid ? 'Efekt działa na Twoim wgranym filmie. Pobrany plik będzie gotowym filmem.' : 'Ten efekt zmienia Twój film. Wgraj nagranie, a zobaczysz efekt od razu.') : null,
+    tpl.footage ? h('button', { class: 'btn', onclick: () => $('#vidIn').click() }, ST.bgVid ? 'Zmień film' : 'Wgraj swój film') : null,
+    tpl.footHint ? h('div', { class: 'hint', style: 'color:var(--fg)' }, 'Najlepiej wygląda na Twoim nagraniu: wybierz poniżej tło „Twój film”.') : null,
     tpl.keyHint ? h('div', { class: 'hint', style: 'color:var(--fg)' }, 'Jak użyć w CapCut: dodaj pobrany film jako Nakładkę, potem Wycinanie → Kluczowanie koloru i kliknij zielony. Zostanie sama animacja.') : null));
   const texts = tpl.fields.filter(f => f[1] !== 'color'), colors = tpl.fields.filter(f => f[1] === 'color');
   if (texts.length) b.append(h('div', { class: 'group' }, h('div', { class: 'gh' }, 'Napisy'), ...texts.map(f => field(...f))));
@@ -1275,7 +1691,7 @@ function tick(now) {
     dirty = true;
   }
   if (!exporting) syncBgVideo(ST.t, ST.playing);
-  if ((dirty || (ST.bg === 'video' && ST.bgVid)) && !exporting) { dirty = false; sizeView(); renderTo(vg, view.width, view.height, ST.t); const s = $('#scrub'); s.value = Math.round(ST.t / D * 1000); s.style.setProperty('--p', (ST.t / D * 100) + '%'); $('#tNow').textContent = ST.t.toFixed(1); }
+  if ((dirty || ((ST.bg === 'video' || ST.tpl.footage) && ST.bgVid)) && !exporting) { dirty = false; sizeView(); renderTo(vg, view.width, view.height, ST.t); const s = $('#scrub'); s.value = Math.round(ST.t / D * 1000); s.style.setProperty('--p', (ST.t / D * 100) + '%'); $('#tNow').textContent = ST.t.toFixed(1); }
   requestAnimationFrame(tick);
 }
 function setPlayIcon() { $('#playBtn').innerHTML = ST.playing ? ICON.pause : ICON.play; }
@@ -1293,7 +1709,7 @@ $('#skinIn').addEventListener('change', async e => {
 $('#vidIn').addEventListener('change', e => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
   const vd = document.createElement('video'); vd.src = URL.createObjectURL(f); vd.muted = true; vd.loop = true; vd.playsInline = true; vd.preload = 'auto';
-  vd.onloadeddata = () => { if (ST.bgVid) ST.bgVid.pause(); ST.bgVid = vd; ST.bg = 'video'; ST.bgAuto = false; renderEditor(); updateTitle(); dirty = true; toast('Film wczytany jako tło'); };
+  vd.onloadeddata = () => { if (ST.bgVid) ST.bgVid.pause(); ST.bgVid = vd; if (!ST.tpl.footage) { ST.bg = 'video'; ST.bgAuto = false; } renderEditor(); updateTitle(); dirty = true; toast('Film wczytany jako tło'); };
   vd.onerror = () => toast('Nie udało się otworzyć tego filmu', 4000);
 });
 $('#bgIn').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (!f) return; const im = new Image(); im.onload = () => { ST.bgImg = im; ST.bg = 'image'; renderEditor(); dirty = true; }; im.src = URL.createObjectURL(f); });
@@ -1338,7 +1754,7 @@ function runExport(W, H, fps, mime, ext, body, bg) {
   renderTo(g, W, H, 0, tpl, true);
   const stream = cv.captureStream(fps);
   if (ST.sound) { audio(); for (const tr of recDest.stream.getAudioTracks()) stream.addTrack(tr); }
-  const vd = ST.bg === 'video' ? ST.bgVid : null;
+  const vd = (ST.bg === 'video' || tpl.footage) ? ST.bgVid : null;
   if (vd) { vd.pause(); vd.currentTime = 0; if (ST.sound) { if (!vd._src) { try { vd._src = actx.createMediaElementSource(vd); vd._src.connect(master); } catch (e) { } } vd.muted = false; } }
   let rec; try { rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: Math.round(W * H * fps * .18), audioBitsPerSecond: 192000 }); } catch (e) { toast('Nie udało się uruchomić nagrywania'); return; }
   const chunks = []; rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
