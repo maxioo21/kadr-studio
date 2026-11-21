@@ -1,4 +1,4 @@
-# Kadr Studio 🎬
+# FakeTok 🎬
 
 Darmowy edytor wideo po polsku: oś czasu, efekty, przejścia, filtry, animowane napisy, naklejki, usuwanie tła AI i eksport do MP4. Działa bez internetu, a Twoje filmy nie są nigdzie wysyłane.
 
@@ -6,8 +6,8 @@ Darmowy edytor wideo po polsku: oś czasu, efekty, przejścia, filtry, animowane
 
 | | Plik | |
 |---|---|---|
-| 🪟 **Windows 10/11** | [**KadrStudio-Setup.exe**](https://github.com/maxioo21/kadr-studio/raw/main/pobierz/KadrStudio-Setup.exe) (26 MB) | instalator: ikona na pulpicie i w menu Start |
-| 🤖 **Android** | [**KadrStudio.apk**](https://github.com/maxioo21/kadr-studio/raw/main/pobierz/KadrStudio.apk) (5,4 MB) | gotowe filmy trafiają do galerii |
+| 🪟 **Windows 10/11** | [**FakeTok-Setup.exe**](https://github.com/maxioo21/kadr-studio/raw/main/pobierz/FakeTok-Setup.exe) (26 MB) | instalator: ikona na pulpicie i w menu Start |
+| 🤖 **Android** | [**FakeTok.apk**](https://github.com/maxioo21/kadr-studio/raw/main/pobierz/FakeTok.apk) (5,4 MB) | gotowe filmy trafiają do galerii |
 | 🌐 **Przeglądarka** (telefon i komputer) | **https://maxioo21.github.io/kadr-studio/** | przycisk „Zainstaluj” dodaje aplikację na ekran główny |
 
 **Windows:** uruchom pobrany plik. Jeśli pojawi się „System Windows ochronił ten komputer”, kliknij *Więcej informacji*, a potem *Uruchom mimo to*. Program otwiera się we własnym oknie (używa Microsoft Edge, który jest w każdym Windowsie). Gotowe filmy zapisują się w folderze *Pobrane*.
@@ -40,8 +40,8 @@ npm install
 ```bash
 npm run fonts        # pobiera czcionki do docs/fonts (raz)
 npm run build:web    # buduje docs/ (GitHub Pages, praca offline)
-npm run build:installer   # dist/KadrStudio.exe i dist/KadrStudio-Setup.exe (wymaga makensis)
-npm run build:android     # dist/KadrStudio.apk (wymaga android-sdk-platform-23 aapt apksigner dalvik-exchange zipalign i JDK)
+npm run build:installer   # dist/FakeTok.exe i dist/FakeTok-Setup.exe (wymaga makensis)
+npm run build:android     # dist/FakeTok.apk (wymaga android-sdk-platform-23 aapt apksigner dalvik-exchange zipalign i JDK)
 npm start            # uruchamia wersję na komputer z folderu docs/
 ```
 

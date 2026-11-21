@@ -1,5 +1,5 @@
 /*
- * Kadr Studio – aplikacja na komputer (Windows).
+ * FakeTok – aplikacja na komputer (Windows).
  * Uruchamia mały lokalny serwer z plikami edytora i otwiera go we własnym oknie
  * (Microsoft Edge lub Chrome w trybie aplikacji, bez pasków przeglądarki).
  * Nic nie jest wysyłane do internetu – filmy zostają na komputerze.
@@ -11,7 +11,7 @@ const http = require('http');
 const { spawn } = require('child_process');
 
 const isWin = process.platform === 'win32';
-const dataDir = path.join(process.env.LOCALAPPDATA || process.env.APPDATA || path.join(os.homedir(), '.config'), 'KadrStudio');
+const dataDir = path.join(process.env.LOCALAPPDATA || process.env.APPDATA || path.join(os.homedir(), '.config'), 'FakeTok');
 fs.mkdirSync(dataDir, { recursive: true });
 const logFile = path.join(dataDir, 'log.txt');
 const log = (...a) => { try { fs.appendFileSync(logFile, `${new Date().toISOString()} ${a.join(' ')}\n`); } catch { /* */ } };
@@ -19,7 +19,7 @@ function showError(msg) {
   log('BŁĄD', msg);
   if (isWin) {
     const text = String(msg).replace(/["'\\\r\n]/g, ' ').slice(0, 400);
-    spawn('mshta', [`javascript:alert("Kadr Studio: ${text}");close()`], { windowsHide: true, detached: true, stdio: 'ignore' }).unref();
+    spawn('mshta', [`javascript:alert("FakeTok: ${text}");close()`], { windowsHide: true, detached: true, stdio: 'ignore' }).unref();
   } else console.error(msg);
 }
 process.on('uncaughtException', e => { showError(e && e.stack || e); setTimeout(() => process.exit(1), 3000); });
@@ -40,7 +40,7 @@ let lastAlive = 0;
 
 function probe(port) {
   return new Promise(resolve => {
-    const req = http.get({ host: '127.0.0.1', port, path: '/__kadr', timeout: 700 }, res => { let b = ''; res.on('data', d => { b += d; }); res.on('end', () => resolve(b === 'kadr-studio')); });
+    const req = http.get({ host: '127.0.0.1', port, path: '/__kadr', timeout: 700 }, res => { let b = ''; res.on('data', d => { b += d; }); res.on('end', () => resolve(b === 'faketok')); });
     req.on('error', () => resolve(false)); req.on('timeout', () => { req.destroy(); resolve(false); });
   });
 }
@@ -48,7 +48,7 @@ function serve(port) {
   return new Promise((resolve, reject) => {
     const srv = http.createServer((req, res) => {
       const url = decodeURIComponent((req.url || '/').split('?')[0]);
-      if (url === '/__kadr') { res.end('kadr-studio'); return; }
+      if (url === '/__kadr') { res.end('faketok'); return; }
       if (url === '/__alive') { lastAlive = Date.now(); res.writeHead(204); res.end(); return; }
       const rel = url === '/' ? 'index.html' : url.replace(/^\/+/, '');
       const data = readFile(rel);

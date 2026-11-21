@@ -1,6 +1,6 @@
 {
-  "name": "Kadr Studio",
-  "short_name": "Kadr",
+  "name": "FakeTok",
+  "short_name": "FakeTok",
   "description": "Edytor wideo: efekty, przejścia, filtry, napisy i usuwanie tła",
   "lang": "pl",
   "start_url": "./",

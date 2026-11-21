@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Buduje Kadr Studio na Androida: dist/KadrStudio.apk  (najpierw: npm run build:web)
+# Buduje FakeTok na Androida: dist/FakeTok.apk  (najpierw: npm run build:web)
 # Wymaga (Ubuntu/Debian): android-sdk-platform-23 aapt apksigner dalvik-exchange zipalign oraz JDK.
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -27,6 +27,6 @@ if [ ! -f "$KEYSTORE" ]; then
   keytool -genkeypair -keystore "$KEYSTORE" -storepass "$KEYPASS" -keypass "$KEYPASS" -alias kadr \
     -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Kadr Studio, O=Kadr Studio, C=PL" >/dev/null 2>&1
 fi
-apksigner sign --ks "$KEYSTORE" --ks-pass "pass:$KEYPASS" --ks-key-alias kadr --out "$OUT/KadrStudio.apk" "$B/aligned.apk"
-apksigner verify "$OUT/KadrStudio.apk"
-echo "Gotowe: $OUT/KadrStudio.apk ($(du -h "$OUT/KadrStudio.apk" | cut -f1))"
+apksigner sign --ks "$KEYSTORE" --ks-pass "pass:$KEYPASS" --ks-key-alias kadr --out "$OUT/FakeTok.apk" "$B/aligned.apk"
+apksigner verify "$OUT/FakeTok.apk"
+echo "Gotowe: $OUT/FakeTok.apk ($(du -h "$OUT/FakeTok.apk" | cut -f1))"

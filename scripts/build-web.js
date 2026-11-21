@@ -15,7 +15,7 @@ if (!fontsLink.test(src)) throw new Error('Nie znaleziono linku do czcionek w sr
 const body = src.replace(fontsLink, '<link rel="stylesheet" href="fonts/fonts.css">');
 const head = `<!doctype html><html lang="pl"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="Kadr Studio – darmowy edytor wideo: efekty, przejścia, filtry, napisy, usuwanie tła AI i eksport do MP4.">
+<meta name="description" content="FakeTok – darmowy edytor wideo: efekty, przejścia, filtry, napisy, usuwanie tła AI i eksport do MP4.">
 <meta name="theme-color" content="#0c0d11">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -27,7 +27,7 @@ fs.writeFileSync(path.join(DOCS, 'index.html'), head + body + '</body></html>');
 
 fs.copyFileSync(path.join(ROOT, 'src', 'icon.svg'), path.join(DOCS, 'icon.svg'));
 fs.writeFileSync(path.join(DOCS, 'manifest.webmanifest'), JSON.stringify({
-  name: 'Kadr Studio', short_name: 'Kadr', description: 'Edytor wideo: efekty, przejścia, filtry, napisy i usuwanie tła',
+  name: 'FakeTok', short_name: 'FakeTok', description: 'Edytor wideo: efekty, przejścia, filtry, napisy i usuwanie tła',
   lang: 'pl', start_url: './', scope: './', display: 'standalone', background_color: '#0c0d11', theme_color: '#0c0d11',
   icons: [
     { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
@@ -39,8 +39,8 @@ fs.writeFileSync(path.join(DOCS, 'manifest.webmanifest'), JSON.stringify({
 
 const files = [];
 (function walk(d, pre) { for (const f of fs.readdirSync(d, { withFileTypes: true })) { const rel = pre + f.name; if (f.isDirectory()) walk(path.join(d, f.name), rel + '/'); else if (f.name !== 'sw.js' && f.name !== '.nojekyll') files.push(rel); } })(DOCS, '');
-fs.writeFileSync(path.join(DOCS, 'sw.js'), `/* Kadr Studio – praca offline */
-const CACHE = 'kadr-${VERSION}-${Date.now().toString(36)}';
+fs.writeFileSync(path.join(DOCS, 'sw.js'), `/* FakeTok – praca offline */
+const CACHE = 'faketok-${VERSION}-${Date.now().toString(36)}';
 const FILES = ${JSON.stringify(['./', ...files])};
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });

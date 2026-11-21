@@ -1,5 +1,5 @@
 /*
- * Buduje aplikację na komputer: dist/KadrStudio.exe (Windows, jeden plik z wbudowanym edytorem).
+ * Buduje aplikację na komputer: dist/FakeTok.exe (Windows, jeden plik z wbudowanym edytorem).
  *   npm run build:desktop      (najpierw: npm run build:web)
  * Kroki: blob Single Executable Application (Node.js) z plikami z docs/ → ikona i opis (resedit) → tryb okienkowy.
  */
@@ -35,15 +35,15 @@ execFileSync(process.execPath, ['--experimental-sea-config', path.join(B, 'sea-c
 (async () => {
   step(3, `Node.js ${NODE_VERSION} dla Windows`);
   const nodeExe = await getWindowsNode();
-  const target = path.join(B, 'KadrStudio.exe');
+  const target = path.join(B, 'FakeTok.exe');
   step(4, 'Ikona, opis i wbudowanie edytora w plik');
   await brandExe(nodeExe, target, fs.readFileSync(path.join(B, 'sea.blob')));
   step(5, 'Tryb okienkowy (bez czarnego okna konsoli)');
   setWindowsGuiSubsystem(target);
-  const out = path.join(ROOT, 'dist', 'KadrStudio.exe');
+  const out = path.join(ROOT, 'dist', 'FakeTok.exe');
   fs.mkdirSync(path.dirname(out), { recursive: true });
   fs.copyFileSync(target, out);
-  console.log(`Gotowe: dist/KadrStudio.exe (${(fs.statSync(out).size / 1e6).toFixed(1)} MB)`);
+  console.log(`Gotowe: dist/FakeTok.exe (${(fs.statSync(out).size / 1e6).toFixed(1)} MB)`);
 })().catch(e => { console.error(e); process.exit(1); });
 
 /** Pobiera oficjalny node.exe tej samej wersji (pakiet node-win-x64 z rejestru npm). */
@@ -73,8 +73,8 @@ async function brandExe(src, dst, blob) {
   const langs = vi.getAllLanguagesForStringValues();
   const lang = langs[0] || { lang: 1033, codepage: 1200 };
   vi.setStringValues(lang, {
-    CompanyName: 'Kadr Studio', FileDescription: 'Kadr Studio – edytor wideo', ProductName: 'Kadr Studio',
-    InternalName: 'KadrStudio', OriginalFilename: 'KadrStudio.exe', FileVersion: '1.1.0', ProductVersion: '1.1.0', LegalCopyright: 'Kadr Studio'
+    CompanyName: 'FakeTok', FileDescription: 'FakeTok – edytor wideo', ProductName: 'FakeTok',
+    InternalName: 'FakeTok', OriginalFilename: 'FakeTok.exe', FileVersion: '1.1.0', ProductVersion: '1.1.0', LegalCopyright: 'FakeTok'
   });
   vi.outputToResourceEntries(res.entries);
   res.entries = res.entries.filter(e => !(e.type === 10 && e.id === 'NODE_SEA_BLOB'));

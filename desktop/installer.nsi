@@ -1,36 +1,36 @@
-﻿; Kadr Studio – instalator dla Windows (NSIS). Budowanie: npm run build:installer
+﻿; FakeTok – instalator dla Windows (NSIS). Budowanie: npm run build:installer
 Target amd64-unicode
 !include "MUI2.nsh"
 
-!define APPNAME "Kadr Studio"
+!define APPNAME "FakeTok"
 !define APPVERSION "1.1.0"
-!define UNINSTKEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\KadrStudio"
+!define UNINSTKEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\FakeTok"
 
 Name "${APPNAME}"
-OutFile "..\dist\KadrStudio-Setup.exe"
-InstallDir "$LOCALAPPDATA\Programs\KadrStudio"
-InstallDirRegKey HKCU "Software\KadrStudio" "InstallDir"
+OutFile "..\dist\FakeTok-Setup.exe"
+InstallDir "$LOCALAPPDATA\Programs\FakeTok"
+InstallDirRegKey HKCU "Software\FakeTok" "InstallDir"
 RequestExecutionLevel user
 SetCompressor /SOLID lzma
-BrandingText "Kadr Studio ${APPVERSION}"
+BrandingText "FakeTok ${APPVERSION}"
 
 VIProductVersion "1.1.0.0"
-VIAddVersionKey /LANG=1045 "ProductName" "Kadr Studio"
-VIAddVersionKey /LANG=1045 "FileDescription" "Instalator Kadr Studio"
+VIAddVersionKey /LANG=1045 "ProductName" "FakeTok"
+VIAddVersionKey /LANG=1045 "FileDescription" "Instalator FakeTok"
 VIAddVersionKey /LANG=1045 "FileVersion" "${APPVERSION}"
 VIAddVersionKey /LANG=1045 "ProductVersion" "${APPVERSION}"
-VIAddVersionKey /LANG=1045 "CompanyName" "Kadr Studio"
-VIAddVersionKey /LANG=1045 "LegalCopyright" "Kadr Studio"
+VIAddVersionKey /LANG=1045 "CompanyName" "FakeTok"
+VIAddVersionKey /LANG=1045 "LegalCopyright" "FakeTok"
 
 !define MUI_ICON "icon.ico"
 !define MUI_UNICON "icon.ico"
 !define MUI_ABORTWARNING
-!define MUI_WELCOMEPAGE_TITLE "Witaj w instalatorze Kadr Studio"
-!define MUI_WELCOMEPAGE_TEXT "Kadr Studio to darmowy edytor wideo: efekty, przejścia, filtry, animowane napisy i usuwanie tła.$\r$\n$\r$\nInstalator doda program do menu Start i na pulpit. Nie są potrzebne uprawnienia administratora.$\r$\n$\r$\nKliknij Dalej, aby kontynuować."
-!define MUI_FINISHPAGE_RUN "$INSTDIR\KadrStudio.exe"
-!define MUI_FINISHPAGE_RUN_TEXT "Uruchom Kadr Studio"
+!define MUI_WELCOMEPAGE_TITLE "Witaj w instalatorze FakeTok"
+!define MUI_WELCOMEPAGE_TEXT "FakeTok to darmowy edytor wideo: efekty, przejścia, filtry, animowane napisy i usuwanie tła.$\r$\n$\r$\nInstalator doda program do menu Start i na pulpit, a starszą wersję o nazwie Kadr Studio usunie. Nie są potrzebne uprawnienia administratora.$\r$\n$\r$\nKliknij Dalej, aby kontynuować."
+!define MUI_FINISHPAGE_RUN "$INSTDIR\FakeTok.exe"
+!define MUI_FINISHPAGE_RUN_TEXT "Uruchom FakeTok"
 !define MUI_FINISHPAGE_TITLE "Gotowe!"
-!define MUI_FINISHPAGE_TEXT "Kadr Studio zostało zainstalowane. Uruchomisz je ikoną na pulpicie lub z menu Start.$\r$\n$\r$\nGotowe filmy trafiają do folderu Pobrane."
+!define MUI_FINISHPAGE_TEXT "FakeTok został zainstalowany. Uruchomisz je ikoną na pulpicie lub z menu Start.$\r$\n$\r$\nGotowe filmy trafiają do folderu Pobrane."
 
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_DIRECTORY
@@ -40,25 +40,31 @@ VIAddVersionKey /LANG=1045 "LegalCopyright" "Kadr Studio"
 !insertmacro MUI_UNPAGE_INSTFILES
 !insertmacro MUI_LANGUAGE "Polish"
 
-Section "Kadr Studio" SecMain
+Section "FakeTok" SecMain
   SectionIn RO
+  nsExec::Exec 'taskkill /F /IM FakeTok.exe'
   nsExec::Exec 'taskkill /F /IM KadrStudio.exe'
   Sleep 500
+  ; poprzednia nazwa programu: Kadr Studio – usuń ją po cichu
+  IfFileExists "$LOCALAPPDATA\Programs\KadrStudio\Odinstaluj.exe" 0 +2
+    ExecWait '"$LOCALAPPDATA\Programs\KadrStudio\Odinstaluj.exe" /S _?=$LOCALAPPDATA\Programs\KadrStudio'
+  Delete "$LOCALAPPDATA\Programs\KadrStudio\Odinstaluj.exe"
+  RMDir "$LOCALAPPDATA\Programs\KadrStudio"
   SetOutPath "$INSTDIR"
-  File "..\dist\KadrStudio.exe"
-  File "/oname=KadrStudio.ico" "icon.ico"
+  File "..\dist\FakeTok.exe"
+  File "/oname=FakeTok.ico" "icon.ico"
   WriteUninstaller "$INSTDIR\Odinstaluj.exe"
 
-  CreateShortcut "$DESKTOP\Kadr Studio.lnk" "$INSTDIR\KadrStudio.exe" "" "$INSTDIR\KadrStudio.exe" 0 SW_SHOWNORMAL "" "Edytor wideo Kadr Studio"
-  CreateDirectory "$SMPROGRAMS\Kadr Studio"
-  CreateShortcut "$SMPROGRAMS\Kadr Studio\Kadr Studio.lnk" "$INSTDIR\KadrStudio.exe" "" "$INSTDIR\KadrStudio.exe" 0 SW_SHOWNORMAL "" "Edytor wideo Kadr Studio"
-  CreateShortcut "$SMPROGRAMS\Kadr Studio\Odinstaluj Kadr Studio.lnk" "$INSTDIR\Odinstaluj.exe"
+  CreateShortcut "$DESKTOP\FakeTok.lnk" "$INSTDIR\FakeTok.exe" "" "$INSTDIR\FakeTok.exe" 0 SW_SHOWNORMAL "" "Edytor wideo FakeTok"
+  CreateDirectory "$SMPROGRAMS\FakeTok"
+  CreateShortcut "$SMPROGRAMS\FakeTok\FakeTok.lnk" "$INSTDIR\FakeTok.exe" "" "$INSTDIR\FakeTok.exe" 0 SW_SHOWNORMAL "" "Edytor wideo FakeTok"
+  CreateShortcut "$SMPROGRAMS\FakeTok\Odinstaluj FakeTok.lnk" "$INSTDIR\Odinstaluj.exe"
 
-  WriteRegStr HKCU "Software\KadrStudio" "InstallDir" "$INSTDIR"
-  WriteRegStr HKCU "${UNINSTKEY}" "DisplayName" "Kadr Studio – edytor wideo"
+  WriteRegStr HKCU "Software\FakeTok" "InstallDir" "$INSTDIR"
+  WriteRegStr HKCU "${UNINSTKEY}" "DisplayName" "FakeTok – edytor wideo"
   WriteRegStr HKCU "${UNINSTKEY}" "DisplayVersion" "${APPVERSION}"
-  WriteRegStr HKCU "${UNINSTKEY}" "Publisher" "Kadr Studio"
-  WriteRegStr HKCU "${UNINSTKEY}" "DisplayIcon" "$INSTDIR\KadrStudio.exe"
+  WriteRegStr HKCU "${UNINSTKEY}" "Publisher" "FakeTok"
+  WriteRegStr HKCU "${UNINSTKEY}" "DisplayIcon" "$INSTDIR\FakeTok.exe"
   WriteRegStr HKCU "${UNINSTKEY}" "InstallLocation" "$INSTDIR"
   WriteRegStr HKCU "${UNINSTKEY}" "UninstallString" '"$INSTDIR\Odinstaluj.exe"'
   WriteRegDWORD HKCU "${UNINSTKEY}" "NoModify" 1
@@ -67,16 +73,16 @@ Section "Kadr Studio" SecMain
 SectionEnd
 
 Section "Uninstall"
-  nsExec::Exec 'taskkill /F /IM KadrStudio.exe'
+  nsExec::Exec 'taskkill /F /IM FakeTok.exe'
   Sleep 500
-  Delete "$INSTDIR\KadrStudio.exe"
-  Delete "$INSTDIR\KadrStudio.ico"
+  Delete "$INSTDIR\FakeTok.exe"
+  Delete "$INSTDIR\FakeTok.ico"
   Delete "$INSTDIR\Odinstaluj.exe"
   RMDir "$INSTDIR"
-  Delete "$DESKTOP\Kadr Studio.lnk"
-  Delete "$SMPROGRAMS\Kadr Studio\Kadr Studio.lnk"
-  Delete "$SMPROGRAMS\Kadr Studio\Odinstaluj Kadr Studio.lnk"
-  RMDir "$SMPROGRAMS\Kadr Studio"
+  Delete "$DESKTOP\FakeTok.lnk"
+  Delete "$SMPROGRAMS\FakeTok\FakeTok.lnk"
+  Delete "$SMPROGRAMS\FakeTok\Odinstaluj FakeTok.lnk"
+  RMDir "$SMPROGRAMS\FakeTok"
   DeleteRegKey HKCU "${UNINSTKEY}"
-  DeleteRegKey HKCU "Software\KadrStudio"
+  DeleteRegKey HKCU "Software\FakeTok"
 SectionEnd

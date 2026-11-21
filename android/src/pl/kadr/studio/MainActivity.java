@@ -35,7 +35,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Kadr Studio na Androida: edytor działa w całości offline z plików aplikacji.
+ * FakeTok na Androida: edytor działa w całości offline z plików aplikacji.
  * Pliki są serwowane pod adresem https://appassets.androidplatform.net/ (bezpieczny kontekst dla WebGL, WebAssembly i nagrywania).
  */
 public class MainActivity extends Activity {
@@ -164,7 +164,7 @@ public class MainActivity extends Activity {
                     ContentValues cv = new ContentValues();
                     cv.put("_display_name", name);
                     cv.put("mime_type", m);
-                    cv.put("relative_path", dir + "/Kadr Studio");
+                    cv.put("relative_path", dir + "/FakeTok");
                     cv.put("is_pending", 1);
                     Uri coll = m.startsWith("video/") ? MediaStore.Video.Media.EXTERNAL_CONTENT_URI
                             : m.startsWith("image/") ? MediaStore.Images.Media.EXTERNAL_CONTENT_URI
@@ -177,12 +177,12 @@ public class MainActivity extends Activity {
                         runOnUiThread(new Runnable() { public void run() { requestPermissions(new String[]{ Manifest.permission.WRITE_EXTERNAL_STORAGE }, REQ_PERM); } });
                         return false;
                     }
-                    File d = new File(Environment.getExternalStoragePublicDirectory(dir), "Kadr Studio");
+                    File d = new File(Environment.getExternalStoragePublicDirectory(dir), "FakeTok");
                     if (!d.exists() && !d.mkdirs()) return false;
                     file = new File(d, name);
                     out = new FileOutputStream(file);
                 }
-                label = (m.startsWith("video/") ? "Galeria, folder " : "folder ") + dir + "/Kadr Studio";
+                label = (m.startsWith("video/") ? "Galeria, folder " : "folder ") + dir + "/FakeTok";
                 return out != null;
             } catch (Exception e) { close(); return false; }
         }
