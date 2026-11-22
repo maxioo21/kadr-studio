@@ -4291,7 +4291,7 @@ const AI_DECOR = ['panel', 'splash', 'rays', 'line', 'burst', 'particles', 'curs
 function aiTypo(L, notes) {
   const FILLER = /^(start|tekst|text|title|tytuł|napis|reklama|odczyt|lorem ipsum|placeholder|subtitle|podtytuł|opis)$/i;
   L.filter(x => x.type === 'text' && FILLER.test(x.text.trim())).forEach(x => { L.splice(L.indexOf(x), 1); notes.push(`usunięto pusty napis „${x.text.trim()}”`); });
-  const texts = L.filter(x => x.type === 'text').sort((a, b) => b.size - a.size); if (!texts.length) return;
+  const texts = L.filter(x => x.type === 'text' && !x.fixed).sort((a, b) => b.size - a.size); if (!texts.length) return;
   const game = L.some(x => x.type === 'item' || x.type === 'character') || texts.some(x => TX_PIXEL[x.style]);
   texts.forEach(x => { if (!TX_STYLES.includes(x.style)) x.style = TX_FROM_FONT[x.font] || (game ? 'mc' : 'thumb'); });
   texts.forEach(x => { if (TX_PIXEL[x.style] || (game && !TX_STYLES.includes(x.style))) { const c = x.text.replace(/[️‍]/g, '').replace(/\p{Extended_Pictographic}/gu, '').split('\n').map(l => l.replace(/\s{2,}/g, ' ').trim()).filter(Boolean).join('\n'); if (c) x.text = c; else if (TX_PIXEL[x.style]) x.style = 'thumb'; } });
@@ -4383,7 +4383,7 @@ async function aiOnline(prompt, signal) {
 }
 let wlEngine = null, wlModel = null, wlCtx = 4096, wlF16 = null, wlLib = null, wlNoGrammar = false;
 const aiLocalId = (f16 = wlF16 !== false) => `Qwen2.5-${aiLocalSize === '3' ? '3B' : '1.5B'}-Instruct-${f16 ? 'q4f16_1' : 'q4f32_1'}-MLC`;
-async function aiLocal(prompt, signal) {
+async function aiLocal(prompt, signal, maxTok) {
   if (!AI_HAS_GPU) throw { code: 'no_webgpu' };
   if (wlF16 === null) { let ad = null; try { ad = await navigator.gpu.requestAdapter(); } catch (e) { } if (!ad) throw { code: 'no_webgpu' }; wlF16 = !!(ad.features && ad.features.has('shader-f16')); }
   if (!wlEngine || wlModel !== aiLocalId()) {
@@ -4403,7 +4403,7 @@ async function aiLocal(prompt, signal) {
     if (lastErr || !wlEngine) { const m = String(lastErr && lastErr.message || lastErr || ''); if (/quota/i.test(m)) throw { code: 'no_space', message: m }; if (/failed to fetch|networkerror|network error/i.test(m)) throw { code: 'offline', message: m }; throw { code: 'local_failed', message: m }; }
   }
   const stop = () => { try { wlEngine.interruptGenerate(); } catch (e) { } }; signal?.addEventListener('abort', stop, { once: true });
-  let r; const req = { messages: [{ role: 'system', content: 'You are a senior motion designer. You answer with exactly one valid JSON object and nothing else: no prose, no markdown, no comments.' }, { role: 'user', content: prompt }], temperature: .6, max_tokens: wlCtx >= 8192 ? 2400 : 1500 };
+  let r; const req = { messages: [{ role: 'system', content: 'You are a senior motion designer. You answer with exactly one valid JSON object and nothing else: no prose, no markdown, no comments.' }, { role: 'user', content: prompt }], temperature: .6, max_tokens: maxTok || (wlCtx >= 8192 ? 2400 : 1500) };
   try {
     if (!wlNoGrammar) { try { r = await wlEngine.chat.completions.create(Object.assign({ response_format: { type: 'json_object' } }, req)); } catch (e) { if (signal?.aborted) throw e; if (!/grammar|response.?format|json_object|non-string|xgrammar/i.test(String(e && e.message || e))) throw e; console.warn('JSON mode not available, continuing without it', e); wlNoGrammar = true; } }
     if (!r) r = await wlEngine.chat.completions.create(req);
@@ -4415,9 +4415,9 @@ async function aiLocal(prompt, signal) {
   finally { signal?.removeEventListener('abort', stop); }
   if (signal?.aborted) throw { code: 'cancelled' }; return aiParse(r.choices[0].message.content);
 }
-async function aiCall(prompt, signal, images) {
+async function aiCall(prompt, signal, images, maxTok) {
   if (aiProv === 'online') return aiOnline(prompt, signal);
-  if (aiProv === 'local') return aiLocal(prompt, signal);
+  if (aiProv === 'local') return aiLocal(prompt, signal, maxTok);
   const o = { modelTier: 'complex', signal, cache: false }; if (images && aiImages) o.images = images;
   try { return await aiSample.json(prompt, o); } catch (e) { if (e && e.code === 'images_unavailable') { aiImages = false; return aiSample.json(prompt, { modelTier: 'complex', signal, cache: false }); } throw e; }
 }
@@ -4462,6 +4462,91 @@ Work like a senior motion designer: one hero element and a clear reading order; 
 
 Example (shape only, not a design to copy):
 {"title":"Nowy rekord","duration":5,"background":"none","layers":[{"type":"rays","x":0.5,"y":0.42,"color":"#ffd23f","alpha":0.08,"in":"fade"},{"type":"item","item":"gold","x":0.5,"y":0.38,"size":0.3,"in":"pop","loop":"glint"},{"type":"text","text":"NOWY REKORD","style":"mcLogo","x":0.5,"y":0.64,"size":0.15,"color":"#ffd23f","start":0.3,"in":"letters"},{"type":"text","text":"Przetrwałem 100 dni","style":"mc","x":0.5,"y":0.76,"size":0.055,"color":"#ffffff","start":0.8,"in":"fade"},{"type":"burst","kind":"confetti","x":0.5,"y":0.4,"at":0.35,"count":90,"color":"#ffd23f","color2":"#ffffff"}]}`;
+/* ================= small on-device models: they only read the request into a short brief; the layout engine below designs the animation ================= */
+function aiBriefPrompt(req) { return `Read the creator's request for a short overlay animation and fill in this brief. Reply with only the JSON object.
+{"title": "main text to show, 1-4 words, written with the creator's own words from the request (never invent other words)", "subtitle": "optional second line from the request, or empty", "label": "optional tiny tag (e.g. NOWOŚĆ, LIVE), or empty", "kind": "notification | title | intro | subscribe | counter | item | character", "item": "diamond | emerald | gold | sword | pickaxe | bow | apple | heart | potion | gift | none", "number": a number from the request to count up to, or null, "colors": ["#rrggbb", "#rrggbb"], "style": "game (Minecraft-like) | creator", "effects": ["rays" | "confetti" | "sparks" | "glint" | "splash"]}
+Write texts in the request's language (usually Polish). Colours named in the request win (gold = #ffd23f).
+Request: «${req}»`; }
+const aiNorm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ł/g, 'l');
+const AI_KW_ITEM = [['diament', 'diamond'], ['szmaragd', 'emerald'], ['emerald', 'emerald'], ['zlot', 'gold'], ['sztabk', 'gold'], ['miecz', 'sword'], ['sword', 'sword'], ['kilof', 'pickaxe'], ['luk ', 'bow'], ['luku', 'bow'], ['jabl', 'apple'], ['serc', 'heart'], ['serduszk', 'heart'], ['mikstur', 'potion'], ['eliksir', 'potion'], ['prezent', 'gift'], ['giveaway', 'gift'], ['skrzyn', 'gift']];
+const AI_KW_COL = [['zlot', ['#ffd23f', '#ff9f1a']], ['zolt', ['#ffe14d', '#f5b400']], ['fiolet', ['#b26bff', '#6d28d9']], ['purpur', ['#c050ff', '#7e22ce']], ['zielon', ['#5cf27a', '#16a34a']], ['czerwon', ['#ff4d5e', '#b91c1c']], ['niebiesk', ['#4cc3ff', '#2563eb']], ['blekit', ['#7dd3fc', '#0284c7']], ['rozow', ['#ff6ad5', '#db2777']], ['pomarancz', ['#ff9f43', '#ea580c']], ['turkus', ['#2ee6d6', '#0e9488']], ['bial', ['#ffffff', '#cbd5e1']], ['srebr', ['#e5e7eb', '#9ca3af']], ['czarn', ['#f3f4f6', '#4b5563']], ['neon', ['#39ff88', '#00e5ff']], ['teczow', ['#ff4fd8', '#4cc3ff']]];
+const AI_KW_KIND = [['notification', ['powiadom', 'notyfik', 'osiagni', 'achievement', 'odblok', 'zdobyt']], ['subscribe', ['subskryb', 'subuj', 'dzwonk', 'obserwuj', 'follow', 'lajk']], ['counter', ['licznik', 'rosnie', 'odlicz', 'zlicz']], ['character', ['postac', 'skin', 'macha', 'ludzik']], ['intro', ['intro', 'wstep', 'powitan', 'witaj', 'kanal']], ['item', ['przedmiot', 'item']]];
+const AI_GAME_KW = ['minecraft', ' mc ', 'hardcore', 'pvp', 'survival', 'serwer', 'blok', 'crafting', 'skin', 'diament', 'szmaragd', 'kilof', 'miecz', 'creeper', 'nether', 'end '];
+function aiReqInfo(req) {
+  const n = ' ' + aiNorm(req) + ' ', hits = (list) => list.map(([k, v]) => [n.indexOf(k), v]).filter(x => x[0] >= 0).sort((a, b) => a[0] - b[0]).map(x => x[1]);
+  const cols = hits(AI_KW_COL), items = hits(AI_KW_ITEM), kinds = AI_KW_KIND.filter(([, ks]) => ks.some(k => n.includes(k))).map(x => x[0]);
+  const num = (req.match(/(\d[\d\s.]*\d|\d)/) || [])[1]; const numV = num ? parseInt(num.replace(/[\s.]/g, '')) : null;
+  const after = numV != null ? (req.slice(req.indexOf(num) + num.length).match(/^\s*([\p{L}]{2,12})/u) || [])[1] || '' : '';
+  const nick = (req.match(/nick(?:iem|u)?\s+([^\s,.;!?]+)/i) || [])[1] || (req.match(/\b([A-Z][a-z]+[A-Z][\w]*|[A-Za-z]{2,}\d+\w*)\b/) || [])[1] || '';
+  return { colors: cols.length ? [cols[0][0], cols[1] ? cols[1][0] : cols[0][1]] : null, item: items[0] || null, kinds, num: numV, unit: after, nick, game: AI_GAME_KW.some(k => n.includes(k)) || items.length > 0 };
+}
+function aiTitleFrom(req) {
+  const q = req.match(/[«"„“]([^«»"„”“]{2,40})[»"”“]/); if (q) return q[1].trim();
+  let s = req.includes(':') ? req.slice(req.indexOf(':') + 1) : req; s = s.replace(/\bz\s+nick\S*\s+\S+/i, ' ').split(/[,.;!?\n]/)[0];
+  s = s.replace(/(^|\s)(zrób|zrob|chcę|chce|animacj\S*|napis\S*|tytuł\S*|tytul\S*|powiadomieni\S*|intro|kolory|kolor\S*|przycisk\S*|kursor\S*|klika\S*|dzwonk\S*|licznik\S*|rośnie|rosnie|moja|mój|moj|obok|krótki|krotki|opis\S*|z|i|w kolorach)(?=\s|$)/gi, ' ').replace(/\s+/g, ' ').trim();
+  const STOP = new Set(['na', 'o', 'z', 'w', 'do', 'dla', 'kanał', 'kanal', 'kanale', 'kanału', 'filmu', 'film', 'stylu', 'styl']); const isCol = x => AI_KW_COL.some(([k]) => aiNorm(x).startsWith(k) || aiNorm(x).includes(k + 'o-')), w = s.split(' ').filter(x => x && !isCol(x)); while (w.length && STOP.has(w[0].toLowerCase())) w.shift(); while (w.length && STOP.has(w[w.length - 1].toLowerCase())) w.pop();
+  return w.slice(0, 6).join(' ');
+}
+const aiCap = s => (s ? s[0].toUpperCase() + s.slice(1) : s);
+// is a text built from the request's own words? (prefix match copes with Polish endings)
+function aiOnTopic(text, req) { const rq = aiNorm(req).split(/[^a-z0-9]+/).filter(w => w.length >= 3), tw = aiNorm(text).split(/[^a-z0-9]+/).filter(w => w.length >= 3); if (!tw.length) return false; return tw.some(w => rq.some(r => r.slice(0, 4) === w.slice(0, 4) || r === w)); }
+function aiFromBrief(b, req) {
+  b = b && typeof b === 'object' ? b : {}; const info = aiReqInfo(req), rnd2 = Math.random, pick = a => a[Math.floor(rnd2() * a.length)];
+  const hex = c => (typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c.trim()) ? c.trim() : null);
+  let [c1, c2] = info.colors || [hex(b.colors?.[0]), hex(b.colors?.[1])]; c1 = c1 || pick(['#ffd23f', '#4cc3ff', '#ff4fd8', '#5cf27a', '#b26bff']); c2 = c2 || mix(c1, '#000000', .35);
+  const kinds = ['notification', 'title', 'intro', 'subscribe', 'counter', 'item', 'character'];
+  let kind = info.kinds[0] || (kinds.includes(b.kind) ? b.kind : 'title'); if (kind === 'counter' && info.num == null && !(Number(b.number) > 0)) kind = 'title';
+  const game = b.style === 'game' || info.game, item = info.item || (MC_DEF[b.item] ? b.item : null);
+  let title = String(b.title || '').trim(), sub = String(b.subtitle || '').trim(), label = String(b.label || '').trim().slice(0, 16);
+  if (!title || !(aiOnTopic(title, req) || (info.nick && title.includes(info.nick)))) { const t2 = aiTitleFrom(req), w = t2.split(' ').filter(x => x && x !== info.nick); if (info.nick) { title = info.nick; if (!(sub && aiOnTopic(sub, req))) sub = kind === 'character' || kind === 'subscribe' ? '' : aiCap(w.slice(0, 4).join(' ')); } else { title = w.slice(0, 3).join(' '); sub = sub && aiOnTopic(sub, req) ? sub : aiCap(w.slice(3).join(' ')); } }
+  if (sub && !aiOnTopic(sub, req) && !/opis|podpis|tekst|hasł|hasl|slogan/i.test(req)) sub = ''; if (label && !aiOnTopic(label, req) && !/^(nowość|nowosc|live|na żywo|nowy)$/i.test(label)) label = '';
+  title = aiCap(title.slice(0, 40)); sub = aiCap(sub.slice(0, 50));
+  const num = info.num ?? (Number(b.number) > 0 ? Math.round(Number(b.number)) : null), fx = Array.isArray(b.effects) ? b.effects : [];
+  const tStyle = game ? pick(['mcLogo', 'mcTitle']) : pick(['thumb', 'thumb', 'caption']), sStyle = game ? 'mc' : 'clean', inT = pick(['letters', 'letters', 'zoom', 'pop', 'drop']);
+  const L = [], burst = (x, y, at) => L.push({ type: 'burst', kind: game ? pick(['sparks', 'stars']) : pick(['confetti', 'stars']), x, y, at, count: game ? 18 : 90, color: c1, color2: '#ffffff', size: .12 });
+  const D = 5;
+  if (kind === 'notification') {
+    const ic = item || (game ? 'gold' : null);
+    L.push({ type: 'panel', style: game ? 'card' : 'glass', color: game ? '#1c1c22' : c2, color2: '#101014', x: .7, y: .15, w: .5, h: .17, in: 'slideLeft' });
+    if (ic) L.push({ type: 'item', item: ic, x: .5, y: .15, size: .11, in: 'pop', start: .25, loop: 'glint' });
+    L.push({ type: 'text', text: title.replace(/\n/g, ' '), style: game ? 'mc' : 'clean', x: ic ? .56 : .48, y: sub ? .12 : .15, size: .052, color: c1, align: 'left', maxW: ic ? .36 : .42, in: 'fade', start: .35, fixed: true });
+    if (sub) L.push({ type: 'text', text: sub, style: game ? 'mc' : 'clean', x: ic ? .56 : .48, y: .185, size: .038, color: '#ffffff', align: 'left', maxW: ic ? .36 : .42, in: 'fade', start: .5, fixed: true });
+    burst(ic ? .5 : .7, .15, .45);
+  } else if (kind === 'subscribe') {
+    const who = info.nick || (b.title && aiOnTopic(b.title, req) && !/subskryb|przycisk|kursor|dzwon/i.test(b.title) ? String(b.title).trim() : '');
+    L.push({ type: 'avatar', x: .5, y: .3, size: .22, color: c1, color2: c2, text: who || 'Twój kanał', in: 'pop' });
+    if (who) L.push({ type: 'text', text: who, style: sStyle, x: .5, y: .47, size: .06, color: '#ffffff', in: 'fade', start: .4 });
+    L.push({ type: 'button', text: 'SUBSKRYBUJ', pressedText: 'SUBSKRYBUJESZ', pressedColor: '#3a3a44', x: .5, y: .63, w: .36, h: .12, color: c1, color2: c2, pressAt: 2.2, in: 'pop', start: .6 });
+    L.push({ type: 'cursor', x: .54, y: .65, fromX: .92, fromY: 1.05, start: 1.1, clickAt: 2.2 });
+    L.push({ type: 'burst', kind: 'hearts', x: .5, y: .63, at: 2.25, count: 16, color: c1, color2: '#ffffff', size: .12 });
+  } else if (kind === 'counter') {
+    if (game || fx.includes('rays') || rnd2() < .6) L.push({ type: 'rays', x: .5, y: .5, color: c1, alpha: .08, in: 'fade' });
+    if (item) L.push({ type: 'item', item, x: .5, y: .24, size: .16, in: 'pop', loop: 'float' });
+    L.push({ type: 'counter', from: 0, to: num || 100, suffix: info.unit ? ' ' + info.unit : '', x: .5, y: .48, size: .2, color: c1, start: .2, countDur: 1.6, in: 'pop' });
+    const t2 = title.replace(String(num || ''), '').replace(info.unit || '§', '').trim(); if (t2.length > 2) L.push({ type: 'text', text: aiCap(t2), style: tStyle === 'mcLogo' ? 'mcTitle' : tStyle, x: .5, y: .68, size: .1, color: '#ffffff', in: 'fade', start: .5 });
+    if (sub) L.push({ type: 'text', text: sub, style: sStyle, x: .5, y: .8, size: .05, color: c1, in: 'fade', start: .8 });
+    burst(.5, .48, 1.8);
+  } else if (kind === 'item' && item) {
+    L.push({ type: 'item', item, x: .3, y: .5, size: .38, in: 'pop', loop: 'glint' });
+    L.push({ type: 'text', text: [title, sub].filter(Boolean).join('\n'), style: 'tooltip', x: .48, y: .5, size: .06, color: c1, align: 'left', in: 'fade', start: .5 });
+    burst(.3, .5, .4);
+  } else if (kind === 'character') {
+    L.push({ type: 'character', x: .27, y: .55, size: .72, pose: pick(['wave', 'win', 'point']), color: c1, in: 'fade' });
+    L.push({ type: 'text', text: title, style: tStyle, x: .64, y: .45, size: .14, color: c1, color2: game ? '' : c2, maxW: .5, in: inT, start: .6 });
+    if (sub) L.push({ type: 'text', text: sub, style: sStyle, x: .64, y: .6, size: .055, color: '#ffffff', maxW: .5, in: 'fade', start: 1 });
+  } else {
+    const hero = kind === 'intro' || item;
+    if (fx.includes('splash') || (!game && rnd2() < .5)) L.push({ type: 'splash', x: .5, y: hero ? .62 : .48, size: .5, stretch: 1.7, color: c2, in: 'pop' });
+    else L.push({ type: 'rays', x: .5, y: hero ? .4 : .48, color: c1, alpha: .08, in: 'fade' });
+    if (hero) L.push(item ? { type: 'item', item, x: .5, y: .32, size: .3, in: 'pop', loop: 'glint' } : { type: 'character', x: .5, y: .38, size: .55, pose: 'wave', color: c1, in: 'fade' });
+    if (label) L.push({ type: 'text', text: label, style: 'tag', x: .5, y: hero ? .5 : .3, size: .04, color: c2, start: .3, in: 'pop' });
+    L.push({ type: 'text', text: title, style: tStyle, x: .5, y: hero ? .62 : .46, size: .16, color: c1, color2: game ? '' : c2, in: inT, start: .4 });
+    if (sub) L.push({ type: 'text', text: sub, style: sStyle, x: .5, y: hero ? .76 : .62, size: .06, color: '#ffffff', in: 'fade', start: .9 });
+    burst(.5, hero ? .32 : .46, .5);
+    if (game) L.push({ type: 'particles', kind: 'embers', count: 30, color: c1, x: .5, y: .5 });
+  }
+  return { title: title.slice(0, 40) || 'Animacja AI', duration: D, background: 'none', layers: L };
+}
 function aiPromptText(req) { return `You design overlay animations for YouTube and TikTok creators (many make Minecraft videos). Design ONE animation for the request below.\nAspect ratio of the frame: ${ST.fmt}.\n\n${AI_SCHEMA}\n\nRequest from the creator: «${req}»\n\nReply with only the JSON object.`; }
 function aiCritiqueText(req, spec, times, withImages) {
   const notes = (spec._notes || []).length ? `\nThe page's layout checker already fixed: ${spec._notes.join('; ')}. Keep those fixes.` : '';
@@ -4496,14 +4581,21 @@ function aiSetSteps(steps) { aiSteps = steps; renderAi(); }
 async function aiGenerate() {
   const box = $('#aiPrompt'), req = (box?.value || '').trim(); if (!req) { toast('Opisz, jaką animację chcesz'); box?.focus(); return; }
   if (!aiProv || aiBusy) return;
-  const rounds = +aiLevel, steps = [{ t: aiProv === 'local' && (!wlEngine || wlModel !== aiLocalId()) ? 'Uruchamiam AI i wymyślam scenariusz' : 'Wymyślam scenariusz i układ', s: 'run' }, ...Array.from({ length: rounds }, (_, r) => ({ t: aiProv === 'claude' && aiImages ? `Oglądam klatki i poprawiam (${r + 1}/${rounds})` : `Sprawdzam projekt i poprawiam (${r + 1}/${rounds})`, s: 'wait' })), { t: 'Zapisuję animację', s: 'wait' }];
+  const local = aiProv === 'local', rounds = local ? 1 : +aiLevel, steps = local ? [{ t: !wlEngine || wlModel !== aiLocalId() ? 'Uruchamiam AI i czytam twój opis' : 'Czytam twój opis', s: 'run' }, { t: 'Projektuję układ, napisy i ruch', s: 'wait' }, { t: 'Zapisuję animację', s: 'wait' }] : [{ t: 'Wymyślam scenariusz i układ', s: 'run' }, ...Array.from({ length: rounds }, (_, r) => ({ t: aiProv === 'claude' && aiImages ? `Oglądam klatki i poprawiam (${r + 1}/${rounds})` : `Sprawdzam projekt i poprawiam (${r + 1}/${rounds})`, s: 'wait' })), { t: 'Zapisuję animację', s: 'wait' }];
   aiBusy = true; aiMsg = ''; aiCtl = new AbortController(); aiT0 = performance.now(); clearInterval(aiTimer); aiTimer = setInterval(() => { const el = $('#aiTime'); if (el) el.textContent = Math.round((performance.now() - aiT0) / 1000) + ' s'; }, 1000); aiSetSteps(steps);
   const id = 'ai' + Date.now().toString(36), rec = { id, prompt: req, spec: null };
   try {
-    let spec = aiPolishSafe(aiSanitize(await aiCall(aiPromptText(req), aiCtl.signal)));
+    let spec;
+    if (local) {
+      let brief = null; try { brief = await aiCall(aiBriefPrompt(req), aiCtl.signal, null, 360); } catch (e) { if (!e || e.code !== 'invalid_json') throw e; }
+      steps[0].s = 'done'; steps[1].s = 'run'; aiSetSteps(steps); await aiWait(200, aiCtl.signal);
+      spec = aiPolishSafe(aiSanitize(aiFromBrief(brief, req))); rec.spec = spec; selectTpl(aiTemplate(rec)); steps[1].s = 'done';
+    } else {
+    spec = aiPolishSafe(aiSanitize(await aiCall(aiPromptText(req), aiCtl.signal)));
     if (!spec.layers.length) throw { code: 'empty_spec' };
     rec.spec = spec; selectTpl(aiTemplate(rec)); steps[0].s = 'done';
-    for (let r = 0; r < rounds; r++) {
+    }
+    for (let r = 0; r < (local ? 0 : rounds); r++) {
       steps[r + 1].s = 'run'; aiSetSteps(steps);
       const vision = aiProv === 'claude' && aiImages, fr = await aiFrames(spec); if (aiProv === 'online') await aiWait(2500, aiCtl.signal);
       let better; try { better = aiPolishSafe(aiSanitize(await aiCall(aiCritiqueText(req, spec, fr.times, vision), aiCtl.signal, vision ? fr.blobs : null))); }
