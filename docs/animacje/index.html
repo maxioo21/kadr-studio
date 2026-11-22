@@ -143,6 +143,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 .itm:hover{background:var(--hover)}
 .itm.on{box-shadow:0 0 0 2px var(--app),0 0 0 4px #fff}
 .itm.up{border:1.5px dashed var(--line2)}
+.slotgrid{display:grid;gap:6px;margin-bottom:10px}.itm.slot{position:relative}.itm .cnt{position:absolute;right:5px;bottom:2px;font:800 12px Inter;color:#fff;text-shadow:1px 1px 0 #000,0 0 3px #000}.cntrow{display:flex;align-items:center;gap:12px;margin-top:10px;color:var(--dim);font-size:13px}.cntrow input{width:84px;padding:8px 10px;border-radius:10px;border:0;background:var(--field);color:inherit;font:600 14px Inter}
 .itm.up svg{width:20px;height:20px}
 .linkbtn{border:0;background:none;color:var(--acc-hi);padding:0;font:inherit;text-decoration:underline;cursor:pointer}
 .skinbox canvas{width:88px;height:88px;image-rendering:pixelated;background:repeating-conic-gradient(#26262c 0 25%,#1b1b20 0 50%) 0 0/11px 11px;border-radius:12px;flex:none}
@@ -443,6 +444,8 @@ function sfx(name, when = 0, out = master) {
   const env = (node, a, peak, d) => { const g = actx.createGain(); g.gain.setValueAtTime(.0001, t0); g.gain.exponentialRampToValueAtTime(peak, t0 + a); g.gain.exponentialRampToValueAtTime(.0001, t0 + a + d); node.connect(g); g.connect(out); return g; };
   const osc = (type, f0, f1, dur, peak) => { const o = actx.createOscillator(); o.type = type; o.frequency.setValueAtTime(f0, t0); if (f1) o.frequency.exponentialRampToValueAtTime(f1, t0 + dur); env(o, .004, peak, dur); o.start(t0); o.stop(t0 + dur + .1); };
   const nz = (dur, type, f0, f1, peak, q = 1) => { const s = actx.createBufferSource(); s.buffer = noiseBuf(dur); const f = actx.createBiquadFilter(); f.type = type; f.Q.value = q; f.frequency.setValueAtTime(f0, t0); if (f1) f.frequency.exponentialRampToValueAtTime(f1, t0 + dur * .8); s.connect(f); env(f, dur * .3, peak, dur * .7); s.start(t0); };
+  const at = (dt, type, f0, f1, dur, peak) => { const tt = t0 + dt, o = actx.createOscillator(), gg = actx.createGain(); o.type = type; o.frequency.setValueAtTime(f0, tt); if (f1) o.frequency.exponentialRampToValueAtTime(f1, tt + dur); gg.gain.setValueAtTime(.0001, tt); gg.gain.exponentialRampToValueAtTime(peak, tt + .004); gg.gain.exponentialRampToValueAtTime(.0001, tt + .004 + dur); o.connect(gg); gg.connect(out); o.start(tt); o.stop(tt + dur + .1); };
+  const atN = (dt, dur, type, f0, f1, peak) => { const tt = t0 + dt, sN = actx.createBufferSource(); sN.buffer = noiseBuf(dur); const f = actx.createBiquadFilter(); f.type = type; f.frequency.value = f0; const gg = actx.createGain(); gg.gain.setValueAtTime(peak, tt); gg.gain.exponentialRampToValueAtTime(.0001, tt + dur); sN.connect(f); f.connect(gg); gg.connect(out); sN.start(tt); sN.stop(tt + dur + .05); };
   switch (name) {
     case 'whoosh': nz(.6, 'bandpass', 300, 3500, .8, 1.2); break;
     case 'riser': nz(1.6, 'bandpass', 200, 7000, .5, 2); break;
@@ -456,6 +459,43 @@ function sfx(name, when = 0, out = master) {
     case 'step': nz(.08, 'lowpass', 900, 0, .35); break;
     case 'zap': nz(.5, 'highpass', 1200, 0, .9); osc('sawtooth', 120, 40, .6, .5); break;
     case 'glass': nz(.4, 'highpass', 3000, 0, .8); for (let k = 0; k < 8; k++) { const o = actx.createOscillator(); o.frequency.value = 2500 + Math.random() * 3500; const g2 = actx.createGain(); const tk = t0 + .05 + Math.random() * .5; g2.gain.setValueAtTime(.0001, tk); g2.gain.exponentialRampToValueAtTime(.12, tk + .005); g2.gain.exponentialRampToValueAtTime(.0001, tk + .25); o.connect(g2); g2.connect(out); o.start(tk); o.stop(tk + .3); } break;
+    // ---- extra sounds, so animations do not all share the same few
+    case 'bubble': osc('sine', 300, 1300, .09, .6); break;
+    case 'blip': osc('square', 880, 1320, .06, .24); at(.03, 'sine', 1760, 0, .06, .2); break;
+    case 'plop': osc('sine', 520, 90, .18, .8); nz(.04, 'lowpass', 900, 0, .3); break;
+    case 'boing': osc('triangle', 180, 540, .25, .5); osc('sine', 360, 1080, .2, .18); break;
+    case 'tap': nz(.03, 'bandpass', 1800, 0, .6, 3); osc('sine', 1200, 0, .04, .2); break;
+    case 'wood': osc('triangle', 780, 0, .08, .6); nz(.02, 'bandpass', 2400, 0, .4, 4); break;
+    case 'tock': osc('sine', 520, 470, .1, .55); break;
+    case 'pluck': osc('triangle', 660, 640, .25, .4); osc('sine', 1320, 0, .12, .12); break;
+    case 'swish': nz(.25, 'highpass', 2000, 6000, .6); break;
+    case 'swoosh': nz(.7, 'bandpass', 150, 1400, .8, .8); break;
+    case 'air': nz(.5, 'lowpass', 600, 2400, .5); break;
+    case 'sweep': nz(.5, 'bandpass', 3000, 400, .6, 1.5); break;
+    case 'impact': nz(.35, 'lowpass', 3000, 300, .9); osc('sine', 70, 35, .7, .9); break;
+    case 'thump': osc('sine', 120, 50, .35, 1); break;
+    case 'drop': osc('sine', 400, 40, .9, .7); break;
+    case 'punch': nz(.12, 'bandpass', 900, 0, 1, 1.2); osc('sine', 160, 60, .2, .8); break;
+    case 'chime': [1047, 1319, 1568].forEach((f, k) => at(k * .06, 'sine', f, 0, .9, .22)); break;
+    case 'marimba': osc('sine', 880, 0, .35, .5); osc('sine', 3520, 0, .08, .14); break;
+    case 'notify': osc('sine', 988, 0, .2, .35); at(.12, 'sine', 1319, 0, .35, .35); break;
+    case 'harp': [523, 659, 784, 1047].forEach((f, k) => at(k * .05, 'triangle', f, 0, .6, .2)); break;
+    case 'key': nz(.025, 'highpass', 3000, 0, .5); osc('square', 600, 0, .02, .07); break;
+    case 'snap': nz(.04, 'bandpass', 2500, 0, .9, 4); break;
+    case 'tik': osc('sine', 2093, 0, .05, .25); break;
+    case 'clack': nz(.05, 'bandpass', 1200, 0, .7, 2); atN(.02, .02, 'highpass', 4000, 0, .4); break;
+    case 'rise2': osc('sine', 200, 1600, 1.2, .18); nz(1.2, 'bandpass', 400, 5000, .3, 2); break;
+    case 'sweepup': nz(1, 'highpass', 500, 8000, .4); break;
+    case 'shimmerup': for (let k = 0; k < 10; k++) at(k * .09, 'sine', 1500 + k * 260, 0, .25, .18); break;
+    case 'coin': osc('square', 988, 0, .08, .2); at(.08, 'square', 1319, 0, .3, .2); break;
+    case 'xp': osc('sine', 1600 + Math.random() * 1000, 0, .12, .28); break;
+    case 'levelup': [523, 659, 784, 1047, 1319].forEach((f, k) => at(k * .08, 'triangle', f, 0, .28, .24)); break;
+    case 'pickup': osc('sine', 600, 1200, .07, .35); at(.06, 'sine', 1200, 0, .12, .3); break;
+    case 'magic': for (let k = 0; k < 12; k++) at(Math.random() * .8, 'sine', 1200 + Math.random() * 2000, 0, .4, .07); nz(.8, 'highpass', 4000, 0, .15); break;
+    case 'break': nz(.25, 'bandpass', 600, 0, .9, 1.5); for (let k = 0; k < 6; k++) atN(Math.random() * .2, .05, 'bandpass', 800 + Math.random() * 2000, 0, .5); break;
+    case 'success': [523, 659, 784].forEach(f => osc('triangle', f, 0, .8, .15)); at(.15, 'triangle', 1047, 0, .7, .12); break;
+    case 'uiclick': osc('square', 2000, 1500, .02, .12); nz(.015, 'highpass', 5000, 0, .4); break;
+    case 'swing': nz(.25, 'bandpass', 800, 2500, 1, 1.5); break;
   }
 }
 
@@ -1534,7 +1574,7 @@ TEMPLATES.push(
   {
     id: 'mine', cat: 'Gry', name: 'Kopanie bloku', d: 'Postać uderza w blok, ten pęka i rozpada się na kawałki.', dur: 4.5, skin: true,
     fields: [['kind', 'select', 'Blok', 'trawa', [['trawa', 'Trawa'], ['kamien', 'Kamień'], ['ruda', 'Ruda diamentu'], ['drewno', 'Drewno']]], ['caption', 'text', 'Napis (opcjonalnie)', '']],
-    sfx: [[.5, 'step'], [.9, 'step'], [1.3, 'step'], [1.7, 'step'], [2.1, 'step'], [2.3, 'pop'], [2.6, 'pop']],
+    sfx: [[.5, 'break'], [.9, 'break'], [1.3, 'break'], [1.7, 'break'], [2.1, 'break'], [2.3, 'pickup'], [2.6, 'pickup']],
     render(g, W, H, t, v, u) {
       const blk = propBlock(v.kind), brk = 2.3, show = [];
       const swing = t > .3 && t < brk ? Math.abs(Math.sin((t - .3) * 7.85)) : 0;
@@ -1625,7 +1665,7 @@ TEMPLATES.push(
   {
     id: 'achievement', cat: 'Gry', name: 'Osiągnięcie zdobyte', d: 'Okienko osiągnięcia wjeżdża z boku z ikoną pucharu.', dur: 4, defBg: 'green', keyHint: true,
     fields: [['title', 'text', 'Tytuł', 'Osiągnięcie zdobyte!'], ['desc', 'text', 'Opis', '1000 subskrybentów'], ['accent', 'color', 'Kolor tytułu', '#ffd23f']],
-    sfx: [[.25, 'ding']],
+    sfx: [[.25, 'notify']],
     render(g, W, H, t, v, u) {
       const por = isPortrait(W, H), w = Math.min(W * .9, 820 * u), hh = 170 * u, k = E.back(seg(t, .2, .6)), out = E.in(seg(t, 3.3, 3.8));
       const x = por ? W / 2 - w / 2 : lerp(W + 20, W - w - 50 * u, k) + out * (w + 80 * u), y = por ? lerp(-hh - 20, 70 * u, k) - out * (hh + 100 * u) : 50 * u;
@@ -1658,7 +1698,7 @@ TEMPLATES.push(
   {
     id: 'levelup', cat: 'Gry', name: 'Level up', d: 'Pasek doświadczenia się zapełnia i wskakuje nowy poziom.', dur: 3.5,
     fields: [['level', 'text', 'Poziom', '30'], ['label', 'text', 'Napis', 'LEVEL UP!'], ['accent', 'color', 'Kolor', '#7cff6b']],
-    sfx: [[1.8, 'ding'], [1.85, 'pop']],
+    sfx: [[1.8, 'levelup']],
     render(g, W, H, t, v, u) {
       const bw = Math.min(W * .8, 1100 * u), bh = 36 * u, bx = W / 2 - bw / 2, by = H * .62, f = E.inOut(seg(t, .2, 1.8));
       g.fillStyle = '#121216'; g.fillRect(bx - 6 * u, by - 6 * u, bw + 12 * u, bh + 12 * u);
@@ -2128,7 +2168,7 @@ TEMPLATES.push(
   },
   {
     id: 'liveBadge', cat: 'Kanał', name: 'Na żywo', d: 'Plakietka NA ŻYWO z pulsującą kropką, licznikiem widzów i czatem.', dur: 4.5, defBg: 'green', keyHint: true,
-    fields: [['label', 'text', 'Napis', 'NA ŻYWO'], ['viewers', 'text', 'Widzowie', '1248'], ['accent', 'color', 'Kolor', '#ff2b4a']], sfx: [[.1, 'pop'], [.5, 'pop']],
+    fields: [['label', 'text', 'Napis', 'NA ŻYWO'], ['viewers', 'text', 'Widzowie', '1248'], ['chat', 'textarea', 'Czat (każda linijka: nick: wiadomość)', 'Kuba_PL: siema!\nzosia: pierwsza :D\nMrBlok: gg ez\nNina: kocham ten kanał'], ['accent', 'color', 'Kolor', '#ff2b4a']], sfx: [[.1, 'pop'], [.5, 'pop']],
     render(g, W, H, t, v, u) {
       const k = E.back(seg(t, .1, .5)), out = E.in(seg(t, 4, 4.4)), hh = 110 * u, x = 70 * u, y = 70 * u - (1 - k) * 260 * u - out * 300 * u;
       g.font = `900 ${56 * u}px Inter`; const lw = g.measureText(v.label).width + 150 * u;
@@ -2142,7 +2182,7 @@ TEMPLATES.push(
       g.save(); g.globalAlpha = clamp(k2 * 2, 0, 1); rr(g, vx, vy, vw, hh, 18 * u); g.fillStyle = 'rgba(12,12,16,.82)'; g.fill();
       g.strokeStyle = '#fff'; g.lineWidth = 5 * u; g.beginPath(); g.ellipse(vx + 56 * u, vy + hh / 2, 26 * u, 16 * u, 0, 0, Math.PI * 2); g.stroke(); g.fillStyle = '#fff'; g.beginPath(); g.arc(vx + 56 * u, vy + hh / 2, 8 * u, 0, Math.PI * 2); g.fill();
       T(g, txt, vx + 100 * u, vy + hh / 2 + 2 * u, { size: 50 * u, weight: 800, align: 'left' }); g.restore();
-      const chat = [['Kuba_PL', 'siema!', '#22d3e6'], ['zosia', 'pierwsza :D', '#ffd23f'], ['MrBlok', 'gg ez', '#7cff6b'], ['Nina', 'kocham ten kanał', '#ff7ad9']];
+      const CC = ['#22d3e6', '#ffd23f', '#7cff6b', '#ff7ad9', '#ff9f43', '#a78bfa'], chat = String(v.chat).split(/\n|\\n/).map(l => l.trim()).filter(Boolean).slice(0, 6).map((l, i) => { const j = l.indexOf(':'); return j > 0 ? [l.slice(0, j).trim(), l.slice(j + 1).trim(), CC[i % CC.length]] : ['widz', l, CC[i % CC.length]]; });
       chat.forEach(([nick, msg, c], i) => {
         const t0 = 1.1 + i * .55, kc = E.out(seg(t, t0, t0 + .3)); if (kc <= 0) return;
         const row = chat.filter((_, j) => t >= 1.1 + j * .55).length - 1 - i, cy = H - 90 * u - row * 86 * u, cx = x - (1 - kc) * 80 * u;
@@ -2360,7 +2400,7 @@ TEMPLATES.push(
   },
   {
     id: 'xpOrbs', cat: 'Gry', name: 'Kulki doświadczenia', d: 'Zielone kulki lecą do paska, pasek się zapełnia i wyskakuje liczba punktów.', dur: 4,
-    fields: [['xp', 'text', 'Punkty', '+120 XP'], ['color', 'color', 'Kolor', '#8cff4a']], sfx: [[.6, 'pop'], [.8, 'pop'], [1, 'pop'], [1.2, 'pop'], [2.2, 'ding']],
+    fields: [['xp', 'text', 'Punkty', '+120 XP'], ['color', 'color', 'Kolor', '#8cff4a']], sfx: [[.6, 'xp'], [.8, 'xp'], [1, 'xp'], [1.2, 'xp'], [2.2, 'levelup']],
     render(g, W, H, t, v, u) {
       const bw = Math.min(W * .7, 900 * u), bx = W / 2 - bw / 2, by = H * .78, bh = 30 * u, out = seg(t, 3.5, 4);
       let got = 0; const N = 26;
@@ -3293,7 +3333,7 @@ const MC_TPL = [
   },
   {
     id: 'mcStats', cat: 'Mc', name: 'Karta przedmiotu', d: 'Fioletowa karta: rzadkość, wielka nazwa i trzy linijki opisu, a obok obracający się przedmiot.', dur: 5, keyHint: true,
-    fields: [['rarity', 'text', 'Rzadkość', 'LEGENDARNY'], ['name', 'text', 'Nazwa', 'NAZWA PRZEDMIOTU'], ['l1', 'text', 'Opis 1', 'Ostrość V'], ['l2', 'text', 'Opis 2', 'Ogień II'], ['l3', 'text', 'Opis 3', 'Niezniszczalność III'], ['item', 'item', 'Przedmiot', 'sword', MC_ITEMS], ['tint', 'color', 'Kolor przedmiotu', ''], ['color', 'color', 'Kolor karty', '#5b16a8']],
+    fields: [['rarity', 'text', 'Rzadkość', 'LEGENDARNY'], ['name', 'text', 'Nazwa', 'NAZWA PRZEDMIOTU'], ['l1', 'text', 'Opis 1', 'Ostrość V'], ['l2', 'text', 'Opis 2', 'Ogień II'], ['l3', 'text', 'Opis 3', 'Niezniszczalność III'], ['item', 'item', 'Przedmiot', 'sword', MC_ITEMS], ['tint', 'color', 'Kolor przedmiotu', ''], ['color', 'color', 'Kolor karty', '#5b16a8'], ['rcolor', 'color', 'Kolor etykiety rzadkości', '#ffb21f']],
     sfx: [[.1, 'whoosh'], [.5, 'pop'], [.9, 'tick'], [1.1, 'tick'], [1.3, 'tick']],
     render(g, W, H, t, v, u) {
       const out = E.in(seg(t, 4.5, 5)), k = E.out(seg(t, .05, .45)) * (1 - out); if (k <= 0) return;
@@ -3302,7 +3342,7 @@ const MC_TPL = [
       rr(g, x, y, w, hh, 18 * u); const bg = g.createRadialGradient(x + w * .7, y + hh * .5, 0, x + w * .5, y + hh * .5, w * .7); bg.addColorStop(0, mix(v.color, '#ffffff', .16)); bg.addColorStop(1, mix(v.color, '#000000', .55)); const hue = hexToHsl(v.color)[0], nameC = hslToHex(hue, .95, .7), nameSh = hslToHex(hue, .8, .16); g.fillStyle = bg; g.fill();
       g.globalAlpha = .08; for (let i = 0; i < 26; i++) { g.fillStyle = '#fff'; g.fillRect(x + rnd(i, 1) * w, y + rnd(i, 2) * hh, 6 * u, 6 * u); } g.globalAlpha = 1;
       const lx = x + 70 * u, tagK = E.back(seg(t, .4, .7));
-      g.save(); g.translate(lx, y + 90 * u); g.scale(tagK, tagK); const tw = pxMeasure(v.rarity, 26 * u) + 24 * u; g.fillStyle = '#ffb21f'; g.fillRect(0, -20 * u, tw, 40 * u); T(g, v.rarity, 12 * u, 2 * u, { size: 26 * u, font: 'Tiny5', weight: 400, color: '#3a1a00', align: 'left' }); g.restore();
+      g.save(); g.translate(lx, y + 90 * u); g.scale(tagK, tagK); const tw = pxMeasure(v.rarity, 26 * u) + 24 * u; g.fillStyle = v.rcolor; g.fillRect(0, -20 * u, tw, 40 * u); T(g, v.rarity, 12 * u, 2 * u, { size: 26 * u, font: 'Tiny5', weight: 400, color: txLum(v.rcolor) > .55 ? mix(v.rcolor, '#000000', .8) : '#ffffff', align: 'left' }); g.restore();
       const nl = proWrap(g, v.name, `400 ${110 * u}px "Tiny5"`, w * .5, 2); nl.forEach((ln, i) => { const kk = E.out(seg(t, .5 + i * .1, .85 + i * .1)); mcText(g, ln, lx - (1 - kk) * 80 * u, y + 190 * u + i * 104 * u, 110 * u, nameC, { align: 'left', alpha: kk, maxW: w * .52, weight: 700, shadow: nameSh }); });
       [v.l1, v.l2, v.l3].forEach((s, i) => { if (!s) return; const kk = E.out(seg(t, .9 + i * .2, 1.2 + i * .2)), yy = y + 190 * u + nl.length * 104 * u + 20 * u + i * 58 * u; g.save(); g.globalAlpha *= kk; g.fillStyle = '#ffcf3a'; g.save(); g.translate(lx + 12 * u, yy); g.rotate(Math.PI / 4); g.fillRect(-8 * u, -8 * u, 16 * u, 16 * u); g.restore(); mcText(g, s, lx + 40 * u, yy, 40 * u, '#ffffff', { align: 'left', maxW: w * .45 }); g.restore(); });
       const is = Math.min(hh * .78, w * .34); mcItem(g, mcKind(v), v.tint, x + w * .76, y + hh / 2 + mcBob(t, u, 14), is * E.back(seg(t, .3, .8)), -.5 + Math.sin(t * 1.3) * .12, ((t - 1.2) % 2.2) / .5);
@@ -3311,18 +3351,18 @@ const MC_TPL = [
   },
   {
     id: 'mcHotbar', cat: 'Mc', name: 'Pasek przedmiotów', d: 'Pasek z dziewięcioma slotami jak w grze. Zaznaczenie przeskakuje na twój przedmiot, a nad paskiem pojawia się jego nazwa.', dur: 4.5, keyHint: true,
-    fields: [['name', 'text', 'Nazwa przedmiotu', 'Miecz Zagłady'], ['item', 'item', 'Przedmiot', 'sword', MC_ITEMS], ['tint', 'color', 'Kolor przedmiotu', ''], ['color', 'color', 'Kolor nazwy', '#ffffff']],
-    sfx: [[.6, 'tick'], [.9, 'tick'], [1.2, 'tick'], [1.5, 'pop']],
+    fields: [['name', 'text', 'Nazwa przedmiotu', 'Miecz Zagłady'], ['bar', 'slots', 'Przedmioty na pasku', 'pickaxe;apple*12;bow;gold*32;sword;potion;emerald*7;;diamond*64', { n: 9, cols: 9 }], ['pick', 'select', 'Który slot się zaznacza', '5', [['1', '1'], ['2', '2'], ['3', '3'], ['4', '4'], ['5', '5'], ['6', '6'], ['7', '7'], ['8', '8'], ['9', '9']]], ['color', 'color', 'Kolor nazwy', '#ffffff']],
+    sfx: [[.6, 'tik'], [.9, 'tik'], [1.2, 'tik'], [1.5, 'pickup']],
     render(g, W, H, t, v, u) {
       const out = E.in(seg(t, 4.1, 4.5)), kin = E.out(seg(t, .05, .45)), a = kin * (1 - out); if (a <= 0) return;
       const slot = Math.round(Math.min(W / 10.5, 116 * u)), P = Math.max(2, Math.round(slot / 22)), n = 9, bw = slot * n + P * 2, bh = slot + P * 2, x0 = Math.round(W / 2 - bw / 2), y0 = Math.round(H * .74 + (1 - kin) * 70 * u);
-      const items = ['pickaxe', 'apple', 'bow', 'gold', mcKind(v), 'potion', 'emerald', null, 'diamond'], counts = ['', '12', '', '32', '', '', '7', '', '64'];
+      const bar = slotsParse(v.bar, 9), pick = clamp((parseInt(v.pick) || 5) - 1, 0, 8), start = (pick - 4 + 9) % 9;
       g.save(); g.globalAlpha *= a;
       g.fillStyle = 'rgba(12,12,12,.62)'; g.fillRect(x0, y0, bw, bh); g.fillStyle = 'rgba(0,0,0,.85)'; g.fillRect(x0, y0, bw, P); g.fillRect(x0, y0 + bh - P, bw, P); g.fillRect(x0, y0, P, bh); g.fillRect(x0 + bw - P, y0, P, bh);
       for (let i = 0; i < n; i++) { const sx = x0 + P + i * slot; pxSlot(g, sx + P, y0 + 2 * P, slot - 2 * P, P, 'rgba(139,139,139,.42)');
-        if (items[i]) { const kk = E.back(seg(t, .15 + i * .04, .45 + i * .04)); mcItem(g, items[i], i === 4 ? v.tint : '', sx + slot / 2, y0 + P + slot / 2, slot * .66 * kk, 0, i === 4 && t > 1.5 ? ((t - 1.7) % 2) / .45 : -1); }
-        if (counts[i] && t > .5) pxText(g, counts[i], sx + slot - 2 * P, y0 + slot - P * 1.5, { size: slot * .3, color: '#ffffff', align: 'right', base: 'alphabetic' }); }
-      const ticks = [.6, .9, 1.2, 1.5]; let idx = 0, frac = 0; ticks.forEach((tk, i) => { if (t >= tk) { idx = i + 1; frac = E.out(seg(t, tk, tk + .09)); } }); const pos = idx === 0 ? 0 : idx - 1 + frac;
+        if (bar[i].item) { const kk = E.back(seg(t, .15 + i * .04, .45 + i * .04)); mcItem(g, slotKind(bar[i], v), '', sx + slot / 2, y0 + P + slot / 2, slot * .66 * kk, 0, i === pick && t > 1.5 ? ((t - 1.7) % 2) / .45 : -1); }
+        if (bar[i].item && bar[i].n > 1 && t > .5) pxText(g, String(bar[i].n), sx + slot - 2 * P, y0 + slot - P * 1.5, { size: slot * .3, color: '#ffffff', align: 'right', base: 'alphabetic' }); }
+      const ticks = [.6, .9, 1.2, 1.5]; let idx = 0, frac = 0; ticks.forEach((tk, i) => { if (t >= tk) { idx = i + 1; frac = E.out(seg(t, tk, tk + .09)); } }); const pos = (start + (idx === 0 ? 0 : idx - 1 + frac)) % 9;
       const fx = Math.round(x0 + P + pos * slot - P), fy = y0 - P, fs = slot + 2 * P; g.fillStyle = '#ffffff'; g.fillRect(fx, fy, fs, 2 * P); g.fillRect(fx, fy + fs, fs, 2 * P); g.fillRect(fx, fy, 2 * P, fs + 2 * P); g.fillRect(fx + fs - P, fy, 2 * P, fs + 2 * P);
       g.fillStyle = '#9a9a9a'; g.fillRect(fx + 2 * P, fy + 2 * P, fs - 3 * P, P);
       const kn = seg(t, 1.5, 1.7) * (1 - seg(t, 3.6, 4.0)); if (kn > 0) mcText(g, v.name, W / 2, y0 - slot * .62, Math.min(56 * u, slot * .5), v.color, { alpha: kn, maxW: W * .8, weight: 700 });
@@ -3331,13 +3371,13 @@ const MC_TPL = [
   },
   {
     id: 'mcScoreboard', cat: 'Mc', name: 'Tablica wyników', d: 'Tablica z boku ekranu jak na serwerze: tytuł, gracze i punkty, które rosną. Na koniec pierwszy gracz dostaje bonus.', dur: 5.5,
-    fields: [['title', 'text', 'Tytuł', 'TURNIEJ PVP'], ['p1', 'text', 'Gracz 1', 'MaksPVP'], ['p2', 'text', 'Gracz 2', 'Kuba'], ['p3', 'text', 'Gracz 3', 'Zosia'], ['p4', 'text', 'Gracz 4', 'Olek'], ['color', 'color', 'Kolor tytułu', '#ffd23f']],
-    sfx: [[.2, 'whoosh'], [2.8, 'ding']],
+    fields: [['title', 'text', 'Tytuł', 'TURNIEJ PVP'], ['p1', 'text', 'Gracz 1', 'MaksPVP'], ['s1', 'text', 'Punkty gracza 1', '15'], ['p2', 'text', 'Gracz 2', 'Kuba'], ['s2', 'text', 'Punkty gracza 2', '11'], ['p3', 'text', 'Gracz 3', 'Zosia'], ['s3', 'text', 'Punkty gracza 3', '8'], ['p4', 'text', 'Gracz 4', 'Olek'], ['s4', 'text', 'Punkty gracza 4', '5'], ['bonus', 'text', 'Bonus dla gracza 1 (0 = bez)', '5'], ['color', 'color', 'Kolor tytułu', '#ffd23f']],
+    sfx: [[.2, 'sweep'], [2.8, 'coin']],
     render(g, W, H, t, v, u) {
       const out = E.in(seg(t, 5.1, 5.5)), kin = E.out(seg(t, .1, .55)); if (kin * (1 - out) <= 0) return;
-      const fs = Math.max(20, Math.round(46 * u)), rowH = Math.round(fs * 1.25), pad = Math.round(fs * .45), names = [v.p1, v.p2, v.p3, v.p4].filter(s => String(s).trim()), fin = [15, 11, 8, 5], bonus = seg(t, 2.8, 3.1);
-      const scores = names.map((_, i) => Math.round(fin[i] * E.out(seg(t, .8 + i * .15, 2.2 + i * .15))) + (i === 0 && t > 2.8 ? 5 : 0));
-      const nameW = Math.max(...names.map(s => pxMeasure(s, fs)), pxMeasure(v.title, fs, { bold: true }) * .9), pw = Math.round(nameW + pxMeasure('00', fs) + pad * 3.4), ph = rowH * (names.length + 1) + pad * 1.2;
+      const fs = Math.max(20, Math.round(46 * u)), rowH = Math.round(fs * 1.25), pad = Math.round(fs * .45), rowsIn = [[v.p1, v.s1], [v.p2, v.s2], [v.p3, v.s3], [v.p4, v.s4]].filter(r => String(r[0]).trim()), names = rowsIn.map(r => r[0]), fin = rowsIn.map(r => parseInt(r[1]) || 0), bn = parseInt(v.bonus) || 0, bonus = bn ? seg(t, 2.8, 3.1) : 0;
+      const scores = names.map((_, i) => Math.round(fin[i] * E.out(seg(t, .8 + i * .15, 2.2 + i * .15))) + (i === 0 && bn && t > 2.8 ? bn : 0));
+      const nameW = Math.max(...names.map(s => pxMeasure(s, fs)), pxMeasure(v.title, fs, { bold: true }) * .9), pw = Math.round(nameW + pxMeasure(String(Math.max(...fin.map((f, i) => f + (i === 0 ? Math.abs(bn) : 0)), 10)), fs) + pad * 3.4), ph = rowH * (names.length + 1) + pad * 1.2;
       const x = Math.round(W - pw - W * .04 + (1 - kin) * (pw + W * .05)), y = Math.round(H / 2 - ph / 2);
       g.save(); g.globalAlpha *= 1 - out;
       g.fillStyle = 'rgba(0,0,0,.42)'; g.fillRect(x, y, pw, rowH + pad * .6); g.fillStyle = 'rgba(0,0,0,.3)'; g.fillRect(x, y + rowH + pad * .6, pw, ph - rowH - pad * .6);
@@ -3345,14 +3385,14 @@ const MC_TPL = [
       names.forEach((s, i) => { const kr = E.out(seg(t, .45 + i * .12, .8 + i * .12)), ry = y + rowH + pad * .6 + pad * .3 + i * rowH + rowH / 2; g.save(); g.globalAlpha *= kr; g.translate((1 - kr) * 60 * u, 0);
         mcText(g, s, x + pad, ry, fs, i === 0 && bonus > 0 && bonus < 1 ? '#ffff55' : '#ffffff', { align: 'left', maxW: nameW });
         const pop = i === 0 ? 1 + .35 * Math.sin(Math.PI * bonus) : 1; mcText(g, String(scores[i]), x + pw - pad, ry, fs, '#ff5555', { align: 'right', scale: pop }); g.restore(); });
-      if (t > 2.8 && t < 4.2) { const k2 = seg(t, 2.8, 4.2); mcText(g, '+5', x + pw - pad * .4, y + rowH * 1.6 - k2 * 70 * u, fs * 1.1, '#55ff55', { align: 'left', alpha: 1 - k2, weight: 700 }); }
+      if (bn && t > 2.8 && t < 4.2) { const k2 = seg(t, 2.8, 4.2); mcText(g, (bn > 0 ? '+' : '') + bn, x + pw - pad * .4, y + rowH * 1.6 - k2 * 70 * u, fs * 1.1, '#55ff55', { align: 'left', alpha: 1 - k2, weight: 700 }); }
       g.restore();
     }
   },
   {
     id: 'mcTooltipItem', cat: 'Mc', name: 'Przedmiot z opisem', d: 'Przedmiot unosi się, a obok wyskakuje opis jak w grze: nazwa i zaklęcia pojawiają się linijka po linijce.', dur: 5, keyHint: true,
     fields: [['name', 'text', 'Nazwa', 'Miecz Zagłady'], ['l1', 'text', 'Opis 1', 'Ostrość V'], ['l2', 'text', 'Opis 2', 'Zaklęty ogień II'], ['l3', 'text', 'Opis 3', 'Niezniszczalność III'], ['item', 'item', 'Przedmiot', 'sword', MC_ITEMS], ['tint', 'color', 'Kolor przedmiotu', ''], ['color', 'color', 'Kolor nazwy', '#55ffff']],
-    sfx: [[.1, 'pop'], [.6, 'tick'], [.9, 'tick'], [1.1, 'tick'], [1.3, 'tick']],
+    sfx: [[.1, 'pickup'], [.6, 'key'], [.85, 'key'], [1.1, 'key'], [1.35, 'key']],
     render(g, W, H, t, v, u) {
       const out = E.in(seg(t, 4.6, 5)), k = E.back(seg(t, .05, .45)) * (1 - out); if (k <= 0) return;
       const s = Math.min(W * .3, H * .46), ix = W * .3, iy = H / 2 + mcBob(t, u, 12);
@@ -3371,7 +3411,7 @@ const MC_TPL = [
   {
     id: 'mcTitleCmd', cat: 'Mc', name: 'Tytuł na środku ekranu', d: 'Duży tytuł i podtytuł na środku, dokładnie tak jak pojawiają się w grze: płynne wejście, chwila na ekranie i wyjście.', dur: 5,
     fields: [['title', 'text', 'Tytuł', 'ODCINEK 1'], ['sub', 'text', 'Podtytuł', 'Początek przygody'], ['color', 'color', 'Kolor tytułu', '#ffffff'], ['accent', 'color', 'Kolor podtytułu', '#ffd23f']],
-    sfx: [[.1, 'whoosh']],
+    sfx: [[.1, 'air']],
     render(g, W, H, t, v, u) {
       const a = seg(t, .1, .7) * (1 - seg(t, 4, 4.9)); if (a <= 0) return;
       const fs = Math.min(170 * u, W * 1.3 / Math.max(5, [...v.title].length));
@@ -3382,7 +3422,7 @@ const MC_TPL = [
   {
     id: 'mcEnchant', cat: 'Mc', name: 'Zaklinanie przedmiotu', d: 'Magiczne runy wlatują w przedmiot, który zaczyna mienić się na fioletowo, a pod nim pojawia się nazwa zaklęcia.', dur: 5, keyHint: true,
     fields: [['name', 'text', 'Zaklęcie', 'Ostrość V'], ['item', 'item', 'Przedmiot', 'sword', MC_ITEMS], ['tint', 'color', 'Kolor przedmiotu', ''], ['color', 'color', 'Kolor zaklęcia', '#c77dff']],
-    sfx: [[.3, 'whoosh'], [1.8, 'ding']],
+    sfx: [[.3, 'magic'], [1.8, 'chime']],
     render(g, W, H, t, v, u) {
       const out = E.in(seg(t, 4.6, 5)), k = E.back(seg(t, .05, .45)) * (1 - out); if (k <= 0) return;
       const s = Math.min(W, H) * .4, cx = W / 2, cy = H * .44 + mcBob(t, u, 10), glow = seg(t, .6, 1.8);
@@ -3401,7 +3441,7 @@ const MC_TPL = [
   {
     id: 'mcObjective', cat: 'Mc', name: 'Nowy cel', d: 'Powiadomienie jak w grze wjeżdża z prawej: ikonka w zielonej ramce, NOWY CEL i opis.', dur: 4.5, keyHint: true,
     fields: [['title', 'text', 'Napis', 'NOWY CEL'], ['desc', 'text', 'Opis', 'Zdobądź 10 diamentów'], ['item', 'item', 'Ikona', 'heart', MC_ITEMS], ['tint', 'color', 'Kolor ikony', ''], ['color', 'color', 'Kolor napisu', '#64ff4f']],
-    sfx: [[.15, 'whoosh'], [.45, 'ding']],
+    sfx: [[.15, 'swish'], [.45, 'notify']],
     render(g, W, H, t, v, u) {
       const w = Math.min(W * .62, 760 * u), hh = 150 * u, m = 50 * u, k = E.out(seg(t, .1, .5)), out = E.in(seg(t, 3.9, 4.4)), x = W - m - w + (1 - k) * (w + m * 2), y = m - out * (hh + m * 2);
       g.save(); g.shadowColor = 'rgba(0,0,0,.5)'; g.shadowBlur = 24 * u; g.fillStyle = '#212121'; g.fillRect(x, y, w, hh); g.restore(); g.strokeStyle = '#6b6b6b'; g.lineWidth = 5 * u; g.strokeRect(x + 2.5 * u, y + 2.5 * u, w - 5 * u, hh - 5 * u);
@@ -3414,7 +3454,7 @@ const MC_TPL = [
   {
     id: 'mcDone', cat: 'Mc', name: 'Cel ukończony', d: 'Mała karta z przedmiotem i wielkim UKOŃCZONY, a w rogu wskakuje zielony znaczek.', dur: 4, keyHint: true,
     fields: [['small', 'text', 'Mały napis', 'CEL'], ['title', 'text', 'Napis', 'UKOŃCZONY'], ['desc', 'text', 'Opis', 'Pokonaj smoka'], ['item', 'item', 'Przedmiot', 'emerald', MC_ITEMS], ['tint', 'color', 'Kolor przedmiotu', ''], ['color', 'color', 'Kolor', '#ff4fe0']],
-    sfx: [[.1, 'pop'], [.7, 'ding']],
+    sfx: [[.1, 'pickup'], [.7, 'success']],
     render(g, W, H, t, v, u) {
       const out = E.in(seg(t, 3.5, 4)), k = E.back(seg(t, .05, .45)) * (1 - out); if (k <= 0) return;
       const w = Math.min(W * .7, 720 * u), hh = 190 * u, x = W / 2 - w / 2, y = H / 2 - hh / 2;
@@ -3449,24 +3489,24 @@ const MC_TPL = [
   },
   {
     id: 'mcCraft', cat: 'Mc', name: 'Crafting z wynikiem', d: 'Okno craftingu jak w grze: siatka 3×3 zapełnia się przedmiotami, a po strzałce wskakuje wynik.', dur: 5, keyHint: true,
-    fields: [['title', 'text', 'Tytuł okna', 'Crafting'], ['item', 'item', 'Wynik', 'sword', MC_ITEMS], ['tint', 'color', 'Kolor wyniku', '']],
-    sfx: [[.1, 'pop'], [.5, 'tick'], [.65, 'tick'], [.8, 'tick'], [.95, 'tick'], [1.1, 'tick'], [1.25, 'tick'], [1.4, 'tick'], [1.55, 'tick'], [1.7, 'tick'], [2.1, 'ding']],
+    fields: [['title', 'text', 'Tytuł okna', 'Crafting'], ['grid', 'slots', 'Siatka craftingu (3×3)', 'gold;diamond;gold;gold;emerald;gold;apple;potion;apple', { n: 9, cols: 3 }], ['item', 'item', 'Wynik', 'sword', MC_ITEMS], ['count', 'text', 'Ile sztuk wyniku', '1'], ['tint', 'color', 'Kolor wyniku', '']],
+    sfx: [[.1, 'uiclick'], [.5, 'wood'], [.65, 'wood'], [.8, 'wood'], [.95, 'wood'], [1.1, 'wood'], [1.25, 'wood'], [1.4, 'wood'], [1.55, 'wood'], [1.7, 'wood'], [2.1, 'success']],
     render(g, W, H, t, v, u) {
       const out = E.in(seg(t, 4.5, 5)), k = E.back(seg(t, .05, .4)) * (1 - out); if (k <= 0) return;
       const P = Math.max(2, Math.round(5 * u)), slot = 104 * u, gap = 6 * u, gw = slot * 3 + gap * 2, pw = gw + 330 * u, ph = gw + 130 * u, x = W / 2 - pw / 2, y = H / 2 - ph / 2;
-      const items = [['gold', ''], ['diamond', ''], ['gold', ''], ['gold', ''], ['emerald', ''], ['gold', ''], ['apple', ''], ['potion', ''], ['apple', '']];
+      const items = slotsParse(v.grid, 9), filled = items.map((x, i) => (x.item ? i : -1)).filter(i => i >= 0), order = i => filled.indexOf(i);
       g.save(); g.translate(W / 2, H / 2); g.scale(k, k); g.translate(-W / 2, -H / 2);
       g.save(); g.shadowColor = 'rgba(0,0,0,.55)'; g.shadowBlur = 40 * u; g.shadowOffsetY = 16 * u; pxPanel(g, x, y, pw, ph, P); g.restore();
       T(g, v.title, x + 34 * u, y + 46 * u, { size: 38 * u, font: 'Tiny5', weight: 400, color: '#404040', align: 'left' });
-      for (let i = 0; i < 9; i++) { const sx = x + 34 * u + (i % 3) * (slot + gap), sy = y + 84 * u + Math.floor(i / 3) * (slot + gap); pxSlot(g, sx, sy, slot, P); const kk = E.back(seg(t, .5 + i * .15, .78 + i * .15)); if (kk > 0) { mcItem(g, items[i][0], items[i][1], sx + slot / 2, sy + slot / 2, slot * .74 * kk); T(g, String(i + 1), sx + slot - 12 * u, sy + slot - 18 * u, { size: 24 * u, font: 'Tiny5', weight: 400, color: '#fff', align: 'right', shadow: { color: '#3a3a3a', x: 2 * u, y: 2 * u } }); } }
+      for (let i = 0; i < 9; i++) { const sx = x + 34 * u + (i % 3) * (slot + gap), sy = y + 84 * u + Math.floor(i / 3) * (slot + gap); pxSlot(g, sx, sy, slot, P); const it = items[i]; if (!it.item) continue; const o = order(i), kk = E.back(seg(t, .5 + o * (1.4 / Math.max(1, filled.length)), .78 + o * (1.4 / Math.max(1, filled.length)))); if (kk > 0) { mcItem(g, slotKind(it, v), '', sx + slot / 2, sy + slot / 2, slot * .74 * kk); if (it.n > 1) pxText(g, String(it.n), sx + slot - 6 * u, sy + slot - 8 * u, { size: 46 * u, color: '#ffffff', align: 'right', base: 'alphabetic' }); } }
       const ax = x + 34 * u + gw + 40 * u, ay = y + 84 * u + gw / 2; g.fillStyle = '#8b8b8b'; g.fillRect(ax, ay - 12 * u, 90 * u, 24 * u); g.beginPath(); g.moveTo(ax + 84 * u, ay - 36 * u); g.lineTo(ax + 130 * u, ay); g.lineTo(ax + 84 * u, ay + 36 * u); g.closePath(); g.fill();
-      const rs = 150 * u, rx = ax + 160 * u, ry = ay - rs / 2; pxSlot(g, rx, ry, rs, P); const kr = E.back(seg(t, 2.05, 2.4)); if (kr > 0) mcItem(g, mcKind(v), v.tint, rx + rs / 2, ry + rs / 2, rs * .78 * kr, 0, ((t - 2.4) % 1.8) / .45);
+      const rs = 150 * u, rx = ax + 160 * u, ry = ay - rs / 2; pxSlot(g, rx, ry, rs, P); const kr = E.back(seg(t, 2.05, 2.4)); if (kr > 0) { mcItem(g, mcKind(v), v.tint, rx + rs / 2, ry + rs / 2, rs * .78 * kr, 0, ((t - 2.4) % 1.8) / .45); const rc = parseInt(v.count) || 1; if (rc > 1) pxText(g, String(rc), rx + rs - 10 * u, ry + rs - 12 * u, { size: 44 * u, color: '#ffffff', align: 'right', base: 'alphabetic', alpha: kr }); }
       g.restore();
     }
   },
   {
     id: 'mcShatter', cat: 'Mc', name: 'Przedmiot pęka jak szkło', d: 'Przedmiot unosi się, pęka i rozsypuje się na pojedyncze piksele, które spadają.', dur: 3.5, keyHint: true,
-    fields: [mcSel, ['tint', 'color', 'Kolor przedmiotu', '']], sfx: [[.05, 'pop'], [1.2, 'glass']],
+    fields: [mcSel, ['tint', 'color', 'Kolor przedmiotu', '']], sfx: [[.05, 'pickup'], [1.2, 'break']],
     render(g, W, H, t, v, u) {
       const s = Math.min(W, H) * .36, cx = W / 2, cy = H / 2, k = E.back(seg(t, .05, .4)), brk = 1.2;
       if (t < brk) { const sh = t > .9 ? (t - .9) / .3 * 8 * u : 0; mcItem(g, mcKind(v), v.tint, cx + Math.sin(t * 90) * sh, cy + mcBob(t, u), s * k, Math.sin(t * 1.6) * .08); if (t > 1) { g.strokeStyle = 'rgba(255,255,255,.9)'; g.lineWidth = 4 * u; g.beginPath(); g.moveTo(cx - s * .1, cy - s * .3); g.lineTo(cx + s * .05, cy - s * .05); g.lineTo(cx - s * .08, cy + s * .12); g.lineTo(cx + s * .12, cy + s * .3); g.stroke(); } return; }
@@ -3478,7 +3518,7 @@ const MC_TPL = [
   },
   {
     id: 'mcCount', cat: 'Mc', name: 'Licznik przedmiotów', d: 'Przedmiot z licznikiem w rogu: liczba rośnie do 64, a przedmiot podskakuje przy każdym dodaniu.', dur: 4, keyHint: true,
-    fields: [['max', 'text', 'Do ilu', '64'], ['item', 'item', 'Przedmiot', 'gift', MC_ITEMS], ['tint', 'color', 'Kolor przedmiotu', '']], sfx: [[.1, 'pop'], [.5, 'tick'], [.8, 'tick'], [1.1, 'tick'], [1.4, 'tick'], [1.8, 'ding']],
+    fields: [['max', 'text', 'Do ilu', '64'], ['item', 'item', 'Przedmiot', 'gift', MC_ITEMS], ['tint', 'color', 'Kolor przedmiotu', '']], sfx: [[.1, 'pickup'], [.5, 'xp'], [.8, 'xp'], [1.1, 'xp'], [1.4, 'xp'], [1.8, 'coin']],
     render(g, W, H, t, v, u) {
       const out = E.in(seg(t, 3.6, 4)), mx = Math.max(1, parseInt(v.max) || 64), f = E.out(seg(t, .35, 1.8)), n = Math.max(1, Math.round(mx * f)), step = f * 12, bump = 1 + .12 * Math.max(0, 1 - (step % 1) * 4) * (f < 1 ? 1 : 0);
       const k = E.back(seg(t, .05, .4)) * (1 - out), s = Math.min(W, H) * .3;
@@ -3520,7 +3560,7 @@ const MC_TPL = [
   },
   {
     id: 'mcXp', cat: 'Mc', name: 'Neonowy pasek postępu', d: 'Kółko z klejnotem i neonowy pasek, który się zapełnia, z napisem nad nim.', dur: 4, keyHint: true,
-    fields: [['text', 'text', 'Napis', 'Postęp'], ['color', 'color', 'Kolor', '#e83cff'], ['tint', 'color', 'Kolor klejnotu', '']], sfx: [[.1, 'pop'], [.5, 'riser'], [2, 'ding']],
+    fields: [['text', 'text', 'Napis', 'Postęp'], ['color', 'color', 'Kolor', '#e83cff'], ['tint', 'color', 'Kolor klejnotu', '']], sfx: [[.1, 'xp'], [.5, 'rise2'], [2, 'levelup']],
     render(g, W, H, t, v, u) {
       const out = E.in(seg(t, 3.6, 4)), k = E.out(seg(t, .05, .4)) * (1 - out); if (k <= 0) return; const bw = Math.min(W * .7, 900 * u), bx = W / 2 - bw / 2 + 50 * u, by = H / 2, f = E.inOut(seg(t, .5, 2));
       g.save(); g.globalAlpha = k; g.fillStyle = 'rgba(255,255,255,.12)'; rr(g, bx, by - 9 * u, bw, 18 * u, 9 * u); g.fill();
@@ -3548,7 +3588,7 @@ const MC_TPL = [
   {
     id: 'mcServer', cat: 'Mc', name: 'Dołączanie do serwera', d: 'Ekran wyboru serwera jak w grze: kursor zaznacza serwer na zielono i klika Dołącz.', dur: 5, keyHint: true,
     fields: [['title', 'text', 'Tytuł', 'Zagraj'], ['name', 'text', 'Nazwa serwera', 'Mój Serwer'], ['desc', 'text', 'Opis', 'Wbijaj, gramy razem!'], ['tint', 'color', 'Kolor ikony', '']],
-    sfx: [[.1, 'whoosh'], [1.3, 'click'], [2.4, 'click'], [2.45, 'ding']],
+    sfx: [[.1, 'sweep'], [1.3, 'uiclick'], [2.4, 'uiclick'], [2.45, 'success']],
     render(g, W, H, t, v, u) {
       const out = E.in(seg(t, 4.5, 5)), k = E.out(seg(t, .05, .45)) * (1 - out); if (k <= 0) return; const P = Math.max(2, Math.round(5 * u)), bandH = H * .16, sel = t > 1.3, joined = t > 2.45;
       g.save(); g.globalAlpha = k;
@@ -3608,7 +3648,9 @@ function itemAccent(o) { if (o.__img && o.__img._acc) return o.__img._acc; if (o
 function autoCol(role, acc) { let [hh, ss, l] = hexToHsl(acc); if (ss < .12) return role === 'card' ? '#3a3a44' : '#f2f2f2'; if (role === 'card') return hslToHex(hh, Math.min(.75, Math.max(.5, ss)), .32); return hslToHex(hh, Math.max(.75, ss), Math.min(.72, Math.max(.6, l))); }
 function autoColors(tpl, o) { const a = AUTO_COL[tpl.id]; if (!a) return; const box = vBox('_', tpl.id); for (const k in a) if (box[k] === undefined) o[k] = autoCol(a[k], itemAccent(o)); }
 const durOf = tpl => (tpl.durFn ? tpl.durFn(valsFor(tpl)) : tpl.dur);
-const sfxOf = tpl => (tpl.sfxFn ? tpl.sfxFn(valsFor(tpl)) : tpl.sfx || []);
+const SFX_VAR = { pop: ['pop', 'bubble', 'blip', 'plop', 'boing'], tick: ['tick', 'tap', 'wood', 'tock', 'pluck'], whoosh: ['whoosh', 'swish', 'swoosh', 'air', 'sweep'], boom: ['boom', 'impact', 'thump', 'drop', 'punch'], ding: ['ding', 'chime', 'marimba', 'notify', 'harp'], click: ['click', 'key', 'snap', 'tik', 'clack'], riser: ['riser', 'rise2', 'sweepup', 'shimmerup', 'rise2'] };
+const sfxSet = tpl => { const ch = vBox('__snd', tpl.id).__snd; if (ch === 'off') return -1; if (ch && ch !== 'auto') return +ch; let hsh = 0; for (const c of tpl.id) hsh = (hsh * 31 + c.charCodeAt(0)) >>> 0; return hsh % 5; };
+const sfxOf = tpl => { const raw = tpl.sfxFn ? tpl.sfxFn(valsFor(tpl)) : tpl.sfx || [], k = sfxSet(tpl); if (k < 0) return []; return raw.map(([at, nm]) => [at, SFX_VAR[nm] ? SFX_VAR[nm][k % SFX_VAR[nm].length] : nm]); };
 const isKeyBg = () => ST.bg === 'green' || ST.bg === 'none';
 const BGS = [['dark', 'Ciemne'], ['game', 'Gra (podgląd)'], ['grad', 'Studio'], ['green', 'Zielone'], ['black', 'Czarne'], ['video', 'Twój film'], ['image', 'Zdjęcie'], ['color', 'Kolor'], ['none', 'Przezroczyste']];
 
@@ -3831,6 +3873,30 @@ function textCtl(key, def, label) {
 }
 const repostItems = () => makePosters(t => t.fields.some(f => f[1] === 'item'));
 function pickImage(cb) { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.onchange = () => { const f = inp.files[0]; if (!f) return; const im = new Image(); im.onload = () => cb(im); im.onerror = () => toast('Nie udało się wczytać obrazka'); im.src = URL.createObjectURL(f); }; inp.click(); }
+// slot grids (crafting, hotbar): "gold;diamond*3;;apple" = item per slot with an optional count, empty = free slot, "wlasny" = the uploaded picture
+function slotsParse(str, n) { const a = String(str ?? '').split(';'); return Array.from({ length: n }, (_, i) => { const [it, c] = (a[i] || '').split('*'); return { item: (it || '').trim(), n: Math.max(1, Math.min(99, parseInt(c) || 1)) }; }); }
+const slotsStr = arr => arr.map(x => (x.item ? x.item + (x.n > 1 ? '*' + x.n : '') : '')).join(';');
+const slotKind = (x, v) => (x.item === 'wlasny' ? (v.__img || 'diamond') : x.item);
+const slotSel = {};
+function slotsCtl(key, def, o) {
+  const n = o.n || 9, cols = o.cols || 3, wrap = h('div', { class: 'slotsed' });
+  const icon = kind => { const cv = h('canvas', { width: 48, height: 48 }); const sp = kind === 'wlasny' ? VALS.__img : kind ? mcSprite(kind) : null; if (sp) { const cg = cv.getContext('2d'); cg.imageSmoothingEnabled = !!sp._smooth; cg.drawImage(sp, 6, 6, 36, 36); } return cv; };
+  const draw = () => {
+    const arr = slotsParse(VALS[key] ?? def, n); let sel = Math.min(n - 1, slotSel[key] ?? 0);
+    const save = (redraw = true) => { VALS[key] = slotsStr(arr); dirty = true; repost(key); if (redraw) draw(); };
+    const grid = h('div', { class: 'slotgrid', style: `grid-template-columns:repeat(${cols},minmax(0,52px))` });
+    arr.forEach((x, i) => grid.append(h('button', { type: 'button', class: 'itm slot' + (i === sel ? ' on' : ''), title: 'Slot ' + (i + 1), 'aria-label': 'Slot ' + (i + 1), onclick: () => { slotSel[key] = i; draw(); } }, icon(x.item), x.item && x.n > 1 ? h('b', { class: 'cnt' }, String(x.n)) : null)));
+    const pal = h('div', { class: 'items' });
+    pal.append(h('button', { type: 'button', class: 'itm' + (!arr[sel].item ? ' on' : ''), title: 'Pusty slot', 'aria-label': 'Pusty slot', onclick: () => { arr[sel].item = ''; save(); } }, h('span', { style: 'font:600 13px Inter;color:var(--dim)' }, 'pusty')));
+    MC_ITEMS.forEach(([k, l]) => pal.append(h('button', { type: 'button', class: 'itm' + (arr[sel].item === k ? ' on' : ''), title: l, 'aria-label': l, onclick: () => { arr[sel].item = k; save(); } }, icon(k))));
+    const up = h('button', { type: 'button', class: 'itm up' + (arr[sel].item === 'wlasny' ? ' on' : ''), title: 'Własny obrazek', 'aria-label': 'Własny obrazek', onclick: () => pickImage(im => { VALS.__img = mcPrepImage(im); arr[sel].item = 'wlasny'; save(); }) });
+    if (VALS.__img) up.append(icon('wlasny')); else up.append(h('span', { html: ICON.upload, style: 'display:grid' })); pal.append(up);
+    const cnt = h('input', { type: 'number', min: 1, max: 99, value: arr[sel].n, 'aria-label': 'Liczba w slocie' });
+    cnt.addEventListener('input', () => { arr[sel].n = Math.max(1, Math.min(99, parseInt(cnt.value) || 1)); save(false); }); cnt.addEventListener('change', () => draw());
+    wrap.replaceChildren(grid, h('div', { class: 'hint' }, `Slot ${sel + 1}: kliknij przedmiot poniżej albo „pusty”. Liczba 1 nie jest pokazywana.`), pal, h('label', { class: 'cntrow' }, 'Liczba w slocie', cnt));
+  };
+  draw(); return wrap;
+}
 function itemCtl(key, def, opts) {
   const cur = VALS.__img ? '__custom' : String(VALS[key] ?? def), grid = h('div', { class: 'items' });
   opts.forEach(([k, l]) => { const cv = h('canvas', { width: 48, height: 48 }), cg = cv.getContext('2d'); cg.imageSmoothingEnabled = false; cg.drawImage(mcSprite(k), 6, 6, 36, 36);
@@ -3882,7 +3948,8 @@ function renderEditor() {
     tpl.footage && (ST.bgVid ? 'Efekt działa na Twoim wgranym filmie.' : 'Ten efekt zmienia Twój film. Wgraj nagranie, a zobaczysz efekt od razu.')].filter(Boolean);
   const rows = [], fs = tpl.fields, find = k => fs.find(f => f[0] === k && f[1] === 'color'), used = new Set();
   const del = keys => () => { keys.forEach(k => delete VALS[k]); dirty = true; renderEditor(); keys.forEach(repost); updateTitle(); };
-  fs.filter(f => !['color', 'select', 'item', 'image'].includes(f[1])).forEach(([k, , l, d]) => rows.push(pRow(k, l, 'text', textCtl(k, d, l), { copy: () => String(VALS[k] ?? d), reset: del([k]) })));
+  fs.filter(f => f[1] === 'slots').forEach(([k, , l, d, o]) => rows.push(pRow(k, l, 'media', slotsCtl(k, d, o || {}), { reset: del([k]) })));
+  fs.filter(f => !['color', 'select', 'item', 'image', 'slots'].includes(f[1])).forEach(([k, , l, d]) => rows.push(pRow(k, l, 'text', textCtl(k, d, l), { copy: () => String(VALS[k] ?? d), reset: del([k]) })));
   fs.filter(f => f[1] === 'item').forEach(([k, , l, d, o]) => rows.push(pRow(k, l, 'media', itemCtl(k, d, o), { reset: () => { delete VALS[k]; VALS.__img = null; delete VALS.tint; dirty = true; renderEditor(); repostItems(); } })));
   fs.filter(f => f[1] === 'image').forEach(([k, , l]) => rows.push(pRow(k, l, 'media', imageCtl(k, l), { reset: VALS[k] ? () => { VALS[k] = null; dirty = true; renderEditor(); repost(k); } : null })));
   if (find('c1') && find('c2')) { const [, , l1, d1] = find('c1'), [, , l2, d2] = find('c2'); used.add('c1'); used.add('c2'); rows.push(pRow('c1c2', 'Gradient: ' + l1.toLowerCase() + ' → ' + l2.toLowerCase(), 'color', gradCtl('c1', d1, 'c2', d2), { copy: () => `${VALS.c1 ?? d1} → ${VALS.c2 ?? d2}`.toUpperCase(), reset: del(['c1', 'c2']) })); }
@@ -3891,6 +3958,7 @@ function renderEditor() {
   if (tpl.skin) rows.push(pRow('skin', 'Twój skin', 'media', skinBody(), { reset: skinIsDefault ? null : () => { paintDefaultSkin(); c3Skin(); renderEditor(); makePosters(t => t.skin); } }));
   rows.push(pRow('bg', 'Tło', 'media', bgBody(), { reset: () => { ST.bg = 'dark'; ST.bgAuto = true; renderEditor(); updateTitle(); sizeView(); dirty = true; } }));
   fs.filter(f => f[1] === 'select').forEach(([k, , l, d, o]) => rows.push(pRow(k, l, 'values', selCtl(k, d, o), { reset: del([k]) })));
+  if ((tpl.sfx && tpl.sfx.length) || tpl.sfxFn) rows.push(pRow('__snd', 'Styl dźwięków', 'values', selCtl('__snd', 'auto', [['auto', 'Dobrany'], ['0', 'Zestaw 1'], ['1', 'Zestaw 2'], ['2', 'Zestaw 3'], ['3', 'Zestaw 4'], ['4', 'Zestaw 5'], ['off', 'Bez dźwięku']]), { reset: del(['__snd']) }));
   rows.push(pRow('speed', 'Tempo animacji', 'values', speedBody(), { reset: () => { ST.speed = 1; renderEditor(); } }));
   const q = norm(eQuery).trim(), shown = rows.filter(r => (eTab === 'all' || r._kind === eTab) && (!q || norm(r._label).includes(q)));
   const info = eTab === 'all' && !q ? h('div', { class: 'info' }, h('b', null, tpl.name), h('p', null, tpl.d), ...hows.map(t => h('p', { class: 'how' }, t)),
@@ -4292,21 +4360,30 @@ async function aiOnline(prompt, signal) {
   }
   throw { code: 'rate_limited' };
 }
-let wlEngine = null, wlModel = null; const aiLocalId = () => (aiLocalSize === '3' ? 'Qwen2.5-3B-Instruct-q4f16_1-MLC' : 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC');
+let wlEngine = null, wlModel = null, wlCtx = 4096, wlF16 = null, wlLib = null;
+const aiLocalId = (f16 = wlF16 !== false) => `Qwen2.5-${aiLocalSize === '3' ? '3B' : '1.5B'}-Instruct-${f16 ? 'q4f16_1' : 'q4f32_1'}-MLC`;
 async function aiLocal(prompt, signal) {
   if (!AI_HAS_GPU) throw { code: 'no_webgpu' };
-  if (!wlEngine) { let ad = null; try { ad = await navigator.gpu.requestAdapter(); } catch (e) { } if (!ad) throw { code: 'no_webgpu' }; }
-  const id = aiLocalId();
-  if (!wlEngine || wlModel !== id) {
+  if (wlF16 === null) { let ad = null; try { ad = await navigator.gpu.requestAdapter(); } catch (e) { } if (!ad) throw { code: 'no_webgpu' }; wlF16 = !!(ad.features && ad.features.has('shader-f16')); }
+  if (!wlEngine || wlModel !== aiLocalId()) {
     aiLoadMsg = 'Ładuję bibliotekę AI…'; renderAiLoad();
-    let webllm; try { webllm = await import('https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.87/+esm'); } catch (e) { throw { code: 'offline' }; }
-    try { wlEngine = await webllm.CreateMLCEngine(id, { initProgressCallback: p => { aiLoadMsg = `Pobieram i uruchamiam model: ${Math.round((p.progress || 0) * 100)}%`; renderAiLoad(); } }, { context_window_size: 8192 }); wlModel = id; }
-    catch (e) { wlEngine = null; throw { code: 'local_failed', message: String(e && e.message || e) }; }
+    if (!wlLib) { try { wlLib = await import('https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.87/+esm'); } catch (e) { throw { code: 'offline' }; } }
+    if (wlEngine) { try { await wlEngine.unload(); } catch (e) { } wlEngine = null; }
+    const progress = p => { aiLoadMsg = `Pobieram i uruchamiam model: ${Math.round((p.progress || 0) * 100)}%`; renderAiLoad(); };
+    // try the best setup first, then safer ones: bigger memory window -> standard window -> model version that needs no f16 support
+    const tries = [[aiLocalId(), 8192], [aiLocalId(), 0]]; if (wlF16) tries.push([aiLocalId(false), 0]);
+    let lastErr = null;
+    for (const [id, ctx] of tries) {
+      if (signal?.aborted) throw { code: 'cancelled' };
+      try { wlEngine = await wlLib.CreateMLCEngine(id, { initProgressCallback: progress }, ctx ? { context_window_size: ctx } : undefined); wlModel = id; wlCtx = ctx || 4096; if (/q4f32/.test(id)) wlF16 = false; lastErr = null; break; }
+      catch (e) { lastErr = e; console.warn('model load failed', id, ctx, e); try { if (wlEngine) await wlEngine.unload(); } catch (x) { } wlEngine = null; if (/failed to fetch|networkerror|network error|quotaexceeded|quota/i.test(String(e && e.message || e))) break; }
+    }
     aiLoadMsg = ''; renderAiLoad();
+    if (lastErr || !wlEngine) { const m = String(lastErr && lastErr.message || lastErr || ''); if (/quota/i.test(m)) throw { code: 'no_space', message: m }; if (/failed to fetch|networkerror|network error/i.test(m)) throw { code: 'offline', message: m }; throw { code: 'local_failed', message: m }; }
   }
   const stop = () => { try { wlEngine.interruptGenerate(); } catch (e) { } }; signal?.addEventListener('abort', stop, { once: true });
   let r;
-  try { r = await wlEngine.chat.completions.create({ messages: [{ role: 'user', content: prompt }], response_format: { type: 'json_object' }, temperature: .7, max_tokens: 2400 }); }
+  try { r = await wlEngine.chat.completions.create({ messages: [{ role: 'user', content: prompt }], response_format: { type: 'json_object' }, temperature: .7, max_tokens: wlCtx >= 8192 ? 2400 : 1500 }); }
   catch (e) { if (signal?.aborted) throw { code: 'cancelled' }; const m = String(e && e.message || e); console.error(e);
     if (/context.?window|prompt tokens/i.test(m)) throw { code: 'too_long', message: m };
     if (/device|lost|gpu|webgpu|out of memory|oom/i.test(m)) { try { wlEngine.unload(); } catch (x) { } wlEngine = null; throw { code: 'gpu_lost', message: m }; }
@@ -4388,6 +4465,7 @@ const AI_ERR = { offline: 'Brak połączenia z AI. Sprawdź internet i spróbuj 
   upstream_error: 'Claude chwilowo nie odpowiada (problem po stronie serwera Claude, nie u ciebie). Kliknij Generuj jeszcze raz za chwilę.', empty_completion: 'AI nic nie odpowiedziało. Kliknij Generuj jeszcze raz albo opisz animację prościej.',
   invalid_request: 'Strona wysłała do AI błędne zapytanie. To błąd strony, nie twój: wyślij mi zrzut tego komunikatu.', transform_error: 'Strona wysłała do AI błędne zapytanie. To błąd strony, nie twój: wyślij mi zrzut tego komunikatu.', prompt_too_large: 'Opis był za długi. Skróć go i spróbuj jeszcze raz.',
   not_declared: 'Ta wersja strony nie może teraz używać Claude. Otwórz wersję z GitHub i wybierz tryb Na komputerze.', capability_disabled: 'Claude jest wyłączony w tym widoku. Otwórz wersję z GitHub i wybierz tryb Na komputerze.', capability_removed: 'Ta aplikacja jest za stara na tryb Claude. Zaktualizuj ją albo otwórz wersję z GitHub.',
+  no_space: 'Brakuje miejsca w przeglądarce na zapisanie modelu AI. Zwolnij trochę miejsca na dysku albo wybierz mniejszy model 1 GB.',
   too_long: 'Opis był za długi dla AI na komputerze. Skróć opis albo wybierz dokładność Szybko.', gpu_lost: 'Karta graficzna przerwała pracę AI (za mało pamięci albo sterownik). Kliknij Generuj jeszcze raz albo wybierz mniejszy model 1 GB.' };
 function aiPolishSafe(s) { try { return aiPolish(s); } catch (e) { console.error('polish failed', e); return s; } }
 function aiSetSteps(steps) { aiSteps = steps; renderAi(); }
@@ -4417,7 +4495,7 @@ async function aiGenerate() {
     const code = e && e.code; steps.forEach(s => { if (s.s === 'run') s.s = 'fail'; });
     console.error('AI error', e);
     aiMsg = code === 'cancelled' ? 'Zatrzymano.' : (AI_ERR[code] || (code ? 'Coś poszło nie tak po stronie AI. Kliknij Generuj jeszcze raz.' : 'Błąd strony: ' + String(e && e.message || e).slice(0, 140) + '. Wyślij mi zrzut tego komunikatu.'));
-    if (code && code !== 'cancelled') aiMsg += ` (kod: ${code})`;
+    if (code && code !== 'cancelled') aiMsg += ` (kod: ${code})`; if (e && e.message && ['local_failed', 'gpu_lost', 'too_long', 'no_space', 'offline'].includes(code)) aiMsg += ' Szczegóły: ' + String(e.message).replace(/\s+/g, ' ').slice(0, 220);
     if (rec.spec && code === 'cancelled') { const list = aiStore(); list.unshift(rec); aiSave(list); const tp = aiRegister(rec); makePosters(x => x.id === id); renderCats(); selectTpl(tp); aiMsg = 'Zatrzymano. Zapisałem wersję, którą AI zdążyło zrobić.'; }
     if ((code === 'not_granted' || code === 'sampling_disabled') && aiProv === 'claude') { aiSample = null; aiProv = AI_PROVS()[0]?.[0] || null; }
   } finally { aiBusy = false; clearInterval(aiTimer); renderAi(); }
