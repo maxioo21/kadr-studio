@@ -4349,7 +4349,16 @@ let aiSample, aiImages = false, aiCtl = null, aiBusy = false, aiLevel = '1', aiS
 const AI_IN_VIEWER = !!(window.claude && typeof window.claude.use === 'function'), AI_HAS_GPU = !!navigator.gpu;
 const AI_PROVS = () => [AI_IN_VIEWER ? null : ['local', 'Na komputerze', AI_HAS_GPU ? 'Prawdziwe AI działa w twojej przeglądarce: za darmo, bez konta i bez limitu. Za pierwszym razem pobiera model (1 GB albo 2 GB) i zapamiętuje go, potem działa od razu, nawet bez internetu. Potrzebny Chrome lub Edge i karta graficzna.' : 'Twoja przeglądarka nie obsługuje WebGPU, więc ten tryb tu nie zadziała. Spróbuj w Chrome lub Edge na komputerze.'], aiSample ? ['claude', 'Claude', 'Najlepsza jakość. Korzysta z twojego konta Claude.'] : null].filter(Boolean);
 const aiWait = (ms, signal) => new Promise((res, rej) => { const t = setTimeout(res, ms); signal?.addEventListener('abort', () => { clearTimeout(t); rej({ code: 'cancelled' }); }, { once: true }); });
-function aiParse(txt) { const a = String(txt).indexOf('{'), b = String(txt).lastIndexOf('}'); if (a < 0 || b <= a) throw { code: 'invalid_json' }; try { return JSON.parse(String(txt).slice(a, b + 1)); } catch (e) { throw { code: 'invalid_json' }; } }
+// reads the model's answer tolerantly: markdown fences, trailing commas, comments and answers cut off in the middle are repaired
+function aiParse(txt) {
+  let t = String(txt ?? '').replace(/```(?:json)?/gi, ''); const a = t.indexOf('{'); if (a < 0) throw { code: 'invalid_json' }; t = t.slice(a);
+  const tryP = x => { try { const v = JSON.parse(x); return v && typeof v === 'object' ? v : undefined; } catch (e) { return undefined; } };
+  const b = t.lastIndexOf('}'); let r = b > 0 ? tryP(t.slice(0, b + 1)) : undefined; if (r) return r;
+  const close = src => { const st = []; let inS = false, esc = false, out = '', lastComma = -1; for (const ch of src) { out += ch; if (inS) { if (esc) esc = false; else if (ch === '\\') esc = true; else if (ch === '"') inS = false; continue; } if (ch === '"') inS = true; else if (ch === '{' || ch === '[') st.push(ch); else if (ch === '}' || ch === ']') { st.pop(); if (!st.length) break; } else if (ch === ',') lastComma = out.length - 1; } if (inS) out += '"'; return { out, st, lastComma }; };
+  let src = t.replace(/^\s*\/\/[^\n]*$/gm, '').replace(/,\s*([}\]])/g, '$1');
+  for (let k = 0; k < 6; k++) { const c = close(src); let o = c.out.replace(/,\s*$/, ''); const st = c.st.slice(); while (st.length) o += st.pop() === '{' ? '}' : ']'; o = o.replace(/,\s*([}\]])/g, '$1'); r = tryP(o); if (r) return r; if (c.lastComma < 0) break; src = c.out.slice(0, c.lastComma); }
+  throw { code: 'invalid_json' };
+}
 async function aiOnline(prompt, signal) {
   for (let attempt = 0; attempt < 2; attempt++) {
     let r; try { r = await fetch('https://text.pollinations.ai/openai', { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal, body: JSON.stringify({ model: 'openai', messages: [{ role: 'user', content: prompt }], response_format: { type: 'json_object' }, seed: Math.floor(Math.random() * 1e9), referrer: 'faketok' }) }); }
@@ -4360,7 +4369,7 @@ async function aiOnline(prompt, signal) {
   }
   throw { code: 'rate_limited' };
 }
-let wlEngine = null, wlModel = null, wlCtx = 4096, wlF16 = null, wlLib = null;
+let wlEngine = null, wlModel = null, wlCtx = 4096, wlF16 = null, wlLib = null, wlNoGrammar = false;
 const aiLocalId = (f16 = wlF16 !== false) => `Qwen2.5-${aiLocalSize === '3' ? '3B' : '1.5B'}-Instruct-${f16 ? 'q4f16_1' : 'q4f32_1'}-MLC`;
 async function aiLocal(prompt, signal) {
   if (!AI_HAS_GPU) throw { code: 'no_webgpu' };
@@ -4382,8 +4391,11 @@ async function aiLocal(prompt, signal) {
     if (lastErr || !wlEngine) { const m = String(lastErr && lastErr.message || lastErr || ''); if (/quota/i.test(m)) throw { code: 'no_space', message: m }; if (/failed to fetch|networkerror|network error/i.test(m)) throw { code: 'offline', message: m }; throw { code: 'local_failed', message: m }; }
   }
   const stop = () => { try { wlEngine.interruptGenerate(); } catch (e) { } }; signal?.addEventListener('abort', stop, { once: true });
-  let r;
-  try { r = await wlEngine.chat.completions.create({ messages: [{ role: 'user', content: prompt }], response_format: { type: 'json_object' }, temperature: .7, max_tokens: wlCtx >= 8192 ? 2400 : 1500 }); }
+  let r; const req = { messages: [{ role: 'system', content: 'You are a senior motion designer. You answer with exactly one valid JSON object and nothing else: no prose, no markdown, no comments.' }, { role: 'user', content: prompt }], temperature: .6, max_tokens: wlCtx >= 8192 ? 2400 : 1500 };
+  try {
+    if (!wlNoGrammar) { try { r = await wlEngine.chat.completions.create(Object.assign({ response_format: { type: 'json_object' } }, req)); } catch (e) { if (signal?.aborted) throw e; if (!/grammar|response.?format|json_object|non-string|xgrammar/i.test(String(e && e.message || e))) throw e; console.warn('JSON mode not available, continuing without it', e); wlNoGrammar = true; } }
+    if (!r) r = await wlEngine.chat.completions.create(req);
+  }
   catch (e) { if (signal?.aborted) throw { code: 'cancelled' }; const m = String(e && e.message || e); console.error(e);
     if (/context.?window|prompt tokens/i.test(m)) throw { code: 'too_long', message: m };
     if (/device|lost|gpu|webgpu|out of memory|oom/i.test(m)) { try { wlEngine.unload(); } catch (x) { } wlEngine = null; throw { code: 'gpu_lost', message: m }; }
