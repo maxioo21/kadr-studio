@@ -3126,8 +3126,54 @@ const MC_DEF = { diamond: '#4aedd9', emerald: '#17dd62', gold: '#fcee4b', sword:
 const MC_ITEMS = [['diamond', 'Diament'], ['emerald', 'Szmaragd'], ['gold', 'Sztabka złota'], ['sword', 'Miecz'], ['pickaxe', 'Kilof'], ['bow', 'Łuk'], ['apple', 'Jabłko'], ['heart', 'Serce'], ['potion', 'Mikstura'], ['gift', 'Prezent']];
 const MCS = {};
 function mcTone(hx, dl, ds = 0) { const [h, s, l] = hexToHsl(hx); return hslToHex(h, clamp(s + ds, 0, 1), clamp(l + dl, .04, .97)); }
-const mcKind = v => (VALS.icon ? '__custom' : v.item);
-function mcCustomSprite() { const im = VALS.icon; if (im._spr) return im._spr; const S = 48, c = document.createElement('canvas'); c.width = c.height = S; const k = Math.min(S / im.width, S / im.height), w = im.width * k, h = im.height * k, cg = c.getContext('2d'); cg.imageSmoothingEnabled = im.width > S; cg.drawImage(im, (S - w) / 2, (S - h) / 2, w, h); c._smooth = im.width > S; im._spr = c; return c; }
+const mcKind = v => v.__img || v.item;
+// uploaded item pictures: background removed automatically, cropped, upscaled pixel art brought back to its own grid so it stays crisp
+function mcDown(c, n) { const o = document.createElement('canvas'); o.width = o.height = n; const g = o.getContext('2d'); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; g.drawImage(c, 0, 0, n, n); return o; }
+function mcPrepImage(im) {
+  const k0 = Math.min(1, 640 / Math.max(im.width, im.height)), w = Math.max(1, Math.round(im.width * k0)), h = Math.max(1, Math.round(im.height * k0));
+  const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d', { willReadFrequently: true }); g.imageSmoothingEnabled = k0 < 1; g.drawImage(im, 0, 0, w, h);
+  const img = g.getImageData(0, 0, w, h), D = img.data, N = w * h;
+  const dist = (i, c3) => { const r = D[i * 4] - c3[0], gg = D[i * 4 + 1] - c3[1], b = D[i * 4 + 2] - c3[2]; return Math.sqrt(r * r + gg * gg + b * b); };
+  // 1. background: the colour(s) that fill the border, flood-filled from the edges only (inner whites stay)
+  const border = []; for (let x = 0; x < w; x++) border.push(x, (h - 1) * w + x); for (let y = 1; y < h - 1; y++) border.push(y * w, y * w + w - 1);
+  const clear = border.filter(i => D[i * 4 + 3] < 24).length / border.length;
+  let removed = false;
+  if (clear < .4) {
+    const cnt = new Map(); border.forEach(i => { if (D[i * 4 + 3] < 24) return; const q = (D[i * 4] >> 4) << 8 | (D[i * 4 + 1] >> 4) << 4 | (D[i * 4 + 2] >> 4); const e = cnt.get(q) || { n: 0, r: 0, g: 0, b: 0 }; e.n++; e.r += D[i * 4]; e.g += D[i * 4 + 1]; e.b += D[i * 4 + 2]; cnt.set(q, e); });
+    const cl = [...cnt.values()].sort((a, b) => b.n - a.n), bg = []; let cov = 0;
+    for (const e of cl.slice(0, 3)) { if (cov >= .72 * border.length) break; if (e.n < .1 * border.length && bg.length) break; bg.push([e.r / e.n, e.g / e.n, e.b / e.n]); cov += e.n; }
+    if (bg.length && cov >= .55 * border.length) {
+      const TOL = 44, near = i => Math.min(...bg.map(b => dist(i, b))), seen = new Uint8Array(N), st = [];
+      border.forEach(i => { if (!seen[i] && near(i) < TOL) { seen[i] = 1; st.push(i); } });
+      while (st.length) { const i = st.pop(), x = i % w, y = (i / w) | 0; D[i * 4 + 3] = 0; for (const j of [x > 0 ? i - 1 : -1, x < w - 1 ? i + 1 : -1, y > 0 ? i - w : -1, y < h - 1 ? i + w : -1]) if (j >= 0 && !seen[j] && near(j) < TOL) { seen[j] = 1; st.push(j); } }
+      // soften the halo left by anti-aliasing against the old background
+      for (let i = 0; i < N; i++) { if (seen[i] || D[i * 4 + 3] === 0) continue; const x = i % w, y = (i / w) | 0; const nb = (x > 0 && seen[i - 1]) || (x < w - 1 && seen[i + 1]) || (y > 0 && seen[i - w]) || (y < h - 1 && seen[i + w]); if (!nb) continue; const d = near(i); if (d < TOL * 2) D[i * 4 + 3] = Math.round(D[i * 4 + 3] * clamp((d - TOL) / TOL, .2, 1)); }
+      removed = true; g.putImageData(img, 0, 0);
+    }
+  }
+  // 2. crop to the visible part
+  let x0 = w, y0 = h, x1 = -1, y1 = -1; for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (D[(y * w + x) * 4 + 3] > 16) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  if (x1 < 0) { x0 = 0; y0 = 0; x1 = w - 1; y1 = h - 1; }
+  const cw = x1 - x0 + 1, ch = y1 - y0 + 1, crop = g.getImageData(x0, y0, cw, ch), P = crop.data;
+  // accent colour: the most saturated visible pixels
+  let ar = 0, ag = 0, ab = 0, an = 0; for (let i = 0; i < cw * ch; i++) { if (P[i * 4 + 3] < 128) continue; const r = P[i * 4], gg = P[i * 4 + 1], b = P[i * 4 + 2], mx = Math.max(r, gg, b), mn = Math.min(r, gg, b), wt = (mx - mn) / 255 * (mx / 255) + .02; ar += r * wt; ag += gg * wt; ab += b * wt; an += wt; }
+  const acc = an ? '#' + [ar, ag, ab].map(v => Math.round(v / an).toString(16).padStart(2, '0')).join('') : '#cccccc';
+  // 3. pixel art? find the block size from run lengths and check that sampling block centres rebuilds the picture
+  const same = (a, b) => Math.abs(P[a] - P[b]) < 10 && Math.abs(P[a + 1] - P[b + 1]) < 10 && Math.abs(P[a + 2] - P[b + 2]) < 10 && (P[a + 3] > 127) === (P[b + 3] > 127);
+  const runs = [], starts = []; for (let y = 0; y < ch; y += Math.max(1, (ch / 60) | 0)) { let s0 = 0; for (let x = 1; x <= cw; x++) { if (x === cw || !same((y * cw + x) * 4, (y * cw + x - 1) * 4)) { runs.push(x - s0); starts.push(s0); s0 = x; } } }
+  let blk = 1; if (cw > 24 || ch > 24) for (let k = 48; k >= 2; k--) { let ok = 0, tot = 0; runs.forEach(r => { tot += r; if (r % k === 0) ok += r; }); if (tot && ok / tot > .8 && runs.filter(r => r >= k).length > runs.length * .5) { blk = k; break; } }
+  const out = document.createElement('canvas');
+  if (blk > 1) {
+    const ox = (() => { const m = new Map(); starts.forEach(s => m.set(s % blk, (m.get(s % blk) || 0) + 1)); return [...m.entries()].sort((a, b) => b[1] - a[1])[0][0]; })();
+    const nw = Math.ceil((cw - ox) / blk), nh = Math.ceil(ch / blk), sm = document.createElement('canvas'); sm.width = nw; sm.height = nh; const sg = sm.getContext('2d'), si = sg.createImageData(nw, nh);
+    let bad = 0, tot = 0; for (let by = 0; by < nh; by++) for (let bx = 0; bx < nw; bx++) { const sx = Math.min(cw - 1, ox + bx * blk + (blk >> 1)), sy = Math.min(ch - 1, by * blk + (blk >> 1)), si0 = (sy * cw + sx) * 4, di = (by * nw + bx) * 4; for (let q = 0; q < 4; q++) si.data[di + q] = P[si0 + q];
+      for (let yy = by * blk; yy < Math.min(ch, by * blk + blk); yy += 2) for (let xx = ox + bx * blk; xx < Math.min(cw, ox + bx * blk + blk); xx += 2) { tot++; if (!same((yy * cw + xx) * 4, si0)) bad++; } }
+    if (tot && bad / tot < .14) { sg.putImageData(si, 0, 0); const n = Math.max(nw, nh); out.width = out.height = n; const og = out.getContext('2d'); og.drawImage(sm, Math.floor((n - nw) / 2), Math.floor((n - nh) / 2)); out._smooth = false; out._acc = acc; out._bgRemoved = removed; return out; }
+  }
+  if (cw <= 48 && ch <= 48) { const n = Math.max(cw, ch); out.width = out.height = n; out.getContext('2d').putImageData(crop, Math.floor((n - cw) / 2), Math.floor((n - ch) / 2)); out._smooth = false; out._acc = acc; out._bgRemoved = removed; return out; }
+  const n = Math.min(320, Math.max(cw, ch)), sc = n / Math.max(cw, ch), tmp = document.createElement('canvas'); tmp.width = cw; tmp.height = ch; tmp.getContext('2d').putImageData(crop, 0, 0);
+  out.width = out.height = n; const og = out.getContext('2d'); og.imageSmoothingQuality = 'high'; og.drawImage(tmp, (n - cw * sc) / 2, (n - ch * sc) / 2, cw * sc, ch * sc); out._smooth = true; out._acc = acc; out._bgRemoved = removed; return out;
+}
 function avatarImg(g, im, cx, cy, r) { if (!im) return; g.save(); g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.clip(); const k = Math.max(2 * r / im.width, 2 * r / im.height); g.drawImage(im, cx - im.width * k / 2, cy - im.height * k / 2, im.width * k, im.height * k); g.restore(); }
 /* textures from the viewer's own game files: the .jar (or a resource pack .zip) is read in the browser, nothing is uploaded */
 const MC_TEX_KEY = 'faketok_mc_tex_v1', MC_TEX = {}, MC_TEX_PATHS = { diamond: 'item/diamond', emerald: 'item/emerald', gold: 'item/gold_ingot', sword: 'item/diamond_sword', pickaxe: 'item/diamond_pickaxe', bow: 'item/bow', apple: 'item/apple', heart: 'gui/sprites/hud/heart/full', potion: 'item/potion', gift: 'item/totem_of_undying' };
@@ -3155,7 +3201,7 @@ function mcTexSprite(kind, col) {
   if (hue) cg.filter = `hue-rotate(${hue.toFixed(0)}deg)`; cg.drawImage(im, 0, 0, im.width, Math.min(im.height, im.width), 0, 0, n, n); return c;
 }
 function mcSprite(kind, col) {
-  if (kind === '__custom' && VALS.icon) return mcCustomSprite();
+  if (kind && typeof kind === 'object') return kind;
   if (MC_TEX[kind]) { const k2 = kind + (col || '') + '#tex'; if (!MCS[k2]) MCS[k2] = mcTexSprite(kind, col); if (MCS[k2]) return MCS[k2]; }
   col = col || MC_DEF[kind] || '#cccccc'; const key = kind + col; if (MCS[key]) return MCS[key];
   const N = 16, m = Array.from({ length: N }, () => Array(N).fill(null)), set = (x, y, c) => { if (x >= 0 && y >= 0 && x < N && y < N) m[y][x] = c; };
@@ -3176,11 +3222,11 @@ function mcSprite(kind, col) {
     ['................', '................', '................', '................', '................', '.....ooooooooo..', '....o1111111o4o.', '...o1111111o44o.', '..ooooooooo444o.', '..o2222222o444o.', '..o2222222o44o..', '..o3333333o4o...', '..ooooooooooo...'].forEach((r, y) => [...r].forEach((ch, x) => { const c = { 1: T1, 2: T2, 3: T3, 4: T4, o: T4 }[ch]; if (c) set(x, y, ch === 'o' ? mcTone(col, -.3) : c); }));
     set(5, 6, TW); set(6, 6, TW); set(4, 9, T1);
   } else if (kind === 'sword') {
-    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { const d = x + y; if (y >= 1 && y <= 10 && x >= 4 && x <= 14) { if (d === 13) set(x, y, T1); else if (d === 14) set(x, y, T1); else if (d === 15) set(x, y, T2); else if (d === 16) set(x, y, T3); } }
-    set(14, 1, T2); set(13, 0, null); set(14, 0, null); set(12, 1, T1); set(13, 1, T1);
-    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (m[y][x] && (x + y === 13 || x + y === 16) && y === 10) m[y][x] = null;
-    [[1, 9], [2, 10], [3, 11], [5, 13], [6, 14], [2, 9], [6, 13]].forEach(([x, y]) => set(x, y, GA)); [[4, 12]].forEach(([x, y]) => set(x, y, GB)); set(1, 10, GB); set(5, 14, GB);
-    [[3, 12, WB], [2, 13, WB], [3, 13, WC], [2, 14, WC], [1, 14, GB], [1, 15, GB], [0, 15, GB]].forEach(([x, y, c]) => set(x, y, c));
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { const d = x + y; if (y >= 1 && y <= 9 && x >= 4 && x <= 14) { if (d === 13 || d === 14) set(x, y, d === 13 && y < 5 ? TW : T1); else if (d === 15) set(x, y, T2); else if (d === 16) set(x, y, T3); } }
+    set(14, 1, T3); set(13, 1, T2); set(12, 1, T1);
+    for (let i = 0; i < 6; i++) { set(1 + i, 7 + i, i === 0 || i === 5 ? T3 : T2); set(1 + i, 8 + i, T4); }
+    [[2, 12, WA], [3, 12, WB], [1, 13, WB], [2, 13, WC]].forEach(([x, y, c]) => set(x, y, c));
+    [[0, 14, T2], [1, 14, T3], [0, 15, T4]].forEach(([x, y, c]) => set(x, y, c));
   } else if (kind === 'pickaxe') {
     for (let x = 4; x <= 11; x++) { set(x, 2, T1); set(x, 3, x < 11 ? T2 : T2); } set(4, 3, T3); set(11, 3, T1); set(12, 3, T2);
     for (let y = 4; y <= 11; y++) { set(12, y, T2); set(13, y, T3); } set(13, 11, null); set(12, 11, T4); set(13, 4, T2);
@@ -3192,8 +3238,9 @@ function mcSprite(kind, col) {
     for (let y = 4; y <= 14; y++) for (let x = 2; x <= 13; x++) { const d = Math.hypot(x - cx, (y - 9.2) * 1.05); if (d > 5.7) continue; if (y === 4 && Math.abs(x - cx) < 1.2) continue; set(x, y, d < 2.6 && x < 7 && y < 9 ? T1 : x + y > 19 ? T4 : x + y > 15 ? T3 : T2); }
     set(7, 2, WC); set(7, 3, WC); set(8, 1, '#4caf3a'); set(9, 1, '#4caf3a'); set(9, 2, '#2f7a22'); set(10, 1, '#2f7a22'); set(5, 6, TW); set(4, 7, TW);
   } else if (kind === 'heart') {
-    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { const X = (x - 7.5) / 6.6, Y = -(y - 7.2) / 6.6 + .1, f = Math.pow(X * X + Y * Y - 1, 3) - X * X * Y * Y * Y; if (f > 0) continue; set(x, y, x + y < 9 ? T1 : x + y > 17 ? T4 : x + y > 13 ? T3 : T2); }
-    set(4, 4, TW); set(5, 4, TW); set(3, 5, TW);
+    const rows = { 2: [[3, 5], [10, 12]], 3: [[2, 6], [9, 13]], 4: [[1, 6], [9, 14]], 5: [[1, 14]], 6: [[1, 14]], 7: [[1, 14]], 8: [[2, 13]], 9: [[3, 12]], 10: [[4, 11]], 11: [[5, 10]], 12: [[6, 9]], 13: [[7, 8]] };
+    for (const y in rows) rows[y].forEach(([a, b]) => { for (let x = a; x <= b; x++) { const d = x + +y; set(x, +y, d < 8 ? T1 : d > 17 ? T4 : d > 13 ? T3 : T2); } });
+    set(3, 3, TW); set(4, 3, TW); set(2, 4, TW); set(3, 4, T1); set(10, 3, T1); set(11, 3, T1);
   } else if (kind === 'potion') {
     for (let y = 7; y <= 14; y++) for (let x = 3; x <= 12; x++) { const d = Math.hypot(x - cx, (y - 10.6) * 1.1); if (d <= 4.6) set(x, y, d < 2 && x < 7 ? T1 : x + y > 19 ? T4 : T2); }
     for (let y = 3; y <= 6; y++) { set(6, y, '#cfe6ff'); set(7, y, '#e9f4ff'); set(8, y, '#cfe6ff'); set(9, y, '#a8c4e6'); } set(6, 2, WB); set(7, 2, WA); set(8, 2, WB); set(9, 2, WC); set(5, 9, TW);
@@ -3211,7 +3258,7 @@ function mcSprite(kind, col) {
   }
   MCS[key] = c; return c;
 }
-let mcGl = null;
+let mcGl = null, mcEnch = null;
 function mcItem(g, kind, col, cx, cy, size, rot = 0, glint = -1) {
   if (size <= 0) return; const c = mcSprite(kind, col); g.save(); g.translate(cx, cy); g.rotate(rot); g.imageSmoothingEnabled = !!c._smooth; g.drawImage(c, -size / 2, -size / 2, size, size);
   if (glint >= 0 && glint <= 1) { if (!mcGl) mcGl = document.createElement('canvas'); const n = c.width; if (mcGl.width !== n) { mcGl.width = mcGl.height = n; } const gg = mcGl.getContext('2d'), q = n / 16; gg.clearRect(0, 0, n, n); gg.globalCompositeOperation = 'source-over'; gg.drawImage(c, 0, 0); gg.globalCompositeOperation = 'source-in'; gg.fillStyle = 'rgba(255,255,255,.75)'; const p = (glint * 40 - 8) * q; gg.beginPath(); gg.moveTo(p, 0); gg.lineTo(p + 5 * q, 0); gg.lineTo(p - 11 * q, n); gg.lineTo(p - 16 * q, n); gg.closePath(); gg.fill(); gg.globalCompositeOperation = 'source-over'; g.drawImage(mcGl, -size / 2, -size / 2, size, size); }
@@ -3252,14 +3299,103 @@ const MC_TPL = [
       const out = E.in(seg(t, 4.5, 5)), k = E.out(seg(t, .05, .45)) * (1 - out); if (k <= 0) return;
       const w = Math.min(W * .9, 1500 * u), hh = Math.min(H * .8, 640 * u), x = W / 2 - w / 2, y = H / 2 - hh / 2;
       g.save(); g.beginPath(); g.rect(x, y + hh / 2 - hh / 2 * k, w, hh * k); g.clip();
-      rr(g, x, y, w, hh, 18 * u); const bg = g.createRadialGradient(x + w * .7, y + hh * .5, 0, x + w * .5, y + hh * .5, w * .7); bg.addColorStop(0, mix(v.color, '#ff4fd8', .25)); bg.addColorStop(1, mix(v.color, '#000000', .55)); g.fillStyle = bg; g.fill();
+      rr(g, x, y, w, hh, 18 * u); const bg = g.createRadialGradient(x + w * .7, y + hh * .5, 0, x + w * .5, y + hh * .5, w * .7); bg.addColorStop(0, mix(v.color, '#ffffff', .16)); bg.addColorStop(1, mix(v.color, '#000000', .55)); const hue = hexToHsl(v.color)[0], nameC = hslToHex(hue, .95, .7), nameSh = hslToHex(hue, .8, .16); g.fillStyle = bg; g.fill();
       g.globalAlpha = .08; for (let i = 0; i < 26; i++) { g.fillStyle = '#fff'; g.fillRect(x + rnd(i, 1) * w, y + rnd(i, 2) * hh, 6 * u, 6 * u); } g.globalAlpha = 1;
       const lx = x + 70 * u, tagK = E.back(seg(t, .4, .7));
       g.save(); g.translate(lx, y + 90 * u); g.scale(tagK, tagK); const tw = pxMeasure(v.rarity, 26 * u) + 24 * u; g.fillStyle = '#ffb21f'; g.fillRect(0, -20 * u, tw, 40 * u); T(g, v.rarity, 12 * u, 2 * u, { size: 26 * u, font: 'Tiny5', weight: 400, color: '#3a1a00', align: 'left' }); g.restore();
-      const nl = proWrap(g, v.name, `400 ${110 * u}px "Tiny5"`, w * .5, 2); nl.forEach((ln, i) => { const kk = E.out(seg(t, .5 + i * .1, .85 + i * .1)); mcText(g, ln, lx - (1 - kk) * 80 * u, y + 190 * u + i * 104 * u, 110 * u, '#ff4fe0', { align: 'left', alpha: kk, maxW: w * .52, weight: 700, shadow: '#3b0a55' }); });
+      const nl = proWrap(g, v.name, `400 ${110 * u}px "Tiny5"`, w * .5, 2); nl.forEach((ln, i) => { const kk = E.out(seg(t, .5 + i * .1, .85 + i * .1)); mcText(g, ln, lx - (1 - kk) * 80 * u, y + 190 * u + i * 104 * u, 110 * u, nameC, { align: 'left', alpha: kk, maxW: w * .52, weight: 700, shadow: nameSh }); });
       [v.l1, v.l2, v.l3].forEach((s, i) => { if (!s) return; const kk = E.out(seg(t, .9 + i * .2, 1.2 + i * .2)), yy = y + 190 * u + nl.length * 104 * u + 20 * u + i * 58 * u; g.save(); g.globalAlpha *= kk; g.fillStyle = '#ffcf3a'; g.save(); g.translate(lx + 12 * u, yy); g.rotate(Math.PI / 4); g.fillRect(-8 * u, -8 * u, 16 * u, 16 * u); g.restore(); mcText(g, s, lx + 40 * u, yy, 40 * u, '#ffffff', { align: 'left', maxW: w * .45 }); g.restore(); });
       const is = Math.min(hh * .78, w * .34); mcItem(g, mcKind(v), v.tint, x + w * .76, y + hh / 2 + mcBob(t, u, 14), is * E.back(seg(t, .3, .8)), -.5 + Math.sin(t * 1.3) * .12, ((t - 1.2) % 2.2) / .5);
       g.restore();
+    }
+  },
+  {
+    id: 'mcHotbar', cat: 'Mc', name: 'Pasek przedmiotów', d: 'Pasek z dziewięcioma slotami jak w grze. Zaznaczenie przeskakuje na twój przedmiot, a nad paskiem pojawia się jego nazwa.', dur: 4.5, keyHint: true,
+    fields: [['name', 'text', 'Nazwa przedmiotu', 'Miecz Zagłady'], ['item', 'item', 'Przedmiot', 'sword', MC_ITEMS], ['tint', 'color', 'Kolor przedmiotu', ''], ['color', 'color', 'Kolor nazwy', '#ffffff']],
+    sfx: [[.6, 'tick'], [.9, 'tick'], [1.2, 'tick'], [1.5, 'pop']],
+    render(g, W, H, t, v, u) {
+      const out = E.in(seg(t, 4.1, 4.5)), kin = E.out(seg(t, .05, .45)), a = kin * (1 - out); if (a <= 0) return;
+      const slot = Math.round(Math.min(W / 10.5, 116 * u)), P = Math.max(2, Math.round(slot / 22)), n = 9, bw = slot * n + P * 2, bh = slot + P * 2, x0 = Math.round(W / 2 - bw / 2), y0 = Math.round(H * .74 + (1 - kin) * 70 * u);
+      const items = ['pickaxe', 'apple', 'bow', 'gold', mcKind(v), 'potion', 'emerald', null, 'diamond'], counts = ['', '12', '', '32', '', '', '7', '', '64'];
+      g.save(); g.globalAlpha *= a;
+      g.fillStyle = 'rgba(12,12,12,.62)'; g.fillRect(x0, y0, bw, bh); g.fillStyle = 'rgba(0,0,0,.85)'; g.fillRect(x0, y0, bw, P); g.fillRect(x0, y0 + bh - P, bw, P); g.fillRect(x0, y0, P, bh); g.fillRect(x0 + bw - P, y0, P, bh);
+      for (let i = 0; i < n; i++) { const sx = x0 + P + i * slot; pxSlot(g, sx + P, y0 + 2 * P, slot - 2 * P, P, 'rgba(139,139,139,.42)');
+        if (items[i]) { const kk = E.back(seg(t, .15 + i * .04, .45 + i * .04)); mcItem(g, items[i], i === 4 ? v.tint : '', sx + slot / 2, y0 + P + slot / 2, slot * .66 * kk, 0, i === 4 && t > 1.5 ? ((t - 1.7) % 2) / .45 : -1); }
+        if (counts[i] && t > .5) pxText(g, counts[i], sx + slot - 2 * P, y0 + slot - P * 1.5, { size: slot * .3, color: '#ffffff', align: 'right', base: 'alphabetic' }); }
+      const ticks = [.6, .9, 1.2, 1.5]; let idx = 0, frac = 0; ticks.forEach((tk, i) => { if (t >= tk) { idx = i + 1; frac = E.out(seg(t, tk, tk + .09)); } }); const pos = idx === 0 ? 0 : idx - 1 + frac;
+      const fx = Math.round(x0 + P + pos * slot - P), fy = y0 - P, fs = slot + 2 * P; g.fillStyle = '#ffffff'; g.fillRect(fx, fy, fs, 2 * P); g.fillRect(fx, fy + fs, fs, 2 * P); g.fillRect(fx, fy, 2 * P, fs + 2 * P); g.fillRect(fx + fs - P, fy, 2 * P, fs + 2 * P);
+      g.fillStyle = '#9a9a9a'; g.fillRect(fx + 2 * P, fy + 2 * P, fs - 3 * P, P);
+      const kn = seg(t, 1.5, 1.7) * (1 - seg(t, 3.6, 4.0)); if (kn > 0) mcText(g, v.name, W / 2, y0 - slot * .62, Math.min(56 * u, slot * .5), v.color, { alpha: kn, maxW: W * .8, weight: 700 });
+      g.restore();
+    }
+  },
+  {
+    id: 'mcScoreboard', cat: 'Mc', name: 'Tablica wyników', d: 'Tablica z boku ekranu jak na serwerze: tytuł, gracze i punkty, które rosną. Na koniec pierwszy gracz dostaje bonus.', dur: 5.5,
+    fields: [['title', 'text', 'Tytuł', 'TURNIEJ PVP'], ['p1', 'text', 'Gracz 1', 'MaksPVP'], ['p2', 'text', 'Gracz 2', 'Kuba'], ['p3', 'text', 'Gracz 3', 'Zosia'], ['p4', 'text', 'Gracz 4', 'Olek'], ['color', 'color', 'Kolor tytułu', '#ffd23f']],
+    sfx: [[.2, 'whoosh'], [2.8, 'ding']],
+    render(g, W, H, t, v, u) {
+      const out = E.in(seg(t, 5.1, 5.5)), kin = E.out(seg(t, .1, .55)); if (kin * (1 - out) <= 0) return;
+      const fs = Math.max(20, Math.round(46 * u)), rowH = Math.round(fs * 1.25), pad = Math.round(fs * .45), names = [v.p1, v.p2, v.p3, v.p4].filter(s => String(s).trim()), fin = [15, 11, 8, 5], bonus = seg(t, 2.8, 3.1);
+      const scores = names.map((_, i) => Math.round(fin[i] * E.out(seg(t, .8 + i * .15, 2.2 + i * .15))) + (i === 0 && t > 2.8 ? 5 : 0));
+      const nameW = Math.max(...names.map(s => pxMeasure(s, fs)), pxMeasure(v.title, fs, { bold: true }) * .9), pw = Math.round(nameW + pxMeasure('00', fs) + pad * 3.4), ph = rowH * (names.length + 1) + pad * 1.2;
+      const x = Math.round(W - pw - W * .04 + (1 - kin) * (pw + W * .05)), y = Math.round(H / 2 - ph / 2);
+      g.save(); g.globalAlpha *= 1 - out;
+      g.fillStyle = 'rgba(0,0,0,.42)'; g.fillRect(x, y, pw, rowH + pad * .6); g.fillStyle = 'rgba(0,0,0,.3)'; g.fillRect(x, y + rowH + pad * .6, pw, ph - rowH - pad * .6);
+      mcText(g, v.title, x + pw / 2, y + (rowH + pad * .6) / 2, fs, v.color, { weight: 700, maxW: pw - pad });
+      names.forEach((s, i) => { const kr = E.out(seg(t, .45 + i * .12, .8 + i * .12)), ry = y + rowH + pad * .6 + pad * .3 + i * rowH + rowH / 2; g.save(); g.globalAlpha *= kr; g.translate((1 - kr) * 60 * u, 0);
+        mcText(g, s, x + pad, ry, fs, i === 0 && bonus > 0 && bonus < 1 ? '#ffff55' : '#ffffff', { align: 'left', maxW: nameW });
+        const pop = i === 0 ? 1 + .35 * Math.sin(Math.PI * bonus) : 1; mcText(g, String(scores[i]), x + pw - pad, ry, fs, '#ff5555', { align: 'right', scale: pop }); g.restore(); });
+      if (t > 2.8 && t < 4.2) { const k2 = seg(t, 2.8, 4.2); mcText(g, '+5', x + pw - pad * .4, y + rowH * 1.6 - k2 * 70 * u, fs * 1.1, '#55ff55', { align: 'left', alpha: 1 - k2, weight: 700 }); }
+      g.restore();
+    }
+  },
+  {
+    id: 'mcTooltipItem', cat: 'Mc', name: 'Przedmiot z opisem', d: 'Przedmiot unosi się, a obok wyskakuje opis jak w grze: nazwa i zaklęcia pojawiają się linijka po linijce.', dur: 5, keyHint: true,
+    fields: [['name', 'text', 'Nazwa', 'Miecz Zagłady'], ['l1', 'text', 'Opis 1', 'Ostrość V'], ['l2', 'text', 'Opis 2', 'Zaklęty ogień II'], ['l3', 'text', 'Opis 3', 'Niezniszczalność III'], ['item', 'item', 'Przedmiot', 'sword', MC_ITEMS], ['tint', 'color', 'Kolor przedmiotu', ''], ['color', 'color', 'Kolor nazwy', '#55ffff']],
+    sfx: [[.1, 'pop'], [.6, 'tick'], [.9, 'tick'], [1.1, 'tick'], [1.3, 'tick']],
+    render(g, W, H, t, v, u) {
+      const out = E.in(seg(t, 4.6, 5)), k = E.back(seg(t, .05, .45)) * (1 - out); if (k <= 0) return;
+      const s = Math.min(W * .3, H * .46), ix = W * .3, iy = H / 2 + mcBob(t, u, 12);
+      mcItem(g, mcKind(v), v.tint, ix, iy, s * k, -.3 + Math.sin(t * 1.3) * .08, ((t - .9) % 2.2) / .5);
+      const lines = [v.name, v.l1, v.l2, v.l3].filter(x => String(x).trim()), fs = Math.round(Math.min(64 * u, W * .038)), un = fs * .1, pd = Math.round(fs * .42), lh = Math.round(fs * 1.12), P = Math.max(2, Math.round(un));
+      const tw = Math.min(W * .44, Math.max(...lines.map((l, i) => pxMeasure(l, fs, { bold: i === 0 })))), pw = Math.round(tw + pd * 2), ph = Math.round(lines.length * lh + pd * 2 - fs * .2), kb = E.back(seg(t, .4, .7)) * (1 - out);
+      if (kb <= 0) return; const x0 = Math.round(W * .5), y0 = Math.round(H / 2 - ph / 2);
+      g.save(); g.translate(x0, H / 2); g.scale(kb, kb); g.translate(-x0, -H / 2);
+      g.fillStyle = 'rgba(16,0,16,.94)'; g.fillRect(x0 + P, y0, pw - 2 * P, ph); g.fillRect(x0, y0 + P, pw, ph - 2 * P);
+      const bg = g.createLinearGradient(0, y0, 0, y0 + ph); bg.addColorStop(0, '#5000ff'); bg.addColorStop(1, '#28007f'); g.fillStyle = bg;
+      g.fillRect(x0 + P, y0 + P, pw - 2 * P, P); g.fillRect(x0 + P, y0 + ph - 2 * P, pw - 2 * P, P); g.fillRect(x0 + P, y0 + P, P, ph - 2 * P); g.fillRect(x0 + pw - 2 * P, y0 + P, P, ph - 2 * P);
+      lines.forEach((l, i) => { const kl = seg(t, .6 + i * .25, .8 + i * .25); if (kl <= 0) return; const n = Math.ceil([...l].length * Math.min(1, kl * 1.6)); mcText(g, [...l].slice(0, n).join(''), x0 + pd, y0 + pd + fs * .35 + i * lh, fs, i === 0 ? v.color : '#a8a8a8', { align: 'left', weight: i === 0 ? 700 : 400, maxW: tw }); });
+      g.restore();
+    }
+  },
+  {
+    id: 'mcTitleCmd', cat: 'Mc', name: 'Tytuł na środku ekranu', d: 'Duży tytuł i podtytuł na środku, dokładnie tak jak pojawiają się w grze: płynne wejście, chwila na ekranie i wyjście.', dur: 5,
+    fields: [['title', 'text', 'Tytuł', 'ODCINEK 1'], ['sub', 'text', 'Podtytuł', 'Początek przygody'], ['color', 'color', 'Kolor tytułu', '#ffffff'], ['accent', 'color', 'Kolor podtytułu', '#ffd23f']],
+    sfx: [[.1, 'whoosh']],
+    render(g, W, H, t, v, u) {
+      const a = seg(t, .1, .7) * (1 - seg(t, 4, 4.9)); if (a <= 0) return;
+      const fs = Math.min(170 * u, W * 1.3 / Math.max(5, [...v.title].length));
+      mcText(g, v.title, W / 2, H * .45, fs, v.color, { alpha: a, maxW: W * .9, weight: 700, letter: i => ({ a: clamp((t - .1 - i * .05) / .3, 0, 1), dy: (1 - E.out(clamp((t - .1 - i * .05) / .4, 0, 1))) * -20 * u }) });
+      mcText(g, v.sub, W / 2, H * .45 + fs * .78, Math.min(62 * u, fs * .42), v.accent, { alpha: a * seg(t, .6, 1.1), maxW: W * .86 });
+    }
+  },
+  {
+    id: 'mcEnchant', cat: 'Mc', name: 'Zaklinanie przedmiotu', d: 'Magiczne runy wlatują w przedmiot, który zaczyna mienić się na fioletowo, a pod nim pojawia się nazwa zaklęcia.', dur: 5, keyHint: true,
+    fields: [['name', 'text', 'Zaklęcie', 'Ostrość V'], ['item', 'item', 'Przedmiot', 'sword', MC_ITEMS], ['tint', 'color', 'Kolor przedmiotu', ''], ['color', 'color', 'Kolor zaklęcia', '#c77dff']],
+    sfx: [[.3, 'whoosh'], [1.8, 'ding']],
+    render(g, W, H, t, v, u) {
+      const out = E.in(seg(t, 4.6, 5)), k = E.back(seg(t, .05, .45)) * (1 - out); if (k <= 0) return;
+      const s = Math.min(W, H) * .4, cx = W / 2, cy = H * .44 + mcBob(t, u, 10), glow = seg(t, .6, 1.8);
+      if (glow > 0) { const gr = g.createRadialGradient(cx, cy, 0, cx, cy, s * .9); gr.addColorStop(0, rgba(v.color, .35 * glow * (1 - out))); gr.addColorStop(1, rgba(v.color, 0)); g.fillStyle = gr; g.fillRect(cx - s, cy - s, s * 2, s * 2); }
+      const RUNES = ['#.#|.#.|#.#|.#.', '##.|#.#|##.|#..', '.#.|###|.#.|#.#', '#..|##.|#.#|###', '###|..#|.#.|#..', '#.#|###|#.#|#.#'];
+      for (let i = 0; i < 18; i++) { const t0 = .3 + rnd(i, 3) * 1.2, p = seg(t, t0, t0 + .9); if (p <= 0 || p >= 1) continue; const ang = rnd(i, 1) * Math.PI * 2, r = s * (1.15 - E.in(p) * 1.05), rx = cx + Math.cos(ang) * r, ry = cy + Math.sin(ang) * r * .75, q = Math.max(3, Math.round(10 * u)), pat = RUNES[i % RUNES.length].split('|');
+        g.fillStyle = rgba(mix(v.color, '#ffffff', .6), Math.min(1, p * 4) * (1 - p * .4)); pat.forEach((row, yy) => [...row].forEach((ch, xx) => { if (ch === '#') g.fillRect(Math.round(rx + (xx - 1.5) * q), Math.round(ry + (yy - 2) * q), q, q); })); }
+      const c = mcSprite(mcKind(v), v.tint), n = c.width, sc = n <= 32 ? 4 : 1;
+      if (!mcEnch) mcEnch = document.createElement('canvas'); if (mcEnch.width !== n * sc) { mcEnch.width = mcEnch.height = n * sc; } const eg = mcEnch.getContext('2d'); eg.globalCompositeOperation = 'source-over'; eg.clearRect(0, 0, n * sc, n * sc); eg.imageSmoothingEnabled = !!c._smooth; eg.drawImage(c, 0, 0, n * sc, n * sc);
+      if (glow > 0) { eg.globalCompositeOperation = 'source-atop'; const off = (t * .6) % 1, gl = eg.createLinearGradient(0, 0, n * sc, n * sc); for (let j = 0; j <= 4; j++) { const p0 = (j / 4 + off) % 1; gl.addColorStop(Math.max(0, p0 - .08), rgba(v.color, 0)); gl.addColorStop(p0, rgba(mix(v.color, '#ffffff', .25), .7 * glow)); gl.addColorStop(Math.min(1, p0 + .08), rgba(v.color, 0)); } eg.fillStyle = gl; eg.fillRect(0, 0, n * sc, n * sc); }
+      g.save(); g.translate(cx, cy); g.rotate(-.3 + Math.sin(t * 1.3) * .06); g.imageSmoothingEnabled = !!c._smooth; const sz = s * k * (1 + .06 * Math.sin(Math.PI * seg(t, 1.8, 2.1))); g.drawImage(mcEnch, -sz / 2, -sz / 2, sz, sz); g.restore();
+      if (t > 1.8) proBurst(g, cx, cy, 1.8, t, 16, s * .9, ['spark', 'star'], [v.color, '#ffffff', mix(v.color, '#ffffff', .5)], u, 7);
+      const kt = E.back(seg(t, 1.9, 2.3)) * (1 - out); if (kt > 0) pxText(g, v.name, cx, H * .8, { size: Math.min(110 * u, W * 1.1 / Math.max(6, [...v.name].length)), color: v.color, style: 'title', scale: kt, maxW: W * .86, glow: { color: rgba(v.color, .5), blur: 24 * u } });
     }
   },
   {
@@ -3334,7 +3470,7 @@ const MC_TPL = [
     render(g, W, H, t, v, u) {
       const s = Math.min(W, H) * .36, cx = W / 2, cy = H / 2, k = E.back(seg(t, .05, .4)), brk = 1.2;
       if (t < brk) { const sh = t > .9 ? (t - .9) / .3 * 8 * u : 0; mcItem(g, mcKind(v), v.tint, cx + Math.sin(t * 90) * sh, cy + mcBob(t, u), s * k, Math.sin(t * 1.6) * .08); if (t > 1) { g.strokeStyle = 'rgba(255,255,255,.9)'; g.lineWidth = 4 * u; g.beginPath(); g.moveTo(cx - s * .1, cy - s * .3); g.lineTo(cx + s * .05, cy - s * .05); g.lineTo(cx - s * .08, cy + s * .12); g.lineTo(cx + s * .12, cy + s * .3); g.stroke(); } return; }
-      const kd = mcKind(v), c = mcSprite(kd, v.tint), N2 = c.width, px = c._px || (c._px = c.getContext('2d').getImageData(0, 0, N2, N2).data), cs = s / N2, dt = t - brk, hN = N2 / 2;
+      const kd = mcKind(v), c0 = mcSprite(kd, v.tint), c = c0.width > 32 ? (c0._sm || (c0._sm = mcDown(c0, 24))) : c0, N2 = c.width, px = c._px || (c._px = c.getContext('2d').getImageData(0, 0, N2, N2).data), cs = s / N2, dt = t - brk, hN = N2 / 2;
       for (let j = 0; j < N2; j++) for (let i = 0; i < N2; i++) { const o = (j * N2 + i) * 4; if (px[o + 3] < 10) continue; const id = j * N2 + i, vx = (i - hN) / N2 * 16 * (40 + rnd(id, 1) * 60) * u, vy = (j - hN) / N2 * 16 * (30 + rnd(id, 2) * 50) * u - 260 * u * rnd(id, 3);
         const x = cx + (i - hN) * cs + vx * dt, y = cy + (j - hN) * cs + vy * dt + 900 * u * dt * dt; g.save(); g.globalAlpha = 1 - seg(dt, 1.2, 2.2); g.translate(x + cs / 2, y + cs / 2); g.rotate(dt * (rnd(id, 4) - .5) * 10); g.fillStyle = `rgb(${px[o]},${px[o + 1]},${px[o + 2]})`; g.fillRect(-cs / 2, -cs / 2, cs, cs); g.restore(); }
       const fl = 1 - seg(dt, 0, .15); if (fl > 0) { g.fillStyle = `rgba(255,255,255,${fl * .5})`; g.beginPath(); g.arc(cx, cy, s * .6, 0, Math.PI * 2); g.fill(); }
@@ -3460,8 +3596,17 @@ const tintCvs = {}; function tintCanvas(src, col, W, H) { let c = tintCvs[col]; 
 /* ================= state ================= */
 const FORMATS = { '16:9': [1280, 720], '9:16': [720, 1280], '1:1': [1080, 1080] };
 const ST = { q: 1, tpl: TEMPLATES[0], fmt: '16:9', bg: 'dark', bgAuto: true, bgColor: '#101018', bgImg: null, playing: true, loop: true, sound: true, t: 0, speed: 1, cat: 'Wszystkie' };
-const VALS = {}; // shared values by field key, so a nick typed once fills every template
-const valsFor = tpl => { const o = {}; for (const [k, , , def] of tpl.fields) o[k] = VALS[k] ?? def; return o; };
+// values typed in the settings live per animation; only the nick and the profile picture are shared by all of them
+const VSTORE = { _shared: {} }, VALS_SHARED = new Set(['nick', 'avatar']);
+const vCurId = () => { try { return ST.tpl ? ST.tpl.id : '_'; } catch (e) { return '_'; } };
+const vBox = (k, id) => (VALS_SHARED.has(k) ? VSTORE._shared : (VSTORE[id ?? vCurId()] || (VSTORE[id ?? vCurId()] = {})));
+const VALS = new Proxy({}, { get: (_, k) => (typeof k === 'string' ? vBox(k)[k] : undefined), set: (_, k, val) => { vBox(k)[k] = val; return true; }, deleteProperty: (_, k) => { delete vBox(k)[k]; return true; }, has: (_, k) => k in vBox(k) });
+const valsFor = tpl => { const o = {}; for (const [k, , , def] of tpl.fields) o[k] = vBox(k, tpl.id)[k] ?? def; o.__img = vBox('__img', tpl.id).__img || null; autoColors(tpl, o); return o; };
+// colours that follow the chosen item until the user picks their own
+const AUTO_COL = { mcTooltipItem: { color: 'light' }, mcItemName: { color: 'light' }, mcStats: { color: 'card' }, mcObjective: { color: 'light' }, mcDone: { color: 'light' } };
+function itemAccent(o) { if (o.__img && o.__img._acc) return o.__img._acc; if (o.tint) return o.tint; return MC_DEF[o.item] || '#4aedd9'; }
+function autoCol(role, acc) { let [hh, ss, l] = hexToHsl(acc); if (ss < .12) return role === 'card' ? '#3a3a44' : '#f2f2f2'; if (role === 'card') return hslToHex(hh, Math.min(.75, Math.max(.5, ss)), .32); return hslToHex(hh, Math.max(.75, ss), Math.min(.72, Math.max(.6, l))); }
+function autoColors(tpl, o) { const a = AUTO_COL[tpl.id]; if (!a) return; const box = vBox('_', tpl.id); for (const k in a) if (box[k] === undefined) o[k] = autoCol(a[k], itemAccent(o)); }
 const durOf = tpl => (tpl.durFn ? tpl.durFn(valsFor(tpl)) : tpl.dur);
 const sfxOf = tpl => (tpl.sfxFn ? tpl.sfxFn(valsFor(tpl)) : tpl.sfx || []);
 const isKeyBg = () => ST.bg === 'green' || ST.bg === 'none';
@@ -3687,15 +3832,15 @@ function textCtl(key, def, label) {
 const repostItems = () => makePosters(t => t.fields.some(f => f[1] === 'item'));
 function pickImage(cb) { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.onchange = () => { const f = inp.files[0]; if (!f) return; const im = new Image(); im.onload = () => cb(im); im.onerror = () => toast('Nie udało się wczytać obrazka'); im.src = URL.createObjectURL(f); }; inp.click(); }
 function itemCtl(key, def, opts) {
-  const cur = VALS.icon ? '__custom' : String(VALS[key] ?? def), grid = h('div', { class: 'items' });
+  const cur = VALS.__img ? '__custom' : String(VALS[key] ?? def), grid = h('div', { class: 'items' });
   opts.forEach(([k, l]) => { const cv = h('canvas', { width: 48, height: 48 }), cg = cv.getContext('2d'); cg.imageSmoothingEnabled = false; cg.drawImage(mcSprite(k), 6, 6, 36, 36);
-    grid.append(h('button', { type: 'button', class: 'itm' + (cur === k ? ' on' : ''), title: l, 'aria-label': l, onclick: () => { VALS[key] = k; VALS.icon = null; delete VALS.tint; dirty = true; renderEditor(); repostItems(); } }, cv)); });
-  const up = h('button', { type: 'button', class: 'itm up' + (cur === '__custom' ? ' on' : ''), title: 'Własny obrazek (PNG)', onclick: () => pickImage(im => { VALS.icon = im; dirty = true; renderEditor(); repostItems(); toast('Własny przedmiot wgrany'); }) });
-  if (VALS.icon) { const cv = h('canvas', { width: 48, height: 48 }), cg = cv.getContext('2d'); cg.drawImage(mcCustomSprite(), 6, 6, 36, 36); up.append(cv); } else up.append(h('span', { html: ICON.upload, style: 'display:grid' }));
+    grid.append(h('button', { type: 'button', class: 'itm' + (cur === k ? ' on' : ''), title: l, 'aria-label': l, onclick: () => { VALS[key] = k; VALS.__img = null; delete VALS.tint; dirty = true; renderEditor(); repostItems(); } }, cv)); });
+  const up = h('button', { type: 'button', class: 'itm up' + (cur === '__custom' ? ' on' : ''), title: 'Własny obrazek (PNG)', onclick: () => pickImage(im => { const pr = mcPrepImage(im); VALS.__img = pr; dirty = true; renderEditor(); repostItems(); toast(pr._bgRemoved ? 'Wgrano obrazek i usunięto tło' : 'Wgrano własny obrazek'); }) });
+  if (VALS.__img) { const cv = h('canvas', { width: 48, height: 48 }), cg = cv.getContext('2d'); cg.imageSmoothingEnabled = !!VALS.__img._smooth; cg.drawImage(VALS.__img, 6, 6, 36, 36); up.append(cv); } else up.append(h('span', { html: ICON.upload, style: 'display:grid' }));
   grid.append(up);
   const texBtn = h('button', { class: 'btn', style: 'justify-content:flex-start', onclick: () => { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.jar,.zip'; inp.onchange = () => { if (inp.files[0]) mcTexImport(inp.files[0]).catch(() => toast('Nie udało się odczytać tego pliku.')); }; inp.click(); } }, h('span', { html: ICON.upload, style: 'display:grid' }), mcTexLoaded() ? 'Wczytaj inne tekstury z gry' : 'Wczytaj tekstury z twojego Minecrafta');
   const texInfo = mcTexLoaded() ? h('div', { class: 'hint' }, 'Używasz tekstur ze swojej gry. ', h('button', { type: 'button', class: 'linkbtn', onclick: mcTexClear }, 'Wróć do wbudowanych')) : h('div', { class: 'hint' }, 'Wybierz plik gry: Windows + R, wpisz %appdata%\\.minecraft\\versions, otwórz folder wersji i wskaż plik .jar (albo paczkę zasobów .zip). Plik czyta tylko twoja przeglądarka, nic nie jest wysyłane.');
-  return [grid, texBtn, texInfo, h('div', { class: 'hint' }, VALS.icon ? 'Używasz własnego obrazka. Kliknij przedmiot z listy, żeby wrócić do gotowych.' : 'Kliknij przedmiot albo wgraj własny obrazek PNG (najlepiej kwadratowy, z przezroczystym tłem).')];
+  return [grid, texBtn, texInfo, h('div', { class: 'hint' }, VALS.__img ? 'Używasz własnego obrazka. Kliknij przedmiot z listy, żeby wrócić do gotowych.' : 'Kliknij przedmiot albo wgraj własny obrazek PNG (najlepiej kwadratowy, z przezroczystym tłem).')];
 }
 function imageCtl(key, label) {
   const im = VALS[key], prev = h('canvas', { width: 72, height: 72, 'aria-label': label });
@@ -3738,10 +3883,11 @@ function renderEditor() {
   const rows = [], fs = tpl.fields, find = k => fs.find(f => f[0] === k && f[1] === 'color'), used = new Set();
   const del = keys => () => { keys.forEach(k => delete VALS[k]); dirty = true; renderEditor(); keys.forEach(repost); updateTitle(); };
   fs.filter(f => !['color', 'select', 'item', 'image'].includes(f[1])).forEach(([k, , l, d]) => rows.push(pRow(k, l, 'text', textCtl(k, d, l), { copy: () => String(VALS[k] ?? d), reset: del([k]) })));
-  fs.filter(f => f[1] === 'item').forEach(([k, , l, d, o]) => rows.push(pRow(k, l, 'media', itemCtl(k, d, o), { reset: () => { delete VALS[k]; VALS.icon = null; delete VALS.tint; dirty = true; renderEditor(); repostItems(); } })));
+  fs.filter(f => f[1] === 'item').forEach(([k, , l, d, o]) => rows.push(pRow(k, l, 'media', itemCtl(k, d, o), { reset: () => { delete VALS[k]; VALS.__img = null; delete VALS.tint; dirty = true; renderEditor(); repostItems(); } })));
   fs.filter(f => f[1] === 'image').forEach(([k, , l]) => rows.push(pRow(k, l, 'media', imageCtl(k, l), { reset: VALS[k] ? () => { VALS[k] = null; dirty = true; renderEditor(); repost(k); } : null })));
   if (find('c1') && find('c2')) { const [, , l1, d1] = find('c1'), [, , l2, d2] = find('c2'); used.add('c1'); used.add('c2'); rows.push(pRow('c1c2', 'Gradient: ' + l1.toLowerCase() + ' → ' + l2.toLowerCase(), 'color', gradCtl('c1', d1, 'c2', d2), { copy: () => `${VALS.c1 ?? d1} → ${VALS.c2 ?? d2}`.toUpperCase(), reset: del(['c1', 'c2']) })); }
-  fs.filter(f => f[1] === 'color' && !used.has(f[0])).forEach(([k, , l, d]) => { const dd = d || (k === 'tint' ? MC_DEF[VALS.item ?? (fs.find(f => f[1] === 'item') || [])[3]] : '') || '#ffffff'; rows.push(pRow(k, l, 'color', colorCtl(k, dd), { copy: () => String(VALS[k] ?? dd).toUpperCase(), reset: del([k]) })); });
+  const autoV = AUTO_COL[tpl.id] ? valsFor(tpl) : null;
+  fs.filter(f => f[1] === 'color' && !used.has(f[0])).forEach(([k, , l, d]) => { const dd = (autoV && AUTO_COL[tpl.id][k] ? autoV[k] : '') || d || (k === 'tint' ? MC_DEF[VALS.item ?? (fs.find(f => f[1] === 'item') || [])[3]] : '') || '#ffffff'; rows.push(pRow(k, l, 'color', colorCtl(k, dd), { copy: () => String(VALS[k] ?? dd).toUpperCase(), reset: del([k]) })); });
   if (tpl.skin) rows.push(pRow('skin', 'Twój skin', 'media', skinBody(), { reset: skinIsDefault ? null : () => { paintDefaultSkin(); c3Skin(); renderEditor(); makePosters(t => t.skin); } }));
   rows.push(pRow('bg', 'Tło', 'media', bgBody(), { reset: () => { ST.bg = 'dark'; ST.bgAuto = true; renderEditor(); updateTitle(); sizeView(); dirty = true; } }));
   fs.filter(f => f[1] === 'select').forEach(([k, , l, d, o]) => rows.push(pRow(k, l, 'values', selCtl(k, d, o), { reset: del([k]) })));
@@ -4019,7 +4165,7 @@ function renderSpec(g, W, H, t, spec, u) {
       if (L.in === 'wipe') { const bw = txBox(L, W, H).w; g.beginPath(); g.rect(-bw / 2 - S, -S * 4, (bw + S * 2) * reveal, S * 8); g.clip(); }
       txDraw(g, L, S, W, t, t - L.start, shown, u);
     } else if (L.type === 'item') {
-      const kind = VALS.icon && L.custom ? '__custom' : (MC_DEF[L.item] ? L.item : 'diamond'); mcItem(g, kind, L.tint ? aiCol(L.tint, '') : '', 0, 0, S, 0, L.loop === 'glint' ? ((t - L.start - .5) % 2) / .45 : -1);
+      const kind = spec._img && L.custom ? spec._img : (MC_DEF[L.item] ? L.item : 'diamond'); mcItem(g, kind, L.tint ? aiCol(L.tint, '') : '', 0, 0, S, 0, L.loop === 'glint' ? ((t - L.start - .5) % 2) / .45 : -1);
     } else if (L.type === 'shape') {
       const sh = L.shape;
       if (['star', 'heart', 'diamond', 'bolt', 'spark'].includes(sh)) proShape(g, sh, 0, 0, S / 2, 0, c1, L.glow !== false);
@@ -4227,7 +4373,7 @@ function aiTemplate(rec) {
   if (spec.layers.some(L => L.type === 'item')) fields.push(['icon', 'image', 'Własny przedmiot', null]);
   return { id, cat: 'AI', name: spec.title, d: 'Z AI: ' + rec.prompt, dur: spec.duration, keyHint: true, ai: true, skin: spec.layers.some(L => L.type === 'character'), fields, spec, pt: spec.duration * .55,
     render(g, W, H, t, v, u) { const map = {}; cols.forEach((c, j) => { map[c] = v[id + '_c' + j] || c; });
-      renderSpec(g, W, H, t, { ...spec, layers: spec.layers.map((L, i) => { const o = { ...L }; if (v[id + '_t' + i] !== undefined && L.text) o.text = v[id + '_t' + i]; if (map[o.color]) o.color = map[o.color]; if (o.color2 && map[o.color2]) o.color2 = map[o.color2]; if (L.type === 'item' && VALS.icon) o.custom = true; return o; }) }, u); } };
+      renderSpec(g, W, H, t, { ...spec, _img: v.__img, layers: spec.layers.map((L, i) => { const o = { ...L }; if (v[id + '_t' + i] !== undefined && L.text) o.text = v[id + '_t' + i]; if (map[o.color]) o.color = map[o.color]; if (o.color2 && map[o.color2]) o.color2 = map[o.color2]; if (L.type === 'item' && VALS.icon) o.custom = true; return o; }) }, u); } };
 }
 function aiStore() { try { return JSON.parse(localStorage.getItem(AI_KEY) || '[]'); } catch (e) { return []; } }
 function aiSave(list) { try { localStorage.setItem(AI_KEY, JSON.stringify(list.slice(0, 30))); } catch (e) { } }
