@@ -114,6 +114,8 @@ button{cursor:pointer}
 .lbl-grid button{border:0;border-radius:6px;background:var(--panel2);padding:14px 6px;display:grid;place-items:center;min-height:62px}
 .lbl-grid button:hover{background:var(--raise)}
 .tplgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.tpgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px;margin:10px 0 6px}.tpcard{border:0;background:var(--panel2);border-radius:8px;padding:0;overflow:hidden;color:#d9dbe3;cursor:pointer;text-align:center}.tpcard canvas{width:100%;display:block;aspect-ratio:16/9}.tpcard span{display:block;font-size:12px;font-weight:600;padding:5px 4px 7px}.tpcard.on{box-shadow:0 0 0 2px #fff}.tpcard:hover canvas{filter:brightness(1.15)}
+details.adv{margin-top:12px;border-top:1px solid rgba(255,255,255,.08);padding-top:10px}details.adv summary{cursor:pointer;font-size:13px;font-weight:600;color:#cfd2da;margin-bottom:8px}
 .tpl{border:0;background:var(--panel2);border-radius:6px;padding:16px 6px;text-align:center;font-size:19px;line-height:1.1;overflow:hidden;white-space:nowrap;color:#fff;min-height:64px}
 .tpl:hover{background:var(--raise)}
 .tool{display:flex;gap:12px;align-items:flex-start;border-radius:8px;padding:12px;text-align:left;background:var(--panel2)}
@@ -573,9 +575,9 @@ const TR_CATS = {
 CLIP_IN.splice(0, CLIP_IN.length, ['none', 'Brak'], ['fade', 'Pojawienie'], ['zoomIn', 'Najazd'], ['zoomIn2', 'Mocny najazd'], ['zoomOut', 'Oddalenie'], ['slideL', 'Z lewej'], ['slideR', 'Z prawej'], ['slideU', 'Z dołu'], ['slideD', 'Z góry'], ['spin', 'Obrót'], ['spin360', 'Obrót 360°'], ['vortex', 'Wir'], ['bounce', 'Odbicie'], ['jump', 'Wyskok'], ['drop', 'Upadek'], ['blur', 'Wyostrzenie'], ['swing', 'Huśtawka'], ['stretch', 'Rozciągnięcie'], ['flipX', 'Obrót karty'], ['flash', 'Błysk'], ['shake', 'Wstrząs'], ['tilt', 'Przechył']);
 CLIP_OUT.splice(0, CLIP_OUT.length, ['none', 'Brak'], ['fade', 'Zanikanie'], ['zoomIn', 'Odjazd do kamery'], ['zoomIn2', 'Mocny odjazd'], ['zoomOut', 'Oddalenie'], ['slideL', 'W lewo'], ['slideR', 'W prawo'], ['slideU', 'W dół'], ['slideD', 'W górę'], ['spin', 'Obrót'], ['spin360', 'Obrót 360°'], ['vortex', 'Wir'], ['bounce', 'Skurcz'], ['drop', 'Odbicie w górę'], ['blur', 'Rozmycie'], ['swing', 'Huśtawka'], ['stretch', 'Rozciągnięcie'], ['flipX', 'Obrót karty'], ['flash', 'Błysk'], ['shake', 'Wstrząs'], ['tilt', 'Przechył']);
 CLIP_LOOP.splice(0, CLIP_LOOP.length, ['none', 'Brak'], ['dryf', 'Najazd kamery'], ['odjazd', 'Odjazd kamery'], ['puls', 'Puls'], ['zoomBeat', 'Zoom w rytm'], ['serce', 'Bicie serca'], ['kolys', 'Kołysanie'], ['wahadlo', 'Wahadło'], ['trzes', 'Drżenie'], ['unos', 'Unoszenie'], ['jelly', 'Galaretka'], ['obrot', 'Wolny obrót'], ['migot', 'Migotanie']);
-TXT_IN.splice(0, TXT_IN.length, ['none', 'Brak'], ['fade', 'Pojawienie'], ['pop', 'Wyskok'], ['zoom', 'Przybliżenie'], ['zoomBig', 'Z bliska'], ['slideUp', 'Z dołu'], ['slideDown', 'Z góry'], ['slideLeft', 'Z prawej'], ['slideRight', 'Z lewej'], ['blur', 'Wyostrzenie'], ['bounce', 'Upadek'], ['spin', 'Obrót'], ['stretch', 'Rozciągnięcie'], ['flipX', 'Obrót karty'], ['swing', 'Huśtawka'], ['typewriter', 'Maszyna do pisania'], ['letters', 'Litera po literze'], ['wave', 'Fala liter'], ['drop', 'Deszcz liter'], ['scatter', 'Rozsypanie'], ['spinChars', 'Wirujące litery'], ['glitchIn', 'Glitch'], ['flicker', 'Neon']);
-TXT_OUT.splice(0, TXT_OUT.length, ['none', 'Brak'], ['fade', 'Zanikanie'], ['slideUp', 'W górę'], ['slideDown', 'W dół'], ['zoom', 'Pomniejszenie'], ['zoomBig', 'Do kamery'], ['blur', 'Rozmycie'], ['spin', 'Obrót'], ['stretch', 'Rozciągnięcie'], ['flipX', 'Obrót karty'], ['typewriter', 'Kasowanie'], ['letters', 'Litera po literze'], ['drop', 'Opadanie liter'], ['scatter', 'Rozsypanie'], ['spinChars', 'Wirujące litery']);
-TXT_LOOP.splice(0, TXT_LOOP.length, ['none', 'Brak'], ['pulse', 'Puls'], ['heartbeat', 'Bicie serca'], ['wave', 'Fala'], ['hop', 'Podskoki'], ['jelly', 'Galaretka'], ['swing', 'Wahadło'], ['float', 'Unoszenie'], ['shake', 'Drżenie'], ['glitch', 'Glitch'], ['rainbow', 'Tęcza'], ['glow', 'Poświata'], ['flicker', 'Neon'], ['breath', 'Oddech']);
+TXT_IN.splice(0, TXT_IN.length, ['none', 'Brak'], ['fade', 'Pojawienie'], ['pop', 'Wyskok'], ['zoom', 'Przybliżenie'], ['zoomBig', 'Z bliska'], ['slideUp', 'Z dołu'], ['slideDown', 'Z góry'], ['slideLeft', 'Z prawej'], ['slideRight', 'Z lewej'], ['blur', 'Wyostrzenie'], ['bounce', 'Upadek'], ['spin', 'Obrót'], ['stretch', 'Rozciągnięcie'], ['flipX', 'Obrót karty'], ['swing', 'Huśtawka'], ['typewriter', 'Maszyna do pisania'], ['letters', 'Litera po literze'], ['wave', 'Fala liter'], ['drop', 'Deszcz liter'], ['scatter', 'Rozsypanie'], ['spinChars', 'Wirujące litery'], ['glitchIn', 'Glitch'], ['flicker', 'Neon'], ['words', 'Słowo po słowie'], ['wordsPop', 'Wskakujące słowa'], ['slam', 'Uderzenie słów'], ['decode', 'Odkodowanie'], ['rise', 'Wynurzanie'], ['impact', 'Uderzenie'], ['flashIn', 'Błysk']);
+TXT_OUT.splice(0, TXT_OUT.length, ['none', 'Brak'], ['fade', 'Zanikanie'], ['slideUp', 'W górę'], ['slideDown', 'W dół'], ['zoom', 'Pomniejszenie'], ['zoomBig', 'Do kamery'], ['blur', 'Rozmycie'], ['spin', 'Obrót'], ['stretch', 'Rozciągnięcie'], ['flipX', 'Obrót karty'], ['typewriter', 'Kasowanie'], ['letters', 'Litera po literze'], ['drop', 'Opadanie liter'], ['scatter', 'Rozsypanie'], ['spinChars', 'Wirujące litery'], ['words', 'Słowa znikają'], ['rise', 'Odpływanie liter'], ['decode', 'Rozkodowanie']);
+TXT_LOOP.splice(0, TXT_LOOP.length, ['none', 'Brak'], ['pulse', 'Puls'], ['heartbeat', 'Bicie serca'], ['wave', 'Fala'], ['hop', 'Podskoki'], ['jelly', 'Galaretka'], ['swing', 'Wahadło'], ['float', 'Unoszenie'], ['shake', 'Drżenie'], ['glitch', 'Glitch'], ['rainbow', 'Tęcza'], ['glow', 'Poświata'], ['flicker', 'Neon'], ['breath', 'Oddech'], ['shakeHard', 'Trzęsienie pod edit'], ['rgb', 'Rozszczepienie RGB'], ['strobe', 'Stroboskop'], ['zoomBeat', 'Zoom na bit'], ['jitter', 'Drgające litery'], ['karaoke', 'Karaoke']);
 TEXT_PRESETS.push(
   { name: 'Tytuł vloga', css: 'font:900 18px Montserrat;text-transform:uppercase;text-shadow:0 2px 6px #000', p: { font: 'Montserrat', weight: 900, upper: true, size: 9, anim: { in: 'zoomBig', out: 'fade', loop: 'none' } } },
   { name: 'Gra 8-bit', css: 'font:400 11px "Press Start 2P";color:#7CFF6B', p: { font: 'Press Start 2P', weight: 400, color: '#7CFF6B', stroke: '#0a2a0a', strokeW: 1, size: 4.5, shOn: false, anim: { in: 'typewriter', out: 'fade', loop: 'none' } } },
@@ -1574,10 +1576,12 @@ function textAnimBlock(type, k, a, isOut) {
     case 'flipX': a.sx *= Math.max(.01, Math.abs(Math.cos((1 - e) * Math.PI / 2))); break;
     case 'swing': a.rot += Math.sin(k * Math.PI * 3.5) * (1 - k) * .8; a.op *= f; break;
     case 'flicker': a.op *= (k > .82 || pseudo(Math.floor(k * 18), 3) > .5) ? 1 : .05; break;
+    case 'impact': a.sc *= lerp(2.4, 1, e); a.op *= Math.min(1, k * 4); if (k > .5) { const j = (1 - k) / .5; a.dx += (pseudo(Math.floor(k * 60), 3) - .5) * .05 * j; a.dy += (pseudo(Math.floor(k * 60), 4) - .5) * .05 * j; } a.split = Math.max(a.split || 0, (1 - k) * .9); break;
+    case 'flashIn': a.op *= Math.min(1, k * 6); a.glowMul = (a.glowMul || 1) * (1 + (1 - k) * 3); a.flashT = Math.max(a.flashT || 0, 1 - k); break;
   }
 }
 function textAnim(L, lt) {
-  const a = Object.assign(newAnimState(), { glowMul: 1, split: 0 }), A = L.anim;
+  const a = Object.assign(newAnimState(), { glowMul: 1, split: 0, flashT: 0 }), A = L.anim;
   const kin = A.in !== 'none' ? clamp(lt / Math.max(.05, A.inDur), 0, 1) : 1;
   const kout = A.out !== 'none' ? clamp((L.dur - lt) / Math.max(.05, A.outDur), 0, 1) : 1;
   textAnimBlock(A.in, kin, a, false); textAnimBlock(A.out, kout, a, true);
@@ -1593,12 +1597,18 @@ function textAnim(L, lt) {
     case 'jelly': { const w = Math.sin(lt * 8); a.sx *= 1 + .14 * w; a.sy *= 1 - .14 * w; break; }
     case 'glow': a.glowMul = .3 + .7 * (.5 + .5 * Math.sin(lt * 4)); break;
     case 'glitch': { const on = pseudo(Math.floor(lt * 12), 5) > .6; if (on) { a.dx += (pseudo(Math.floor(lt * 40), 6) - .5) * .05; a.split = .8; } break; }
+    case 'shakeHard': { const f = Math.floor(lt * 24); a.dx += (pseudo(f, 1) - .5) * .045; a.dy += (pseudo(f, 2) - .5) * .045; a.rot += (pseudo(f, 4) - .5) * .1; break; }
+    case 'rgb': a.split = Math.max(a.split, .55 + .35 * pseudo(Math.floor(lt * 10), 8)); a.dx += (pseudo(Math.floor(lt * 16), 6) - .5) * .006; break;
+    case 'strobe': if (Math.floor(lt * 8) % 2) a.op *= .12; break;
+    case 'zoomBeat': { const ph = (lt * 2) % 1; a.sc *= 1 + .16 * Math.exp(-ph * 9); a.flashT = Math.max(a.flashT, .5 * Math.exp(-ph * 12)); break; }
   }
   return { a, kin, kout };
 }
-function charState(L, i, n, lt, kin, kout) {
-  const s = { op: 1, dx: 0, dy: 0, sc: 1, rot: 0, hide: false, color: null };
+const DECODE_CH = 'ABCDEFGHJKLMNPRSTUWXYZ0123456789#$%&@*+=?';
+function charState(L, i, n, lt, kin, kout, wi = 0, wn = 1) {
+  const s = { op: 1, dx: 0, dy: 0, sc: 1, rot: 0, hide: false, color: null, ch: null };
   const stag = k => { const st = (i / Math.max(1, n)) * .6; return clamp((k - st) / .4, 0, 1); };
+  const wst = k => { const st = (wi / Math.max(1, wn)) * .7; return clamp((k - st) / .3, 0, 1); };
   const per = (k, type, isOut) => {
     if (k >= 1) return;
     const ci = stag(k), e = easeOutCubic(ci);
@@ -1610,6 +1620,11 @@ function charState(L, i, n, lt, kin, kout) {
       case 'scatter': { const ax = (pseudo(i, 11) - .5) * 9, ay = (pseudo(i, 12) - .5) * 7; s.dx += ax * (1 - e); s.dy += ay * (1 - e); s.rot += (pseudo(i, 13) - .5) * 4 * (1 - e); s.op *= ci; break; }
       case 'spinChars': s.rot += (1 - e) * Math.PI * 2 * (isOut ? 1 : -1); s.sc *= Math.max(.001, e); break;
       case 'glitchIn': if (ci < 1) { s.dx += (pseudo(i, Math.floor(lt * 30)) - .5) * 1.4 * (1 - ci); s.op *= pseudo(i + 3, Math.floor(lt * 20)) > (1 - ci) * .6 ? 1 : 0; } break;
+      case 'words': { const cw = wst(k); s.op *= cw > 0 ? Math.min(1, cw * 4) : 0; s.dy += (1 - easeOutCubic(cw)) * (isOut ? -.5 : .5); break; }
+      case 'wordsPop': { const cw = wst(k); s.sc *= cw <= 0 ? .001 : Math.max(.001, easeOutBack(cw)); s.op *= cw > 0 ? 1 : 0; break; }
+      case 'slam': { const cw = wst(k); s.sc *= cw <= 0 ? .001 : lerp(2.6, 1, easeOutCubic(cw)); s.op *= cw > 0 ? Math.min(1, cw * 3) : 0; break; }
+      case 'decode': if (ci < 1) { s.ch = DECODE_CH[Math.floor(pseudo(i, Math.floor(lt * 24)) * DECODE_CH.length)]; s.op *= .35 + .65 * Math.min(1, k * 2); } break;
+      case 'rise': s.dy += (1 - e) * (isOut ? -.9 : .9); s.op *= ci > 0 ? Math.min(1, ci * 2) : 0; s.sc *= lerp(.7, 1, e); break;
     }
   };
   if (L.anim.in !== 'typewriter' || kin < 1) per(kin, L.anim.in, false);
@@ -1619,6 +1634,8 @@ function charState(L, i, n, lt, kin, kout) {
     case 'hop': { const ph = (lt * 1.4 - i * .09) % 1; const h2 = ph < .3 ? Math.sin(ph / .3 * Math.PI) : 0; s.dy -= h2 * .45; break; }
     case 'rainbow': s.color = `hsl(${(i * 28 + lt * 160) % 360} 92% 62%)`; break;
     case 'flicker': if (pseudo(i, Math.floor(lt * 10)) < .07) s.op *= .2; break;
+    case 'jitter': { const f = Math.floor(lt * 12); s.dx += (pseudo(i, f) - .5) * .12; s.dy += (pseudo(i + 7, f) - .5) * .12; s.rot += (pseudo(i + 3, f) - .5) * .14; break; }
+    case 'karaoke': { const cur = Math.floor((lt * 2.2) % (wn + 1)); if (wi === cur) { s.color = '#ffe14d'; s.sc *= 1.12; } break; }
   }
   return s;
 }
@@ -1637,11 +1654,11 @@ function drawTextLayer(g, L, lt, W, H) {
   if (a.blur > .01) g.filter = `blur(${(a.blur * px * .25).toFixed(1)}px)`;
   if (L.bg) { const pad = px * .32; g.fillStyle = rgba(L.bgColor, L.bgAlpha); g.beginPath(); g.roundRect(-blockW / 2 - pad, -blockH / 2 - pad * .55, blockW + pad * 2, blockH + pad * 1.1, px * .22); g.fill(); }
   g.textBaseline = 'middle'; g.textAlign = 'center'; g.lineJoin = 'round';
-  const items = []; let idx = 0; const n = meas.reduce((x, m) => x + m.chars.length, 0);
+  const items = []; let idx = 0, wi = 0, prevSp = true; const n = meas.reduce((x, m) => x + m.chars.length, 0), wn = Math.max(1, txt.split(/\s+/).filter(Boolean).length);
   meas.forEach((m, li) => {
     let x = L.align === 'left' ? -blockW / 2 : L.align === 'right' ? blockW / 2 - m.w : -m.w / 2;
-    const y = -blockH / 2 + lineH * (li + .5);
-    m.chars.forEach((ch, ci) => { const st = charState(L, idx, n, lt, kin, kout); items.push({ ch, x: x + m.ws[ci] / 2, y, st }); idx++; x += m.ws[ci] + sp; });
+    const y = -blockH / 2 + lineH * (li + .5); prevSp = true;
+    m.chars.forEach((ch, ci) => { const isSp = /\s/.test(ch); if (!isSp && prevSp && idx > 0 && items.some(q => !/\s/.test(q.ch))) wi++; prevSp = isSp; const st = charState(L, idx, n, lt, kin, kout, Math.min(wi, wn - 1), wn); items.push({ ch, x: x + m.ws[ci] / 2, y, st }); idx++; x += m.ws[ci] + sp; });
   });
   let fill = L.color;
   if (L.color2) { const gr = g.createLinearGradient(0, -blockH / 2, 0, blockH / 2); gr.addColorStop(0, L.color); gr.addColorStop(1, L.color2); fill = gr; }
@@ -1650,7 +1667,7 @@ function drawTextLayer(g, L, lt, W, H) {
       if (it.st.hide || it.ch === ' ') continue;
       g.save(); g.translate(it.x + (it.st.dx * px) + ox, it.y + it.st.dy * px); if (it.st.rot) g.rotate(it.st.rot); if (it.st.sc !== 1) g.scale(it.st.sc, it.st.sc);
       g.globalAlpha = clamp(L.opacity * a.op * it.st.op, 0, 1);
-      if (mode === 'stroke') g.strokeText(it.ch, 0, 0); else { if (color) g.fillStyle = color; else if (it.st.color) g.fillStyle = it.st.color; g.fillText(it.ch, 0, 0); }
+      const chx = it.st.ch || it.ch; if (mode === 'stroke') g.strokeText(chx, 0, 0); else { if (color) g.fillStyle = color; else if (it.st.color) g.fillStyle = it.st.color; g.fillText(chx, 0, 0); }
       g.restore();
     }
   };
@@ -1664,6 +1681,7 @@ function drawTextLayer(g, L, lt, W, H) {
   if (a.split > .01) { const o = px * .08 * a.split; g.save(); g.globalCompositeOperation = 'lighter'; pass('fill', -o, '#ff2a55'); pass('fill', o, '#2af0ff'); g.restore(); }
   if (L.strokeW > 0) pass('stroke');
   pass('fill');
+  if (a.flashT > .01) { g.save(); g.globalCompositeOperation = 'lighter'; g.shadowColor = '#ffffff'; g.shadowBlur = px * .6 * a.flashT; g.globalAlpha = 1; const op = L.opacity * a.op; for (const it of items) { if (it.st.hide || it.ch === ' ') continue; g.save(); g.translate(it.x + it.st.dx * px, it.y + it.st.dy * px); if (it.st.sc !== 1) g.scale(it.st.sc, it.st.sc); g.globalAlpha = clamp(op * it.st.op * a.flashT, 0, 1); g.fillStyle = '#ffffff'; g.fillText(it.st.ch || it.ch, 0, 0); g.restore(); } g.restore(); }
   g.restore();
 }
 function layerAnim(L, lt) {
@@ -2079,7 +2097,7 @@ async function freezeFrame() {
    ========================================================= */
 const TABS = [['media', 'Media', 'media'], ['gotowe', 'Gotowe', 'bolt'], ['audio', 'Audio', 'audio'], ['text', 'Tekst', 'text'], ['sticker', 'Naklejki', 'sticker'], ['fx', 'Efekty', 'fx'], ['trans', 'Przejścia', 'trans'], ['filter', 'Filtry', 'filter'], ['magic', 'Magia', 'magic'], ['edit', 'Edytuj', 'edit']];
 const LIB_CATS = () => ({
-  media: ['Twoje media', 'Biblioteka'], gotowe: ['Na bit', 'Montaż'], audio: ['Muzyka', 'Efekty dźwiękowe'], text: ['Style', 'Etykiety'],
+  media: ['Twoje media', 'Biblioteka'], gotowe: ['Na bit', 'Montaż'], audio: ['Muzyka', 'Efekty dźwiękowe'], text: ['Pod edity', 'Style', 'Etykiety'],
   sticker: Object.keys(EMOJI), fx: FX_CATS, trans: Object.keys(TR_CATS), filter: Object.keys(FILTER_CATS), magic: []
 });
 const libCat = {};
@@ -2161,6 +2179,12 @@ function audioRow(m, name, sub, genKey) {
     h('button', { class: 'btn sm', onclick: add }, ico('plus'), 'Dodaj'));
 }
 function libText(b, cat) {
+  if (cat === 'Pod edity') {
+    b.append(h('div', { class: 'hint' }, 'Gotowe napisy do edytów: czcionka, obrys, poświata i animacja w jednym. Kliknij, żeby dodać, a potem zmień tekst.'));
+    TXT_EDIT_PRESETS.forEach(p => document.fonts?.load(`${p.p.italic ? 'italic ' : ''}${p.p.weight} 40px "${p.p.font}"`));
+    b.append(h('div', { class: 'tpgrid' }, TXT_EDIT_PRESETS.map((p, i) => h('button', { class: 'tpcard', title: p.name, onclick: () => { const L0 = sel && sel.kind === 'layer' ? findLayer(sel.id) : null; if (L0 && L0.kind === 'text') { applyPreset(L0, p); touch(); renderInspector(); commit(); toast(`Napis „${p.name}”`); } else { addText(p); const L1 = S.layers[S.layers.length - 1]; if (L1 && L1.kind === 'text') { L1.text = p.t; L1.dur = Math.max(L1.dur, 2.5); needsRender = true; renderInspector(); commit(); } } } }, txtPreview(txtPrevLayer(newText(p.p), p.t, null), i * .41), h('span', null, p.name)))));
+    return;
+  }
   if (cat === 'Etykiety') {
     b.append(h('div', { class: 'lbl-grid' }, LABELS.map(lb => { const css = labelCss(lb.p); return h('button', { title: 'Dodaj etykietę', onclick: () => { const L = newText(lb.p); L.text = lb.t; L.kind = 'sticker'; L.start = clamp(T, 0, Math.max(0, total - .5)); L.dur = 3; if (!lb.p.y) L.y = .3; S.layers.push(L); document.fonts?.load(`${L.weight} 40px "${L.font}"`).then(() => needsRender = true); select({ kind: 'layer', id: L.id }); touch(); commit(); } }, h('span', { style: css }, lb.t)); })));
     return;
@@ -2369,6 +2393,83 @@ function slider(label, get, set, min, max, step, f = v => (+v).toFixed(2), opts 
   paintRange(r);
   return h('div', { class: 'ctl' }, h('label', { for: id, title: opts.def !== undefined ? 'Dwuklik na suwaku przywraca domyślne' : null }, label), r, val);
 }
+
+/* ---------- text animations: ready-made moves for captions, previewed live in the text's own style ---------- */
+const TXT_ANIM_CATS = ['Pod edity', 'Słowa', 'Litery', 'Glitch i neon', 'Klasyczne'];
+const TXT_ANIM_PRESETS = [
+  ['Pod edity', 'Uderzenie', { in: 'impact', inDur: .45, loop: 'shakeHard', out: 'zoomBig', outDur: .3 }],
+  ['Pod edity', 'Błysk na bit', { in: 'flashIn', inDur: .35, loop: 'zoomBeat', out: 'fade', outDur: .25 }],
+  ['Pod edity', 'RGB glitch', { in: 'glitchIn', inDur: .5, loop: 'rgb', out: 'scatter', outDur: .4 }],
+  ['Pod edity', 'Trzęsienie', { in: 'pop', inDur: .3, loop: 'shakeHard', out: 'fade', outDur: .2 }],
+  ['Pod edity', 'Stroboskop', { in: 'flicker', inDur: .4, loop: 'strobe', out: 'fade', outDur: .2 }],
+  ['Pod edity', 'Kinetyczne słowa', { in: 'slam', inDur: .8, loop: 'none', out: 'zoomBig', outDur: .3 }],
+  ['Słowa', 'Słowo po słowie', { in: 'words', inDur: .9, loop: 'none', out: 'words', outDur: .5 }],
+  ['Słowa', 'Wskakujące słowa', { in: 'wordsPop', inDur: .9, loop: 'none', out: 'fade', outDur: .3 }],
+  ['Słowa', 'Karaoke', { in: 'words', inDur: .6, loop: 'karaoke', out: 'fade', outDur: .3 }],
+  ['Słowa', 'Uderzenie słów', { in: 'slam', inDur: .9, loop: 'pulse', out: 'fade', outDur: .3 }],
+  ['Litery', 'Maszyna do pisania', { in: 'typewriter', inDur: 1, loop: 'none', out: 'typewriter', outDur: .6 }],
+  ['Litery', 'Odkodowanie', { in: 'decode', inDur: 1, loop: 'none', out: 'decode', outDur: .5 }],
+  ['Litery', 'Wynurzanie', { in: 'rise', inDur: .8, loop: 'none', out: 'rise', outDur: .5 }],
+  ['Litery', 'Fala liter', { in: 'wave', inDur: .8, loop: 'wave', out: 'letters', outDur: .5 }],
+  ['Litery', 'Deszcz liter', { in: 'drop', inDur: .9, loop: 'none', out: 'drop', outDur: .6 }],
+  ['Litery', 'Rozsypanie', { in: 'scatter', inDur: .9, loop: 'none', out: 'scatter', outDur: .6 }],
+  ['Litery', 'Wirujące litery', { in: 'spinChars', inDur: .8, loop: 'none', out: 'spinChars', outDur: .5 }],
+  ['Litery', 'Drgające litery', { in: 'letters', inDur: .7, loop: 'jitter', out: 'fade', outDur: .3 }],
+  ['Glitch i neon', 'Neon', { in: 'flicker', inDur: .6, loop: 'flicker', out: 'fade', outDur: .3 }, { glow: .9, glowColor: '#ff3fa4' }],
+  ['Glitch i neon', 'Glitch', { in: 'glitchIn', inDur: .5, loop: 'glitch', out: 'fade', outDur: .2 }],
+  ['Glitch i neon', 'Tęcza', { in: 'letters', inDur: .6, loop: 'rainbow', out: 'fade', outDur: .3 }],
+  ['Glitch i neon', 'Pulsująca poświata', { in: 'blur', inDur: .6, loop: 'glow', out: 'blur', outDur: .4 }, { glow: .8, glowColor: '#22d3e6' }],
+  ['Klasyczne', 'Pojawienie', { in: 'fade', inDur: .5, loop: 'none', out: 'fade', outDur: .4 }],
+  ['Klasyczne', 'Wyskok', { in: 'pop', inDur: .5, loop: 'none', out: 'zoom', outDur: .3 }],
+  ['Klasyczne', 'Z dołu', { in: 'slideUp', inDur: .5, loop: 'none', out: 'slideUp', outDur: .4 }],
+  ['Klasyczne', 'Z bliska', { in: 'zoomBig', inDur: .5, loop: 'none', out: 'zoomBig', outDur: .4 }],
+  ['Klasyczne', 'Upadek', { in: 'bounce', inDur: .7, loop: 'float', out: 'fade', outDur: .3 }],
+  ['Klasyczne', 'Puls', { in: 'pop', inDur: .4, loop: 'pulse', out: 'fade', outDur: .3 }],
+  ['Klasyczne', 'Bez animacji', { in: 'none', inDur: .5, loop: 'none', out: 'none', outDur: .4 }]
+];
+const TXT_EDIT_PRESETS = [
+  { name: 'Uderzenie', t: 'BOOM', p: { font: 'Anton', weight: 400, upper: true, color: '#ffffff', stroke: '#000000', strokeW: 1.2, shOn: true, shColor: '#000000', shBlur: .2, shY: .05, size: 11, anim: { in: 'impact', inDur: .45, out: 'zoomBig', outDur: .3, loop: 'shakeHard' } } },
+  { name: 'RGB glitch', t: 'GLITCH', p: { font: 'Bebas Neue', weight: 400, upper: true, color: '#ffffff', size: 12, shOn: false, anim: { in: 'glitchIn', inDur: .5, out: 'scatter', outDur: .4, loop: 'rgb' } } },
+  { name: 'Neon edit', t: 'Neon', p: { font: 'Poppins', weight: 800, color: '#ffffff', glow: 1.1, glowColor: '#ff2bd6', shOn: false, size: 9, anim: { in: 'flicker', inDur: .6, out: 'fade', outDur: .3, loop: 'flicker' } } },
+  { name: 'Karaoke', t: 'Śpiewaj ze mną', p: { font: 'Montserrat', weight: 900, upper: true, color: '#ffffff', stroke: '#000000', strokeW: 1.3, size: 6.5, anim: { in: 'words', inDur: .6, out: 'fade', outDur: .3, loop: 'karaoke' } } },
+  { name: 'Słowo po słowie', t: 'To jest edit', p: { font: 'Poppins', weight: 800, color: '#ffffff', stroke: '#000000', strokeW: 1, size: 8, anim: { in: 'wordsPop', inDur: .9, out: 'fade', outDur: .3, loop: 'none' } } },
+  { name: 'Odkodowanie', t: 'DOSTĘP', p: { font: 'Rubik Mono One', weight: 400, upper: true, color: '#39ff88', glow: .6, glowColor: '#39ff88', shOn: false, size: 6, anim: { in: 'decode', inDur: 1.1, out: 'decode', outDur: .5, loop: 'none' } } },
+  { name: 'Błysk na bit', t: 'FLASH', p: { font: 'Anton', weight: 400, upper: true, color: '#ffffff', glow: .5, glowColor: '#ffffff', shOn: false, size: 12, anim: { in: 'flashIn', inDur: .35, out: 'fade', outDur: .25, loop: 'zoomBeat' } } },
+  { name: 'Złoty', t: 'ZŁOTO', p: { font: 'Anton', weight: 400, upper: true, color: '#fff2a8', color2: '#ff9f1a', stroke: '#3a1d00', strokeW: 1, glow: .4, glowColor: '#ffb000', size: 11, anim: { in: 'pop', inDur: .45, out: 'fade', outDur: .3, loop: 'glow' } } },
+  { name: 'Chrom', t: 'CHROM', p: { font: 'Unbounded', weight: 700, upper: true, color: '#ffffff', color2: '#7d8590', stroke: '#111111', strokeW: .8, size: 8, anim: { in: 'zoomBig', inDur: .5, out: 'zoomBig', outDur: .3, loop: 'pulse' } } },
+  { name: 'Stroboskop', t: 'STROBE', p: { font: 'Bebas Neue', weight: 400, upper: true, color: '#ffffff', size: 13, shOn: false, anim: { in: 'flicker', inDur: .3, out: 'fade', outDur: .2, loop: 'strobe' } } },
+  { name: 'Kinetyczne słowa', t: 'Nie do zatrzymania', p: { font: 'Anton', weight: 400, upper: true, color: '#ffffff', size: 9, anim: { in: 'slam', inDur: .9, out: 'zoomBig', outDur: .3, loop: 'none' } } },
+  { name: 'Z ręki', t: 'Hej!', p: { font: 'Permanent Marker', weight: 400, color: '#ffffff', size: 9, anim: { in: 'letters', inDur: .7, out: 'fade', outDur: .3, loop: 'jitter' } } },
+  { name: 'Komiks bum', t: 'BUM!', p: { font: 'Bangers', weight: 400, color: '#ffe14d', stroke: '#111111', strokeW: 1.3, shOn: true, shColor: '#e8364f', shBlur: 0, shX: .07, shY: .07, size: 11, anim: { in: 'impact', inDur: .4, out: 'zoom', outDur: .3, loop: 'jelly' } } },
+  { name: 'Elegancki film', t: 'Rozdział I', p: { font: 'Playfair Display', weight: 700, italic: true, color: '#f6e7c8', size: 7, spacing: .05, anim: { in: 'rise', inDur: .9, out: 'rise', outDur: .5, loop: 'none' } } }
+];
+let txtAnimCat = 'Pod edity';
+const txtPrevCards = new Set(); let txtPrevRaf = 0, txtPrevLast = 0;
+function txtPreview(L, off = 0) { const c = h('canvas', { width: 220, height: 124 }); c._L = L; c._off = off; txtPrevCards.add(c); if (!txtPrevRaf) txtPrevRaf = requestAnimationFrame(txtPrevTick); return c; }
+function txtPrevTick(now) {
+  txtPrevRaf = 0; let any = false; const draw = now - txtPrevLast > 30 && !document.hidden; if (draw) txtPrevLast = now;
+  for (const c of txtPrevCards) {
+    if (!c.isConnected) { txtPrevCards.delete(c); continue; } any = true; if (!draw) continue;
+    const g = c.getContext('2d'); g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.filter = 'none'; g.fillStyle = '#14151b'; g.fillRect(0, 0, c.width, c.height);
+    const L = c._L, lt = (now / 1000 + c._off) % 3.3; if (lt < L.dur) { try { drawTextLayer(g, L, lt, c.width, c.height); } catch (e) { } }
+  }
+  if (any) txtPrevRaf = requestAnimationFrame(txtPrevTick);
+}
+function txtPrevLayer(base, text, anim) {
+  const L = JSON.parse(JSON.stringify(base)); delete L._bb; Object.assign(L, { text, x: .5, y: .5, scale: 1, rot: 0, start: 0, dur: 2.7, opacity: 1, bg: base.bg });
+  const m = txtPrevLayer.cv || (txtPrevLayer.cv = document.createElement('canvas').getContext('2d')); m.font = `${L.italic ? 'italic ' : ''}${L.weight} 100px ${fontStack(L.font)}`; const shown = L.upper ? String(text).toLocaleUpperCase('pl') : String(text);
+  const w100 = Math.max(...shown.split('\n').map(x => m.measureText(x).width + [...x].length * (L.spacing || 0) * 100)) || 100; L.size = Math.min(34, (.8 * 220 * 100 / w100) / 124 * 100 / (1 + (L.strokeW || 0) * .05)); if (anim) L.anim = Object.assign({}, L.anim, anim); return L;
+}
+function txtAnimSection(L) {
+  const wrap = h('div', { class: 'group' });
+  const same = a => a.in === L.anim.in && a.out === L.anim.out && a.loop === L.anim.loop;
+  const draw = () => {
+    const sample = L.text && L.text.trim() && [...L.text].length <= 14 ? L.text.split('\n')[0] : 'Hej ty!';
+    const grid = h('div', { class: 'tpgrid' }, TXT_ANIM_PRESETS.filter(x => x[0] === txtAnimCat).map(([, name, anim, extra], i) => h('button', { class: 'tpcard' + (same(anim) ? ' on' : ''), title: name, onclick: () => { L.anim = Object.assign({}, L.anim, anim); if (extra) for (const k in extra) if (!L[k]) L[k] = extra[k]; needsRender = true; commit(); draw(); seek(L.start); setPlaying(true); } }, txtPreview(txtPrevLayer(Object.assign({}, L, extra && !L.glow ? extra : {}), sample, anim), i * .37), h('span', null, name))));
+    wrap.replaceChildren(segmented(TXT_ANIM_CATS.map(c => [c, c]), () => txtAnimCat, v => { txtAnimCat = v; draw(); }), grid, h('div', { class: 'hint' }, 'Podgląd pokazuje Twój napis w jego stylu. Kliknij, żeby nałożyć całą animację: wejście, ruch w trakcie i wyjście.'));
+  };
+  draw(); return wrap;
+}
 let animSub = 'in';
 function animSection(A, dur, isText, start, LIN, LOUT, LLOOP) {
   const wrap = h('div', { class: 'group' });
@@ -2516,7 +2617,7 @@ function inspTrans(p, c) {
       h('div', { class: 'hint' }, 'Pełną listę z podglądami znajdziesz w zakładce Przejścia po lewej.')));
 }
 function inspText(p, L) {
-  const tabs = [['text', 'Tekst'], ['style', 'Styl'], ['anim', 'Animacja'], ['pos', 'Położenie']];
+  const tabs = [['text', 'Tekst'], ['style', 'Styl'], ['anim', 'Animacje'], ['pos', 'Położenie']];
   const b = h('div', { class: 'insp-b' });
   const reload = () => document.fonts?.load(`${L.italic ? 'italic ' : ''}${L.weight} 40px "${L.font}"`).then(() => needsRender = true);
   if (inspTab === 'text') {
@@ -2540,10 +2641,8 @@ function inspText(p, L) {
       ctlGroup('Tło napisu', [toggle('Ramka z tłem', () => L.bg, v => { L.bg = v; renderInspector(); }), L.bg ? row('Kolor', colorEl(() => L.bgColor, v => L.bgColor = v)) : null, L.bg ? slider('Krycie tła', () => L.bgAlpha, v => L.bgAlpha = v, 0, 1, .01, pct) : null])
     );
   } else if (inspTab === 'anim') {
-    const A = L.anim; const replay = () => { seek(L.start); setPlaying(true); };
-    b.append(
-      animSection(A, L.dur, true, L.start, TXT_IN, TXT_OUT, TXT_LOOP)
-    );
+    const A = L.anim;
+    b.append(txtAnimSection(L), h('details', { class: 'adv' }, h('summary', null, 'Własne ustawienia: wejście, wyjście, pętla'), animSection(A, L.dur, true, L.start, TXT_IN, TXT_OUT, TXT_LOOP)));
   } else {
     b.append(ctlGroup('Położenie', [
       slider('Poziomo', () => L.x, v => L.x = v, 0, 1, .005, pct), slider('Pionowo', () => L.y, v => L.y = v, 0, 1, .005, pct),
